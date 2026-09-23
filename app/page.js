@@ -2,7 +2,7 @@
 import {useEffect,useMemo,useState} from 'react';
 import {createClient} from '@supabase/supabase-js';
 const supabase=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
-const eventLabel={planning:'企画中',booking:'ブッキング中',confirmed:'確定',promoting:'告知中',show_day:'本番',ended:'終了'}, bookingLabel={offer:'オファー',waiting:'返答待ち',confirmed:'確定',declined:'辞退'};
+const eventLabel={planning:'企画中',booking:'ブッキング中',confirmed:'確定',promoting:'告知中',show_day:'本番',hall_rental:'ホールレンタル',ended:'終了'}, bookingLabel={offer:'オファー',waiting:'返答待ち',confirmed:'確定',declined:'辞退'};
 const pad=n=>String(n).padStart(2,'0'), dateKey=(y,m,d)=>y+'-'+pad(m+1)+'-'+pad(d);
 export default function Page(){
  const now=new Date(),[month,setMonth]=useState(new Date(now.getFullYear(),now.getMonth(),1)),[view,setView]=useState('calendar'),[session,setSession]=useState(null),[events,setEvents]=useState([]),[selected,setSelected]=useState(null),[artists,setArtists]=useState([]),[bookings,setBookings]=useState([]),[tasks,setTasks]=useState([]),[settlement,setSettlement]=useState(null),[modal,setModal]=useState(''),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[message,setMessage]=useState(''),[loading,setLoading]=useState(true),[search,setSearch]=useState(''),[editArtist,setEditArtist]=useState(null),[editBooking,setEditBooking]=useState(null),[team,setTeam]=useState(null),[invites,setInvites]=useState([]),[timetable,setTimetable]=useState([]),[docs,setDocs]=useState([]),[members,setMembers]=useState([]);
