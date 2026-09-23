@@ -38,3 +38,5 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 
 .booking{position:relative;padding-left:30px!important;cursor:grab;transition:opacity .15s,box-shadow .15s}.booking:active{cursor:grabbing}.booking.dragging{opacity:.45}.draghandle{position:absolute;left:4px;top:14px;font-size:20px;color:#98a2b3;line-height:1;cursor:grab;user-select:none}.orderbtn{min-width:30px;padding:5px!important}.orderbtn:disabled{opacity:.3;cursor:not-allowed}
 @media(max-width:600px){.booking{cursor:default}.draghandle{display:none}.booking{padding-left:0!important}}
+
+.modal textarea{width:100%;min-height:90px;resize:vertical;border:1px solid #d9e0eb;border-radius:8px;padding:11px 14px;font:inherit}.publishcheck{display:flex!important;align-items:center;justify-content:flex-start!important;gap:8px!important;padding:10px 12px;background:#f2f7ff;border-radius:8px;font-weight:700}.publishcheck input{width:auto!important;margin:0}.webpill{display:inline-block;margin-left:8px;background:#e8f7ee;color:#16794b;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700}
