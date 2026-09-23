@@ -35,3 +35,6 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .booking>.rowactions button{padding:6px 9px}
 @media(max-width:1200px){.booking{grid-template-columns:minmax(0,1fr) auto!important}.booking .rowactions{grid-column:auto!important;justify-content:flex-end}}
 @media(max-width:600px){.booking{grid-template-columns:minmax(0,1fr) auto!important}.booking>.rowactions{justify-content:flex-start}}
+
+.booking{position:relative;padding-left:30px!important;cursor:grab;transition:opacity .15s,box-shadow .15s}.booking:active{cursor:grabbing}.booking.dragging{opacity:.45}.draghandle{position:absolute;left:4px;top:14px;font-size:20px;color:#98a2b3;line-height:1;cursor:grab;user-select:none}.orderbtn{min-width:30px;padding:5px!important}.orderbtn:disabled{opacity:.3;cursor:not-allowed}
+@media(max-width:600px){.booking{cursor:default}.draghandle{display:none}.booking{padding-left:0!important}}
