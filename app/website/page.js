@@ -1,6 +1,7 @@
 'use client'
 import {useEffect,useState} from 'react'
 import {createClient} from '@supabase/supabase-js'
+import './website.css'
 const supabase=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)
 const money=n=>'¥'+Number(n||0).toLocaleString()
 export default function Website(){
