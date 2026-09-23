@@ -46,3 +46,5 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .day>.event{margin-top:4px;padding:5px 6px;min-height:0;border-radius:7px;font-size:11px;line-height:1.15;white-space:normal;overflow:hidden}
 .day>.event small{margin-top:2px;font-size:9px;line-height:1}
 .day>.event:nth-of-type(n+3){display:none}
+
+.event.ホールレンタル{background:#e8d8ff;color:#4d2775}
