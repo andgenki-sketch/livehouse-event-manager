@@ -75,3 +75,5 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .artistnamelink{appearance:none;border:0!important;background:transparent!important;padding:0!important;margin:0!important;color:#1769aa!important;font:inherit!important;font-weight:800!important;text-align:left;cursor:pointer;text-decoration:none}.artistnamelink:hover{text-decoration:underline}.artistnamelink:focus-visible{outline:2px solid #1769aa;outline-offset:3px;border-radius:3px}
 
 .genrepill{display:inline-flex;align-items:center;margin-left:6px;padding:4px 9px;border-radius:999px;background:#eef2f6;color:#344054;font-size:12px;font-weight:700}
+
+.hallrentalfields{margin:8px 0 14px;padding:14px;border:1px solid #d9c7f2;border-radius:10px;background:#faf7ff}.hallrentalfields h3{margin:0 0 12px;color:#5b3480}.hallrentaldetail{margin:14px 0;padding:14px;border-radius:10px;background:#faf7ff;border:1px solid #e1d4f2}.hallrentaldetail h3{margin:0 0 10px;color:#5b3480}.hallrentaldetail p{margin:6px 0}.hallmemo{white-space:pre-wrap;overflow-wrap:anywhere}
