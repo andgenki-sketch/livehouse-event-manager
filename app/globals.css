@@ -88,3 +88,12 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .modal .hallrentalfields .attendanceform span{white-space:nowrap!important;font-size:12px!important}
 .modal .hallrentalfields textarea{grid-column:1/-1!important;width:100%!important;min-height:72px!important;height:72px!important;padding:8px 10px!important;margin:0!important;resize:vertical}
 @media(max-width:600px){.modal .hallrentalfields{grid-template-columns:1fr!important}.modal .hallrentalfields h3,.modal .hallrentalfields textarea{grid-column:1!important}}
+
+/* Team invite rows */
+.listrow.invite-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto auto!important;align-items:center!important;gap:10px 16px!important}
+.invite-email{min-width:0!important;overflow-wrap:anywhere!important}
+.invite-status{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important;padding:4px 9px!important;border-radius:999px!important;font-size:12px!important;font-weight:700!important}
+.invite-status.pending{background:#fff3cd!important;color:#7a5700!important}
+.invite-status.accepted{background:#e8f7ee!important;color:#18794e!important}
+.invite-action{white-space:nowrap!important}
+@media(max-width:700px){.listrow.invite-row{grid-template-columns:1fr auto!important}.invite-action{grid-column:1/-1!important;justify-self:start!important}}
