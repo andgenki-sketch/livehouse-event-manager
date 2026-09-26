@@ -52,3 +52,18 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .day>.event{cursor:grab;transition:opacity .15s,transform .15s}.day>.event:active{cursor:grabbing}.day>.event.calendar-dragging{opacity:.4;transform:scale(.98)}
 
 .bookingprogress{display:inline-block;margin-top:2px;font-size:11px;font-weight:700;color:#667085}.booking-confirmed{background:#f0fbf4!important;border:1px solid #b7e7c7!important;border-left:5px solid #22a55b!important;border-radius:9px;padding:11px 9px 11px 30px!important}.confirmedmark{display:inline-block;margin-left:7px;padding:3px 6px;border-radius:5px;background:#d9f5e3;color:#157a42;font-size:10px;font-style:normal;white-space:nowrap}.bookingstatus.confirmed{background:#d9f5e3;color:#157a42;padding:4px 7px;border-radius:6px;font-weight:800}.booking-declined{opacity:.5;background:#f7f7f8!important}.booking-declined b{text-decoration:line-through;color:#667085}@media(max-width:600px){.booking-confirmed{padding-left:10px!important}}
+
+/* Confirmed booking visual state — strong override for detail card */
+.detail .booking.booking-confirmed{
+  background:#e9f8ef!important;
+  border:1px solid #9bd5af!important;
+  border-left:6px solid #16a05d!important;
+  border-radius:10px!important;
+  padding:12px 10px 12px 30px!important;
+  margin:8px 0!important;
+  box-shadow:0 1px 3px rgba(22,160,93,.08);
+}
+.detail .booking.booking-confirmed>.quota{background:#dff3e7!important;border:1px solid #c4e8d1}
+.detail .booking.booking-confirmed .confirmedmark{background:#168a51!important;color:#fff!important;padding:4px 7px!important;border-radius:999px!important}
+.detail .booking.booking-confirmed .bookingstatus.confirmed{background:#168a51!important;color:#fff!important}
+@media(max-width:600px){.detail .booking.booking-confirmed{padding-left:10px!important}}
