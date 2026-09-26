@@ -97,3 +97,13 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .invite-status.accepted{background:#e8f7ee!important;color:#18794e!important}
 .invite-action{white-space:nowrap!important}
 @media(max-width:700px){.listrow.invite-row{grid-template-columns:1fr auto!important}.invite-action{grid-column:1/-1!important;justify-self:start!important}}
+
+/* Isolated team invitation card: intentionally independent from .listrow */
+.team-invite-card{box-sizing:border-box;width:100%;margin:8px 0;padding:14px 16px;background:#fff;border:1px solid #e5e9f0;border-radius:10px}
+.team-invite-main{display:flex;align-items:center;justify-content:space-between;gap:24px;min-width:0}
+.team-invite-main>b{display:block;flex:1 1 auto;min-width:0;font-size:14px;line-height:1.4;overflow-wrap:anywhere}
+.team-invite-badge{position:static!important;float:none!important;flex:0 0 auto;display:inline-flex!important;align-items:center;justify-content:center;min-width:62px;padding:5px 10px;border-radius:999px;font-size:12px;line-height:1;font-weight:700;white-space:nowrap}
+.team-invite-badge.pending{background:#fff3cd;color:#7a5700}
+.team-invite-badge.accepted{background:#e8f7ee;color:#18794e}
+.team-invite-action{display:block;margin-top:10px}
+@media(max-width:520px){.team-invite-main{align-items:flex-start;flex-direction:column;gap:8px}.team-invite-badge{align-self:flex-start}}
