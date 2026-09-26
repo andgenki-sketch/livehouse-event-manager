@@ -50,3 +50,5 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .event.ホールレンタル{background:#e8d8ff;color:#4d2775}
 
 .day>.event{cursor:grab;transition:opacity .15s,transform .15s}.day>.event:active{cursor:grabbing}.day>.event.calendar-dragging{opacity:.4;transform:scale(.98)}
+
+.bookingprogress{display:inline-block;margin-top:2px;font-size:11px;font-weight:700;color:#667085}.booking-confirmed{background:#f0fbf4!important;border:1px solid #b7e7c7!important;border-left:5px solid #22a55b!important;border-radius:9px;padding:11px 9px 11px 30px!important}.confirmedmark{display:inline-block;margin-left:7px;padding:3px 6px;border-radius:5px;background:#d9f5e3;color:#157a42;font-size:10px;font-style:normal;white-space:nowrap}.bookingstatus.confirmed{background:#d9f5e3;color:#157a42;padding:4px 7px;border-radius:6px;font-weight:800}.booking-declined{opacity:.5;background:#f7f7f8!important}.booking-declined b{text-decoration:line-through;color:#667085}@media(max-width:600px){.booking-confirmed{padding-left:10px!important}}
