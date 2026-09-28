@@ -107,3 +107,5 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .team-invite-badge.accepted{background:#e8f7ee;color:#18794e}
 .team-invite-action{display:block;margin-top:10px}
 @media(max-width:520px){.team-invite-main{align-items:flex-start;flex-direction:column;gap:8px}.team-invite-badge{align-self:flex-start}}
+
+.finance-table{margin:22px 0;border:1px solid #e5e9f0;border-radius:12px;overflow:hidden;background:#fff}.finance-row{display:grid;grid-template-columns:60px repeat(5,minmax(100px,1fr));gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid #edf0f4;font-size:13px}.finance-row:last-child{border-bottom:0}.finance-head{background:#f5f7fa;color:#667085}.finance-row strong{font-size:14px}@media(max-width:800px){.finance-table{overflow-x:auto}.finance-row{min-width:700px}}
