@@ -154,3 +154,7 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
  .finance-modal .finance-report-screen{height:auto}
  .finance-modal .report-artists{max-height:none}
 }
+
+/* Bar breakdown supports variable item count */
+.finance-modal .report-bar-grid{grid-template-columns:repeat(5,minmax(0,1fr));row-gap:6px}
+@media(max-width:1200px) and (min-width:1001px){.finance-modal .report-bar-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
