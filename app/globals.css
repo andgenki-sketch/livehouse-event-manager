@@ -143,3 +143,14 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .finance-modal .report-cost-row,.finance-modal .report-total-row{display:flex;justify-content:flex-start;gap:8px}
 .finance-modal .modal-actions{display:flex;justify-content:flex-end;gap:8px}
 @media(max-width:1000px){.finance-modal .report-topline{grid-template-columns:1fr}.finance-modal .report-bar-grid{grid-template-columns:1fr 1fr}.finance-modal .report-cost-row,.finance-modal .report-total-row{flex-wrap:wrap}}
+
+/* Finance report: artist area grows only with actual artist rows */
+.finance-modal .finance-report-screen{grid-template-rows:auto auto auto auto auto auto;align-content:start;overflow:hidden}
+.finance-modal .report-artists{flex:none;min-height:0;height:auto;overflow:visible}
+.finance-modal .report-artist-table{overflow:visible;min-height:0}
+.finance-modal .report-artist-row{min-height:30px}
+.finance-modal .report-mini-row{margin-top:0}
+@media(min-width:1001px){
+ .finance-modal .finance-report-screen{height:auto}
+ .finance-modal .report-artists{max-height:none}
+}
