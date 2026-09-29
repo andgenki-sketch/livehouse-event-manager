@@ -171,3 +171,29 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .finance-modal .report-bar-meta i{font-style:normal}
 .finance-modal .finance-report-screen{gap:5px}
 @media(max-width:900px){.finance-modal .report-bar-head{align-items:flex-start;flex-direction:column}.finance-modal .report-bar-meta{flex-wrap:wrap;justify-content:flex-start!important}}
+
+/* Finance report unified monochrome design */
+.finance-modal{--fr-ink:#172033;--fr-line:#d8dee8;--fr-soft:#f5f7fa;--fr-cell:#eef2f6;--fr-white:#fff}
+.finance-modal .report-date,.finance-modal .report-title,.finance-modal .report-summary>*,.finance-modal .report-artist-row.head>*,.finance-modal .report-bar h3 strong,.finance-modal .report-custom-sales h3 strong,.finance-modal .report-cost-row label,.finance-modal .report-total-row label,.finance-modal .report-total-row label strong{background:var(--fr-ink);color:#fff}
+.finance-modal .report-artists,.finance-modal .report-bar,.finance-modal .report-custom-sales{background:var(--fr-white);border:1px solid var(--fr-line);border-radius:8px;padding:8px}
+.finance-modal .report-artist-row>strong,.finance-modal .report-artist-row input,.finance-modal .report-subtotal,.finance-modal .report-bar-meta input,.finance-modal .report-bar-grid input,.finance-modal .custom-sales-item input:last-child{background:var(--fr-soft);border:1px solid var(--fr-line);color:var(--fr-ink)}
+.finance-modal .report-bar-meta label,.finance-modal .report-bar-grid label{background:var(--fr-white);border:1px solid var(--fr-line)}
+.finance-modal .report-cost-row,.finance-modal .report-total-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}
+.finance-modal .report-cost-row label,.finance-modal .report-total-row label{display:grid;grid-template-columns:auto minmax(90px,1fr);align-items:center;gap:8px;border-radius:7px;padding:6px 8px}
+.finance-modal .report-cost-row input,.finance-modal .report-total-row input{width:100%;height:30px;background:#fff;color:var(--fr-ink);border:1px solid var(--fr-line)}
+.finance-modal .report-total-row label strong{min-width:0;width:100%;padding:7px 9px;border:1px solid #344054;border-radius:5px}
+.finance-modal .report-custom-sales{padding:8px}
+.finance-modal .report-custom-sales h3{margin:0 0 7px}
+.finance-modal .custom-sales-grid{gap:8px}
+.finance-modal .custom-sales-item{grid-template-columns:1fr 1fr}
+.finance-modal .custom-sales-item input{border:1px solid var(--fr-line);background:#fff}
+.finance-modal .report-bar-head{padding-bottom:6px;border-bottom:1px solid var(--fr-line)}
+.finance-modal .report-bar-grid{gap:6px 8px}
+.finance-modal .report-bar-grid label{justify-content:space-between;min-width:0}
+.finance-modal .report-bar-grid input{width:86px}
+.finance-modal .report-summary{grid-template-columns:2fr 1fr .65fr}
+.finance-modal .report-summary>*{border:1px solid var(--fr-ink)}
+.finance-modal .report-artist-row{gap:6px}
+.finance-modal .finance-report-screen{gap:8px}
+@media(min-width:1001px){.finance-modal .report-bar-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(max-width:1000px){.finance-modal .report-cost-row,.finance-modal .report-total-row{grid-template-columns:1fr}.finance-modal .custom-sales-grid{grid-template-columns:1fr 1fr}}
