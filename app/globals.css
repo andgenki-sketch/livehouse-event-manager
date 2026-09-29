@@ -207,3 +207,9 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .finance-modal .report-bar-grid label{display:grid;grid-template-columns:minmax(90px,1fr) 78px 18px;align-items:center;gap:6px;height:36px;padding:3px 6px}
 .finance-modal .report-bar-grid input{width:78px;height:28px;margin:0;text-align:right}
 .finance-modal .report-bar-grid i{width:18px;text-align:center}
+
+/* Remove artist-table left indent */
+.finance-modal .report-artists{padding:7px}
+.finance-modal .report-summary,.finance-modal .report-artist-table{margin-left:0;margin-right:0;width:100%}
+.finance-modal .report-artist-row{min-width:0!important;margin-left:0!important;transform:none!important}
+.finance-modal .report-artist-row>strong:first-child,.finance-modal .report-artist-row.head>*:first-child{margin-left:0!important}
