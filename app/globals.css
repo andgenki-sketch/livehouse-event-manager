@@ -213,3 +213,10 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .finance-modal .report-summary,.finance-modal .report-artist-table{margin-left:0;margin-right:0;width:100%}
 .finance-modal .report-artist-row{min-width:0!important;margin-left:0!important;transform:none!important}
 .finance-modal .report-artist-row>strong:first-child,.finance-modal .report-artist-row.head>*:first-child{margin-left:0!important}
+
+/* Actual cause: nested grid's implicit auto column shrinks and centers artist rows.
+   Use a block wrapper so every artist row starts at the same left edge. */
+.finance-modal .report-artist-table{display:block!important;width:100%!important;min-width:0!important}
+.finance-modal .report-artist-row{display:grid!important;width:100%!important;max-width:none!important;min-width:0!important;justify-content:stretch!important;gap:6px!important;margin:0 0 5px!important;grid-template-columns:minmax(0,2.8fr) repeat(6,minmax(0,1fr)) minmax(0,1.3fr)!important}
+.finance-modal .report-artist-row:last-child{margin-bottom:0!important}
+.finance-modal .report-artist-row>*{min-width:0;width:100%}
