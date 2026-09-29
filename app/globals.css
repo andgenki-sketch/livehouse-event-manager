@@ -197,3 +197,13 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .finance-modal .finance-report-screen{gap:8px}
 @media(min-width:1001px){.finance-modal .report-bar-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
 @media(max-width:1000px){.finance-modal .report-cost-row,.finance-modal .report-total-row{grid-template-columns:1fr}.finance-modal .custom-sales-grid{grid-template-columns:1fr 1fr}}
+
+/* Finance report alignment polish */
+.finance-modal .report-artist-row{grid-template-columns:minmax(190px,2.2fr) repeat(6,minmax(90px,.75fr)) minmax(105px,1fr);width:100%;margin:0}
+.finance-modal .report-artist-row.head,.finance-modal .report-artist-row:not(.head){padding-left:0;padding-right:0}
+.finance-modal .report-artist-table{width:100%;padding:0}
+.finance-modal .report-artists{padding-left:7px;padding-right:7px}
+.finance-modal .report-bar-grid{align-items:stretch}
+.finance-modal .report-bar-grid label{display:grid;grid-template-columns:minmax(90px,1fr) 78px 18px;align-items:center;gap:6px;height:36px;padding:3px 6px}
+.finance-modal .report-bar-grid input{width:78px;height:28px;margin:0;text-align:right}
+.finance-modal .report-bar-grid i{width:18px;text-align:center}
