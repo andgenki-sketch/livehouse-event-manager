@@ -158,3 +158,5 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 /* Bar breakdown supports variable item count */
 .finance-modal .report-bar-grid{grid-template-columns:repeat(5,minmax(0,1fr));row-gap:6px}
 @media(max-width:1200px) and (min-width:1001px){.finance-modal .report-bar-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+.report-custom-sales{background:#eef2f6;border-radius:5px;padding:6px 8px}.report-custom-sales h3{margin:0 0 5px;display:flex;align-items:center;gap:12px;font-size:12px}.report-custom-sales h3 strong{background:#1769e8;color:#fff;border-radius:4px;padding:5px 14px}.custom-sales-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.custom-sales-item{display:grid!important;grid-template-columns:1.15fr 1fr;gap:5px!important}.custom-sales-item input{height:29px;margin:0;padding:5px 7px}.custom-sales-item input:last-child{background:#cbd9ee}@media(max-width:1000px){.custom-sales-grid{grid-template-columns:1fr 1fr}}
