@@ -220,3 +220,5 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .finance-modal .report-artist-row{display:grid!important;width:100%!important;max-width:none!important;min-width:0!important;justify-content:stretch!important;gap:6px!important;margin:0 0 5px!important;grid-template-columns:minmax(0,2.8fr) repeat(6,minmax(0,1fr)) minmax(0,1.3fr)!important}
 .finance-modal .report-artist-row:last-child{margin-bottom:0!important}
 .finance-modal .report-artist-row>*{min-width:0;width:100%}
+
+.expense-ledger{margin-top:14px;background:#fff;border:1px solid #e1e6ef;border-radius:10px;overflow:hidden}.expense-row{display:grid;grid-template-columns:110px 120px 120px 130px minmax(180px,1.4fr) minmax(130px,1fr) 70px;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid #edf0f4;font-size:13px}.expense-row.head{background:#172033;color:#fff}.expense-row:last-child{border-bottom:0}.expense-row strong{font-size:14px}.expense-row button{padding:7px 9px}@media(max-width:1000px){.expense-ledger{overflow:auto}.expense-row{min-width:950px}}
