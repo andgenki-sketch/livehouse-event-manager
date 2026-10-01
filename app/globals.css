@@ -311,3 +311,21 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 @media(max-width:650px){
  .finance-modal .report-bar-grid,.finance-modal .custom-sales-grid{grid-template-columns:1fr}
 }
+
+
+/* Finance report laptop fix v2: keep the whole sheet usable instead of squeezing cells */
+@media(max-width:1450px){
+ .finance-modal form{overflow:auto!important}
+ .finance-modal .finance-report-screen{display:block!important;overflow-x:auto!important;overflow-y:visible!important}
+ .finance-modal .report-topline,
+ .finance-modal .report-artists,
+ .finance-modal .report-bar,
+ .finance-modal .report-custom-sales,
+ .finance-modal .report-cost-row,
+ .finance-modal .report-total-row,
+ .finance-modal .finance-report-screen>textarea{min-width:1180px}
+ .finance-modal .report-artist-table{overflow:visible!important}
+ .finance-modal .report-artist-row{min-width:0!important;grid-template-columns:minmax(260px,2.8fr) repeat(6,minmax(115px,1fr)) minmax(130px,1.3fr)!important}
+ .finance-modal .report-bar-grid{grid-template-columns:repeat(5,minmax(210px,1fr))!important}
+ .finance-modal .report-cost-row,.finance-modal .report-total-row{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
