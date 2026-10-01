@@ -285,3 +285,6 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 
 /* Attendance desktop layout fix */
 .attendance-page{width:100%;max-width:none;padding:20px 0}.attendance-page>.sectionhead,.attendance-page>.shift-panel{max-width:100%}.attendance-page .timecard{margin:12px 0;max-width:560px}.attendance-page .shift-panel{width:min(100%,1000px)}
+
+/* Keep attendance records inside the main content column */
+.attendance-page{min-width:0;overflow-x:hidden}.attendance-page>.shift-panel{box-sizing:border-box;width:100%;max-width:100%;min-width:0;overflow:hidden}.attendance-page>.shift-panel>select{display:block;width:100%;max-width:100%;min-width:0}.attendance-page .attendance-list{width:100%;max-width:100%;min-width:0;overflow-x:auto}.attendance-page .attendance-row{max-width:100%;min-width:0}@media(min-width:1001px){.attendance-page{padding-right:0}.attendance-page>.shift-panel{width:min(100%,calc(100vw - 248px))}}
