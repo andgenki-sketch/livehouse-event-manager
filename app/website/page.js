@@ -11,8 +11,8 @@ export default function Website(){
  const [pickupIndex,setPickupIndex]=useState(0)
  const now=new Date()
  const [cursor,setCursor]=useState({y:now.getFullYear(),m:now.getMonth()+1})
- useEffect(()=>{(async()=>{const {data:n}=await supabase.from('website_news').select('id,title,category,body,published_at,created_at').eq('published',true).order('published_at',{ascending:false}).limit(3);setNews(n||[]);const {data}=await supabase.from('events').select('id,title,event_date,venue,open_time,start_time,advance_price,door_price,public_description,flyer_path,event_artists(sort_order,booking_status,artists(name,photo_path))').eq('website_published',true).order('event_date');setEvents(data||[])})()},[])
- const upcoming=useMemo(()=>events.filter(e=>e.event_date>=now.toISOString().slice(0,10)).slice(0,4),[events])
+ useEffect(()=>{(async()=>{const {data:n}=await supabase.from('website_news').select('id,title,category,body,published_at,created_at').eq('published',true).order('published_at',{ascending:false}).limit(3);setNews(n||[]);const {data}=await supabase.from('events').select('id,title,event_date,venue,open_time,start_time,advance_price,door_price,public_description,flyer_path,website_pickup,website_pickup_order,event_artists(sort_order,booking_status,artists(name,photo_path))').eq('website_published',true).order('event_date');setEvents(data||[])})()},[])
+ const upcoming=useMemo(()=>{const future=events.filter(e=>e.event_date>=now.toISOString().slice(0,10));const picked=future.filter(e=>e.website_pickup).sort((a,b)=>(a.website_pickup_order||0)-(b.website_pickup_order||0));return picked.length?picked:future.slice(0,4)},[events])
  const shown=events.filter(e=>{const d=new Date(e.event_date+'T00:00:00');return d.getFullYear()===cursor.y&&d.getMonth()+1===cursor.m})
  const move=n=>{const d=new Date(cursor.y,cursor.m-1+n,1);setCursor({y:d.getFullYear(),m:d.getMonth()+1})}
  const flyer=e=>e.flyer_path?supabase.storage.from('event-flyers').getPublicUrl(e.flyer_path).data.publicUrl:null
