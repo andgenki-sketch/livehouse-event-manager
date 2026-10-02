@@ -424,3 +424,9 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
  .finance-modal .report-bar-meta input{width:100%!important;min-width:0!important;margin:0!important}
  .finance-modal .custom-sales-grid{grid-template-columns:1fr!important}
 }
+
+@media(max-width:650px){
+ .finance-modal .report-artist-row>.mobile-finance-field{display:grid!important;gap:5px!important;min-width:0!important;font-size:10px!important;font-weight:800!important;color:#667085!important}
+ .finance-modal .report-artist-row>.mobile-finance-field input{width:100%!important;min-width:0!important;margin:0!important;padding:10px!important;color:#101828!important}
+ .finance-modal .report-artist-row>strong~input{margin-top:0!important}
+}
