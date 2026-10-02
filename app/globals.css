@@ -341,3 +341,63 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 
 /* Mobile manager navigation mirrors desktop menu */
 @media(max-width:700px){.shell main{padding-bottom:88px}.mobile-bottom-nav{display:flex!important;overflow-x:auto;overflow-y:hidden;grid-template-columns:none;justify-content:flex-start;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;padding:5px 7px}.mobile-bottom-nav button{flex:0 0 78px;min-width:78px;scroll-snap-align:start}.mobile-bottom-nav button span{white-space:nowrap}.mobile-bottom-nav::-webkit-scrollbar{display:none}}
+
+
+/* Mobile finance report: card-first layout */
+@media(max-width:650px){
+ .finance-modal{padding:0!important;align-items:stretch!important}
+ .finance-modal form{width:100vw!important;height:100dvh!important;max-width:none!important;border-radius:0!important;padding:12px 12px 96px!important}
+ .finance-modal .finance-modal-head{position:sticky;top:-12px;z-index:20;margin:-12px -12px 12px;padding:12px;background:#fff;border-bottom:1px solid #e4e7ec}
+ .finance-modal .finance-modal-head h2{font-size:18px;margin:0 0 2px}
+ .finance-modal .finance-modal-head p{font-size:11px;margin:0;color:#667085}
+ .finance-modal .finance-modal-head>button{white-space:nowrap}
+ .finance-modal .finance-report-screen{overflow:visible!important}
+ .finance-modal .report-topline,
+ .finance-modal .report-artists,
+ .finance-modal .report-bar,
+ .finance-modal .report-custom-sales,
+ .finance-modal .report-cost-row,
+ .finance-modal .report-total-row,
+ .finance-modal .finance-report-screen>textarea{min-width:0!important;width:100%!important}
+ .finance-modal .report-topline{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;padding:12px!important;border-radius:12px!important}
+ .finance-modal .report-date{font-size:11px!important;color:#667085}
+ .finance-modal .report-title{font-size:18px!important;font-weight:900}
+ .finance-modal .report-topline label{display:grid!important;grid-template-columns:auto 1fr;align-items:center;gap:8px;font-size:10px}
+ .finance-modal .report-topline input{min-width:0;width:100%;margin:0}
+ .finance-modal .report-summary{display:grid!important;grid-template-columns:1fr auto!important;gap:4px 10px!important;align-items:end}
+ .finance-modal .report-summary>b{grid-column:1/-1;font-size:14px}
+ .finance-modal .report-summary span{font-size:10px;color:#667085}
+ .finance-modal .report-summary strong{font-size:22px}
+ .finance-modal .report-artist-table{overflow:visible!important}
+ .finance-modal .report-artist-row.head{display:none!important}
+ .finance-modal .report-artist-row{display:grid!important;grid-template-columns:1fr 1fr!important;min-width:0!important;gap:9px!important;margin:10px 0!important;padding:12px!important;border:1px solid #e4e7ec!important;border-radius:12px!important;background:#fff!important}
+ .finance-modal .report-artist-row>strong{grid-column:1/-1;font-size:15px;padding-bottom:7px;border-bottom:1px solid #f2f4f7}
+ .finance-modal .report-artist-row>input{width:100%!important;min-width:0!important;margin:0!important;padding-top:22px!important;position:relative}
+ .finance-modal .report-artist-row>input:nth-of-type(1){grid-column:1}
+ .finance-modal .report-artist-row>input:nth-of-type(2){grid-column:2}
+ .finance-modal .report-artist-row .report-subtotal{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;padding-top:9px;border-top:1px solid #f2f4f7;font-size:18px;font-weight:900}
+ .finance-modal .report-artist-row .report-subtotal:before{content:'小計';font-size:10px;color:#667085}
+ .finance-modal .report-bar,.finance-modal .report-custom-sales{padding:13px!important;border-radius:12px!important}
+ .finance-modal .report-bar-head{display:grid!important;grid-template-columns:1fr!important;gap:10px}
+ .finance-modal .report-bar-head h3,.finance-modal .report-custom-sales h3{display:flex;justify-content:space-between;align-items:center;font-size:14px}
+ .finance-modal .report-bar-head h3 strong,.finance-modal .report-custom-sales h3 strong{font-size:20px}
+ .finance-modal .report-bar-meta{display:grid!important;grid-template-columns:1fr!important;gap:8px}
+ .finance-modal .report-bar-grid,.finance-modal .custom-sales-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
+ .finance-modal .report-bar-grid label{min-width:0!important;padding:9px!important}
+ .finance-modal .report-bar-grid input{width:100%!important;min-width:0!important}
+ .finance-modal .custom-sales-item{min-width:0}
+ .finance-modal .custom-sales-item input{width:100%!important;min-width:0!important}
+ .finance-modal .report-cost-row{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;margin-top:12px}
+ .finance-modal .report-cost-row label{display:flex!important;justify-content:space-between;align-items:center;padding:12px!important;border-radius:10px}
+ .finance-modal .report-cost-row strong{font-size:18px}
+ .finance-modal .report-total-row{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin-top:10px}
+ .finance-modal .report-total-row label{min-width:0!important;padding:12px!important;border-radius:12px}
+ .finance-modal .report-total-row label:first-child{grid-column:1/-1}
+ .finance-modal .report-total-row label:first-child strong{font-size:24px}
+ .finance-modal .report-total-row label:last-child{grid-column:1/-1;background:#101828!important;color:#fff!important;display:flex!important;justify-content:space-between;align-items:center}
+ .finance-modal .report-total-row label:last-child strong{font-size:28px}
+ .finance-modal .report-total-row input{width:100%!important;min-width:0!important}
+ .finance-modal .finance-report-screen>textarea{margin-top:10px;min-height:90px}
+ .finance-modal .modal-actions{position:sticky!important;bottom:-96px!important;z-index:20;display:grid!important;grid-template-columns:1fr 2fr!important;gap:8px!important;margin:14px -12px -96px!important;padding:10px 12px calc(10px + env(safe-area-inset-bottom))!important;background:rgba(255,255,255,.96)!important;border-top:1px solid #e4e7ec!important;backdrop-filter:blur(10px)}
+ .finance-modal .modal-actions button{height:48px;font-size:14px;font-weight:900}
+}
