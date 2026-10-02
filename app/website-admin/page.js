@@ -2,6 +2,7 @@
 import {useEffect,useState} from 'react'
 import Link from 'next/link'
 import {createClient} from '@supabase/supabase-js'
+import './website-admin.css'
 const supabase=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)
 export default function WebsiteAdmin(){
  const [team,setTeam]=useState(null),[items,setItems]=useState([]),[editing,setEditing]=useState(null),[loading,setLoading]=useState(true)
