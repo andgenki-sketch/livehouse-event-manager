@@ -32,9 +32,8 @@ SELECT n.nspname AS schema_name,p.proname AS function_name,
        has_function_privilege('authenticated',p.oid,'EXECUTE') AS authenticated_can_execute
 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
 WHERE n.nspname NOT IN ('pg_catalog','information_schema')
-  AND (pg_get_functiondef(p.oid) ILIKE '%hall_rental_fee%'
-       OR pg_get_functiondef(p.oid) ILIKE '%event_artists%'
-       OR pg_get_functiondef(p.oid) ILIKE '%revenue_budget%')
+  AND p.prokind='f'
+  AND (p.proname ILIKE '%contract%' OR p.proname ILIKE '%event%' OR p.proname ILIKE '%finance%')
 ORDER BY n.nspname,p.proname;
 
 -- Verify finance read policies are production-staff-only.
