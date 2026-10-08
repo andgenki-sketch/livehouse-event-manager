@@ -66,6 +66,6 @@ GRANT SELECT (
  created_at,updated_at,team_id,sort_order
 ) ON public.event_artists TO anon,authenticated;
 
--- Contract fields remain writable only according to existing UPDATE RLS policies;
+-- Also intentionally excluded: events.memo and events.revenue_budget, as potentially sensitive internal notes/budgets.\n-- Verify all readers and writers of these fields before activation.\n-- Contract fields remain writable only according to existing UPDATE RLS policies;
 -- this migration is specifically a read-access restriction.
 COMMIT;
