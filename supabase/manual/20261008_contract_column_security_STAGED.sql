@@ -25,7 +25,9 @@ AS $$
    'attendance_guarantee',e.attendance_guarantee,
    'video_shooting',e.video_shooting,
    'after_party',e.after_party,
-   'hall_rental_memo',e.hall_rental_memo
+   'hall_rental_memo',e.hall_rental_memo,
+   'memo',e.memo,
+   'revenue_budget',e.revenue_budget
  )
  FROM public.events e
  WHERE e.id=p_event_id AND public.can_view_event_contracts(e.team_id)
@@ -66,6 +68,20 @@ GRANT SELECT (
  created_at,updated_at,team_id,sort_order
 ) ON public.event_artists TO anon,authenticated;
 
--- Also intentionally excluded: events.memo and events.revenue_budget, as potentially sensitive internal notes/budgets.\n-- Verify all readers and writers of these fields before activation.\n-- Contract fields remain writable only according to existing UPDATE RLS policies;
+-- events.memo and events.revenue_budget are also protected via the contract RPC.
+-- Verify all readers and writers of these fields before activation.
+-- Contract fields remain writable only according to existing UPDATE RLS policies;
 -- this migration is specifically a read-access restriction.
+-- Abort migration if a sensitive field remains readable by anonymous or authenticated clients.
+DO $
+BEGIN
+ IF has_column_privilege('anon','public.events','hall_rental_fee','SELECT')
+ OR has_column_privilege('authenticated','public.events','hall_rental_fee','SELECT')
+ OR has_column_privilege('anon','public.event_artists','guarantee','SELECT')
+ OR has_column_privilege('authenticated','public.event_artists','guarantee','SELECT')
+ OR has_column_privilege('authenticated','public.events','revenue_budget','SELECT')
+ THEN RAISE EXCEPTION 'Sensitive contract column SELECT privilege remains';
+ END IF;
+END;
+$;
 COMMIT;
