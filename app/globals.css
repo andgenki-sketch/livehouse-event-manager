@@ -592,3 +592,8 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .finance-modal .report-hall-fields label{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:11px;font-weight:700;color:#334155}
 .finance-modal .report-hall-fields input{width:100%;min-width:0;box-sizing:border-box;height:35px;border:1px solid #d7deea;border-radius:5px;padding:7px;background:#f5f7fa;font-size:13px}
 @media(max-width:850px){.finance-modal .report-hall-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Hide increment/decrement spinner controls in settlement numeric fields */
+.finance-modal input[type="number"]::-webkit-inner-spin-button,
+.finance-modal input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.finance-modal input[type="number"]{-moz-appearance:textfield;appearance:textfield}
