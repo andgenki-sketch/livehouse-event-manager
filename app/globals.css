@@ -611,3 +611,5 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .team-sortable-person{display:flex;align-items:center;gap:12px;min-width:0}
 .team-drag-handle{font-size:22px;color:#64748b;user-select:none;touch-action:none;flex-shrink:0}
 .team-sortable-member:hover{border-color:#a5b4fc}
+
+.team-member-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.team-order-buttons{display:flex;gap:4px}.team-order-buttons button{padding:5px 10px;font-size:16px;line-height:1.2}
