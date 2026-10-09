@@ -75,7 +75,7 @@ GRANT SELECT (
 -- Contract fields remain writable only according to existing UPDATE RLS policies;
 -- this migration is specifically a read-access restriction.
 -- Abort migration if a sensitive field remains readable by anonymous or authenticated clients.
-DO $
+DO $$
 BEGIN
  IF has_column_privilege('anon','public.events','hall_rental_fee','SELECT')
  OR has_column_privilege('authenticated','public.events','hall_rental_fee','SELECT')
@@ -85,5 +85,5 @@ BEGIN
  THEN RAISE EXCEPTION 'Sensitive contract column SELECT privilege remains';
  END IF;
 END;
-$;
+$$;
 COMMIT;
