@@ -604,3 +604,10 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .listpage .moneycards b{font-size:clamp(15px,1.6vw,23px);overflow-wrap:anywhere}
 .listpage .daily-finance-row{grid-template-columns:minmax(170px,2fr) repeat(3,minmax(95px,1fr)) minmax(125px,1.2fr) 55px;gap:10px}
 @media(max-width:1050px){.listpage .moneycards{grid-template-columns:repeat(2,minmax(0,1fr))}.listpage .daily-finance-row{grid-template-columns:repeat(2,minmax(0,1fr))}.listpage .daily-finance-row span:first-child{grid-column:1/-1}}
+
+/* Drag-sort team member rows */
+.team-sortable-member[draggable="true"]{cursor:grab}
+.team-sortable-member[draggable="true"]:active{cursor:grabbing}
+.team-sortable-person{display:flex;align-items:center;gap:12px;min-width:0}
+.team-drag-handle{font-size:22px;color:#64748b;user-select:none;touch-action:none;flex-shrink:0}
+.team-sortable-member:hover{border-color:#a5b4fc}
