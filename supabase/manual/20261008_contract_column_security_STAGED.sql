@@ -53,6 +53,8 @@ REVOKE ALL ON FUNCTION public.get_event_artist_contracts(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_event_artist_contracts(uuid) TO authenticated;
 
 -- Column-level privileges: preserve safe columns, revoke all table-wide SELECT.
+-- Run only after deploying the safe-projection application and validating
+-- every public-facing API consumer; the existing production UI still uses SELECT *.
 -- WARNING: verify all API clients and public website no longer use select('*').
 REVOKE SELECT ON public.events FROM anon, authenticated;
 REVOKE SELECT ON public.event_artists FROM anon, authenticated;
