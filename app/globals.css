@@ -571,3 +571,15 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
   font-weight:800;
   font-variant-numeric:tabular-nums;
 }
+
+
+/* Custom revenue: one readable row per item with unit price, quantity and computed sales */
+.finance-modal .report-custom-sales .custom-sales-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:5px!important}
+.finance-modal .report-custom-sales .custom-sales-head,
+.finance-modal .report-custom-sales .custom-sales-item{display:grid!important;grid-template-columns:minmax(170px,2fr) minmax(105px,1fr) minmax(80px,.7fr) minmax(110px,1fr)!important;gap:8px!important;align-items:center!important}
+.finance-modal .report-custom-sales .custom-sales-head{background:#172239;color:#fff;padding:6px 8px;border-radius:5px;font-size:11px;font-weight:700}
+.finance-modal .report-custom-sales .custom-sales-item{min-width:0}
+.finance-modal .report-custom-sales .custom-sales-item input{width:100%;min-width:0;max-width:100%;box-sizing:border-box;margin:0;height:32px}
+.finance-modal .report-custom-sales .custom-sales-item input:last-of-type{background:#f4f6fa}
+.finance-modal .report-custom-sales .custom-sales-item output{display:flex;align-items:center;justify-content:flex-end;min-width:0;box-sizing:border-box;padding:5px 9px;height:32px;background:#e8eef7;border:1px solid #d8e0eb;border-radius:5px;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+@media(max-width:640px){.finance-modal .report-custom-sales{overflow-x:auto}.finance-modal .report-custom-sales .custom-sales-grid{min-width:560px}}
