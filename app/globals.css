@@ -613,3 +613,11 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .team-sortable-member:hover{border-color:#a5b4fc}
 
 .team-member-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.team-order-buttons{display:flex;gap:4px}.team-order-buttons button{padding:5px 10px;font-size:16px;line-height:1.2}
+
+/* Timecard: separate break summary from punch controls */
+.attendance-page .timecard-break{margin:20px 0 18px;padding:16px 18px;background:#f8fafc;border:1px solid #e5eaf1;border-radius:14px}
+.attendance-page .timecard-break>p:first-child{margin:0;font-size:14px;font-weight:700;line-height:1.6;color:#344054}
+.attendance-page .timecard-break .hint{text-align:left;margin:8px 0 0;font-size:12px;line-height:1.6}
+.attendance-page .timecard-actions{margin-top:18px;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.attendance-page .timecard-actions button{min-height:56px;height:auto;padding:12px 8px;line-height:1.35;font-size:15px}
+@media(max-width:600px){.attendance-page .timecard-break{margin:20px 0 20px;padding:16px}.attendance-page .timecard-actions{gap:12px;margin-top:20px}.attendance-page .timecard-actions button{min-height:58px;font-size:15px}}
