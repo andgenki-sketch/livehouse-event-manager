@@ -1,0 +1,47 @@
+name: Encrypted Supabase backup
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 04:17 JST. Scheduled execution may be delayed by GitHub.
+    - cron: '17 19 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    # Enable the schedule only after the first manual run has been verified.
+    if: github.event_name == 'workflow_dispatch' || vars.BACKUP_SCHEDULE_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Prepare database client
+        run: docker pull postgres:17.6
+      - name: Export and encrypt
+        env:
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          BACKUP_ENCRYPTION_PASSWORD: ${{ secrets.BACKUP_ENCRYPTION_PASSWORD }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BACKUP_OUTPUT_DIR: ${{ runner.temp }}/encrypted-backup
+        run: python3 scripts/backup.py
+      - name: Save encrypted backup for 30 days
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: supabase-backup-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/encrypted-backup/backup.tar.gz.gpg
+            ${{ runner.temp }}/encrypted-backup/backup.tar.gz.gpg.sha256
+          retention-days: 30
+          compression-level: 0
+          if-no-files-found: error
+      - name: Clean runner output
+        if: always()
+        run: rm -rf -- "$RUNNER_TEMP/encrypted-backup"
