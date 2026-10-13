@@ -36,11 +36,11 @@ def run(args, **kwargs):
         print(label, file=sys.stderr)
         raise
 
-def pg(args):
+def pg(args, **kwargs):
     return run(["docker", "run", "--rm", "-i", "--network", "host",
                 *sum((["-e", k] for k in ("PGHOST", "PGPORT", "PGUSER", "PGDATABASE",
                     "PGPASSWORD", "PGSSLMODE", "PGCONNECT_TIMEOUT", "PGOPTIONS")), []),
-                IMAGE, *args])
+                IMAGE, *args], **kwargs)
 
 def query(sql):
     return pg(["psql", "-X", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-c", sql]).decode().strip()
