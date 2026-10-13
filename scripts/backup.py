@@ -17,8 +17,24 @@ IMAGE = "postgres:17.6"
 
 def run(args, **kwargs):
     # Never print subprocess output: it can contain database rows or object paths.
-    return subprocess.run(args, check=True, stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE, **kwargs).stdout
+    try:
+        return subprocess.run(args, check=True, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE, **kwargs).stdout
+    except subprocess.CalledProcessError as exc:
+        error = (exc.stderr or b"").decode(errors="replace").lower()
+        categories = [
+            ("password authentication failed", "Database password authentication failed"),
+            ("tenant or user not found", "Pooler project or user not found"),
+            ("permission denied", "Database export permission denied"),
+            ("could not translate host name", "Database DNS resolution failed"),
+            ("connection timed out", "Database connection timed out"),
+            ("unsupported startup parameter", "Pooler rejected a startup parameter"),
+            ("unrecognized configuration parameter", "Unsupported database connection parameter"),
+        ]
+        label = next((label for pattern, label in categories if pattern in error),
+                     "Command failed; raw output suppressed")
+        print(label, file=sys.stderr)
+        raise
 
 def pg(args):
     return run(["docker", "run", "--rm", "-i", "--network", "host",
@@ -76,14 +92,17 @@ def main():
         payload.mkdir()
         (payload / "storage").mkdir()
         started = datetime.now(timezone.utc).isoformat()
+        print("Checking database connection", flush=True)
         version = query("show server_version;")
         if not version.startswith("17."):
             raise RuntimeError("Database major version changed; update backup client")
         objects_sql = "select coalesce(json_agg(x order by x.bucket_id,x.name),'[]'::json)::text from (select bucket_id,name,metadata,version from storage.objects) x;"
+        print("Reading Storage inventory", flush=True)
         inventory = json.loads(query(objects_sql))
         schemas = ["public", "auth", "storage"]
         if query("select exists(select 1 from pg_namespace where nspname='supabase_migrations');") == "t":
             schemas.append("supabase_migrations")
+        print("Exporting database", flush=True)
         dump = pg(["pg_dump", "--format=custom", "--no-owner",
                    "--lock-wait-timeout=30s", *sum((["--schema", s] for s in schemas), [])])
         if not dump.startswith(b"PGDMP"):
@@ -91,7 +110,9 @@ def main():
         (payload / "database.dump").write_bytes(dump)
         # Read every section, not just the archive's table of contents.
         pg(["pg_restore", "--file=/dev/null"], input=dump)
+        print("Exporting roles", flush=True)
         (payload / "roles.sql").write_bytes(pg(["pg_dumpall", "--roles-only", "--no-role-passwords"]))
+        print("Downloading Storage files", flush=True)
         manifest = download_objects(inventory, payload, os.environ["SUPABASE_SERVICE_ROLE_KEY"])
         if json.loads(query(objects_sql)) != inventory:
             raise RuntimeError("Storage changed during backup; rerun at a quiet time")
@@ -108,6 +129,7 @@ def main():
         archive = work / "backup.tar.gz"
         with tarfile.open(archive, "w:gz") as tar:
             tar.add(payload, arcname="backup")
+        print("Encrypting and verifying", flush=True)
         encrypted = output / "backup.tar.gz.gpg"
         common = ["gpg", "--batch", "--yes", "--pinentry-mode", "loopback",
                   "--passphrase-fd", "0"]
@@ -126,7 +148,9 @@ if __name__ == "__main__":
     os.umask(0o077)
     try:
         main()
-    except Exception:
+    except Exception as exc:
+        if isinstance(exc, RuntimeError) and (str(exc).startswith("Required secret missing:") or str(exc) == "Encryption password must have at least 32 characters"):
+            print(str(exc), file=sys.stderr)
         # Fail closed; do not upload incomplete output or disclose raw exceptions.
         output = os.environ.get("BACKUP_OUTPUT_DIR")
         if output:
