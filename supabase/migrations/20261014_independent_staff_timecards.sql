@@ -20,7 +20,7 @@ create policy staff_timecards_read on public.staff_timecards for select to authe
 grant select on public.staff_timecards to authenticated;
 -- No direct insert/update/delete grant to staff; validated RPC is the sole writer.
 revoke insert,update,delete on public.staff_timecards from anon,authenticated;
-create or replace function public.staff_daily_timecard_action(p_action text)
+create or replace function public.staff_daily_timecard_action(p_team_id uuid, p_action text)
 returns public.staff_timecards language plpgsql security definer set search_path=''
 as $$
 declare v_uid uuid := auth.uid(); v_staff public.venue_staff%rowtype; v_row public.staff_timecards%rowtype;
@@ -28,7 +28,7 @@ declare v_uid uuid := auth.uid(); v_staff public.venue_staff%rowtype; v_row publ
 begin
  if v_uid is null then raise exception 'ログインが必要です'; end if;
  if p_action not in ('in','out','break_start','break_end') then raise exception '不正な打刻操作です'; end if;
- select * into v_staff from public.venue_staff where user_id=v_uid and active=true order by created_at limit 1;
+ select * into v_staff from public.venue_staff where user_id=v_uid and team_id=p_team_id and active=true order by created_at limit 1;
  if not found then raise exception '有効なスタッフ登録が必要です'; end if;
  perform pg_advisory_xact_lock(hashtext(v_staff.id::text || v_day::text));
  select * into v_row from public.staff_timecards where staff_id=v_staff.id and team_id=v_staff.team_id and work_date=v_day for update;
@@ -51,5 +51,5 @@ begin
  end if;
  return v_row;
 end $$;
-revoke all on function public.staff_daily_timecard_action(text) from public,anon;
+revoke all on function public.staff_daily_timecard_action(uuid,text) from public,anon;
 grant execute on function public.staff_daily_timecard_action(text) to authenticated;
