@@ -34,6 +34,7 @@ begin
  select * into v_row from public.staff_timecards where staff_id=v_staff.id and team_id=v_staff.team_id and ((p_action='in' and work_date=v_day) or (p_action<>'in' and clock_in_at is not null and clock_out_at is null and work_date between v_day-1 and v_day)) order by work_date desc limit 1 for update;
  if p_action='in' then
    if found then raise exception '本日はすでに出勤済みです'; end if;
+   if exists(select 1 from public.staff_timecards where staff_id=v_staff.id and team_id=v_staff.team_id and clock_in_at is not null and clock_out_at is null) then raise exception '前回の勤務が退勤されていません'; end if;
    insert into public.staff_timecards(team_id,staff_id,work_date,clock_in_at)
    values(v_staff.team_id,v_staff.id,v_day,v_now) returning * into v_row;
  elsif p_action='break_start' then
