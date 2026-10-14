@@ -31,7 +31,7 @@ begin
  select * into v_staff from public.venue_staff where user_id=v_uid and team_id=p_team_id and active=true order by created_at limit 1;
  if not found then raise exception '有効なスタッフ登録が必要です'; end if;
  perform pg_advisory_xact_lock(hashtext(v_staff.id::text || v_day::text));
- select * into v_row from public.staff_timecards where staff_id=v_staff.id and team_id=v_staff.team_id and work_date=v_day for update;
+ select * into v_row from public.staff_timecards where staff_id=v_staff.id and team_id=v_staff.team_id and ((p_action='in' and work_date=v_day) or (p_action<>'in' and clock_in_at is not null and clock_out_at is null and work_date between v_day-1 and v_day)) order by work_date desc limit 1 for update;
  if p_action='in' then
    if found then raise exception '本日はすでに出勤済みです'; end if;
    insert into public.staff_timecards(team_id,staff_id,work_date,clock_in_at)
