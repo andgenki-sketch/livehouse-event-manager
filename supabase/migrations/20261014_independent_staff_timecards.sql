@@ -30,10 +30,11 @@ begin
  if p_action not in ('in','out','break_start','break_end') then raise exception '不正な打刻操作です'; end if;
  select * into v_staff from public.venue_staff where user_id=v_uid and team_id=p_team_id and active=true order by created_at limit 1;
  if not found then raise exception '有効なスタッフ登録が必要です'; end if;
- perform pg_advisory_xact_lock(hashtext(v_staff.id::text || v_day::text));
+ perform pg_advisory_xact_lock(hashtext(v_staff.id::text));
  select * into v_row from public.staff_timecards where staff_id=v_staff.id and team_id=v_staff.team_id and ((p_action='in' and work_date=v_day) or (p_action<>'in' and clock_in_at is not null and clock_out_at is null and work_date between v_day-1 and v_day)) order by work_date desc limit 1 for update;
  if p_action='in' then
    if found then raise exception '本日はすでに出勤済みです'; end if;
+   if exists(select 1 from public.staff_timecards where staff_id=v_staff.id and team_id=v_staff.team_id and work_date=v_day) then raise exception '本日はすでに出勤済みです'; end if;
    if exists(select 1 from public.staff_timecards where staff_id=v_staff.id and team_id=v_staff.team_id and clock_in_at is not null and clock_out_at is null) then raise exception '前回の勤務が退勤されていません'; end if;
    insert into public.staff_timecards(team_id,staff_id,work_date,clock_in_at)
    values(v_staff.team_id,v_staff.id,v_day,v_now) returning * into v_row;
@@ -54,3 +55,24 @@ begin
 end $$;
 revoke all on function public.staff_daily_timecard_action(uuid,text) from public,anon;
 grant execute on function public.staff_daily_timecard_action(uuid,text) to authenticated;
+
+-- Only owners may correct daily attendance. Recalculate payroll after edits.
+create or replace function public.owner_update_staff_timecard(
+ p_id uuid, p_clock_in_at timestamptz, p_clock_out_at timestamptz, p_break_minutes integer
+) returns public.staff_timecards language plpgsql security definer set search_path=''
+as $$
+declare v_row public.staff_timecards%rowtype;
+begin
+ select * into v_row from public.staff_timecards where id=p_id for update;
+ if not found then raise exception '勤怠記録が見つかりません'; end if;
+ if not public.is_team_owner(v_row.team_id) then raise exception 'オーナーのみ修正できます'; end if;
+ if p_clock_in_at is null or (p_clock_out_at is not null and p_clock_out_at<p_clock_in_at)
+ or p_break_minutes<0 or p_break_minutes>1440 then raise exception '勤務時刻または休憩時間が不正です'; end if;
+ if (p_clock_in_at at time zone 'Asia/Tokyo')::date<>v_row.work_date then raise exception '出勤日は変更できません'; end if;
+ update public.staff_timecards set clock_in_at=p_clock_in_at,clock_out_at=p_clock_out_at,
+ break_minutes=p_break_minutes,break_started_at=null,updated_at=now()
+ where id=p_id returning * into v_row;
+ return v_row;
+end $$;
+revoke all on function public.owner_update_staff_timecard(uuid,timestamptz,timestamptz,integer) from public,anon;
+grant execute on function public.owner_update_staff_timecard(uuid,timestamptz,timestamptz,integer) to authenticated;
