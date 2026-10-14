@@ -53,4 +53,4 @@ begin
  return v_row;
 end $$;
 revoke all on function public.staff_daily_timecard_action(uuid,text) from public,anon;
-grant execute on function public.staff_daily_timecard_action(text) to authenticated;
+grant execute on function public.staff_daily_timecard_action(uuid,text) to authenticated;
