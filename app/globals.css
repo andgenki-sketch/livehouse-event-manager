@@ -635,3 +635,8 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .shift-request-modal .request-times label{flex:1;min-width:0}
 .shift-request-modal .request-times input{display:block;width:100%;max-width:100%;min-width:0;min-height:44px;box-sizing:border-box;padding:10px 6px}
 .shift-request-modal .request-modal-note input{width:100%;min-width:0;box-sizing:border-box}
+
+/* Keep the personal month calendar within narrow phone screens. */
+.mypage-staff-home{grid-template-columns:repeat(2,minmax(0,1fr))}.mypage-staff-home>section{min-width:0}.mypage-calendar-week,.mypage-calendar-grid{grid-template-columns:repeat(7,minmax(0,1fr))}.mypage-calendar-grid>button,.mypage-cal-empty{min-width:0}.mypage-calendar-grid>button span{max-width:100%}
+@media(max-width:900px){.mypage-staff-home{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:700px){.mypage-month-shifts{width:100%;min-width:0;padding:12px}.mypage-month-shifts .mypage-card-head{flex-wrap:wrap;gap:8px}.mypage-month-shifts .mypage-card-head input{min-width:0;max-width:100%;width:132px}.mypage-calendar-week{gap:3px;margin-top:10px}.mypage-calendar-grid{grid-auto-rows:52px;gap:3px}.mypage-calendar-grid>button,.mypage-calendar-grid>.mypage-cal-empty{height:52px;min-height:0;border-radius:5px}.mypage-calendar-grid>button{padding:3px;gap:2px;overflow:hidden}.mypage-calendar-grid>button i{flex-shrink:0;line-height:20px}.mypage-calendar-grid>button.has-shift{background:#e8f0ff;border-color:#84adff}.mypage-calendar-grid>button span{flex-shrink:0;font-size:9px;line-height:14px;padding:1px 2px;background:#d6e4ff}.mypage-calendar-grid>button span:nth-of-type(n+2){display:none}}
