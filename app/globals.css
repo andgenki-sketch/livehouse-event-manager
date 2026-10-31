@@ -640,3 +640,37 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .mypage-staff-home{grid-template-columns:repeat(2,minmax(0,1fr))}.mypage-staff-home>section{min-width:0}.mypage-calendar-week,.mypage-calendar-grid{grid-template-columns:repeat(7,minmax(0,1fr))}.mypage-calendar-grid>button,.mypage-cal-empty{min-width:0}.mypage-calendar-grid>button span{max-width:100%}
 @media(max-width:900px){.mypage-staff-home{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:700px){.mypage-month-shifts{width:100%;min-width:0;padding:12px}.mypage-month-shifts .mypage-card-head{flex-wrap:wrap;gap:8px}.mypage-month-shifts .mypage-card-head input{min-width:0;max-width:100%;width:132px}.mypage-calendar-week{gap:3px;margin-top:10px}.mypage-calendar-grid{grid-auto-rows:52px;gap:3px}.mypage-calendar-grid>button,.mypage-calendar-grid>.mypage-cal-empty{height:52px;min-height:0;border-radius:5px}.mypage-calendar-grid>button{padding:3px;gap:2px;overflow:hidden}.mypage-calendar-grid>button i{flex-shrink:0;line-height:20px}.mypage-calendar-grid>button.has-shift{background:#e8f0ff;border-color:#84adff}.mypage-calendar-grid>button span{flex-shrink:0;font-size:9px;line-height:14px;padding:1px 2px;background:#d6e4ff}.mypage-calendar-grid>button span:nth-of-type(n+2){display:none}}
+
+/* Month calendars fit the viewport instead of requiring sideways scrolling. */
+@media(max-width:900px){
+ .workspace{min-width:0;grid-template-columns:minmax(0,1fr)}
+ .workspace>div,.shift-page,.shift-page .shift-panel{min-width:0;max-width:100%}
+ .calendar,.shift-calendar,.confirmed-calendar,.request-calendar,.shift-page .request-calendar{width:100%;max-width:100%;min-width:0;overflow:hidden}
+ .calendar .week,.calendar .grid,.shift-weekdays,.shift-calendar-grid,.confirmed-weekdays,.confirmed-grid,.request-weekdays,.request-grid,.shift-page .request-weekdays,.shift-page .request-grid{width:100%;min-width:0;grid-template-columns:repeat(7,minmax(0,1fr))}
+ .calendar .day,.shift-day,.confirmed-day,.request-day{min-width:0;overflow:hidden}
+ .calendar .week b,.shift-weekdays b,.confirmed-weekdays b,.request-weekdays b{padding:7px 0;font-size:11px}
+ .calendar .day{height:auto;min-height:96px;padding:4px}
+ .calendar .day>.event{min-width:0;max-width:100%;padding:4px 2px;margin-top:4px;font-size:10px;line-height:1.35;overflow:hidden;overflow-wrap:anywhere}
+ .calendar .event small{font-size:8px;overflow-wrap:anywhere}
+ .shift-day,.confirmed-day,.request-day{padding:4px;vertical-align:top}
+ .shift-day{min-height:78px}
+ .confirmed-day{min-height:112px}
+ .request-day{min-height:88px}
+ .confirmed-day>strong,.request-day>strong,.shift-day>strong{font-size:12px;margin-bottom:4px}
+ .confirmed-event,.request-day>small{font-size:9px;line-height:1.3;max-width:100%;margin:3px 0}
+ .confirmed-person{display:block;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;line-height:1.4;padding:2px;margin:2px 0}
+ .confirmed-person i{font-size:8px}
+ .confirmed-day em{font-size:9px}
+ .request-day>span{font-size:11px;margin-top:4px}
+ .request-day>em{font-size:8px;overflow-wrap:anywhere}
+ .shift-day-counts{gap:2px}
+ .shift-day-counts span{max-width:100%;font-size:9px;padding:2px;overflow-wrap:anywhere}
+ .shift-day small{font-size:9px;overflow-wrap:anywhere}
+ .shift-calendar-action-hint{flex-wrap:wrap;gap:4px}
+}
+@media(max-width:430px){
+ .shell main{padding-left:8px;padding-right:8px}
+ .shift-page{padding-left:0;padding-right:0}
+ .shift-page .shift-panel{padding:10px}
+ .calendar .day,.shift-day,.confirmed-day,.request-day{padding:3px}
+}
