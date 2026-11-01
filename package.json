@@ -1,1 +1,22 @@
-{"scripts":{"dev":"next dev","build":"next build","start":"next start"},"dependencies":{"@supabase/ssr":"latest","@supabase/supabase-js":"latest","next":"latest","react":"latest","react-dom":"latest"},"devDependencies":{}}
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "prepare:timetable": "node scripts/prepare-timetable-reader.mjs",
+    "prebuild": "npm run prepare:timetable",
+    "predev": "npm run prepare:timetable",
+    "test:timetable": "node --test tests/timetable-import.test.mjs"
+  },
+  "dependencies": {
+    "@supabase/ssr": "latest",
+    "@supabase/supabase-js": "latest",
+    "@tesseract.js-data/eng": "1.0.0",
+    "@tesseract.js-data/jpn": "1.0.0",
+    "next": "latest",
+    "pdfjs-dist": "6.4.299",
+    "react": "latest",
+    "react-dom": "latest",
+    "tesseract.js": "7.0.0"
+  }
+}
