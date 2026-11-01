@@ -8,10 +8,10 @@ The layout parser targets TSA's timetable template: left-hand time column, centr
 
 Limits: PDF/JPEG/PNG/WebP, 10 MiB per file, five PDF pages, 200 selected schedule rows. Images above 50 megapixels are rejected; OCR input is scaled to reduce memory usage. An internet connection is needed to load application/worker assets, with browser model caching thereafter.
 
-Original files use the existing private `event-documents` bucket. `import_event_timetable` atomically saves document metadata, schedule rows and performer information. It runs with invoker permissions; only owner/production members of the event's team may import. All team members may read registered schedules and performer information. Performer data does not modify bookings or artist master records.
+Original files use the existing private `event-documents` bucket. `import_event_timetable` atomically saves document metadata, schedule rows and performer information. It runs with invoker permissions; only owner/production members of the event's team may import. All team members may read registered schedules and performer information. The review screen can additionally sync OPEN/START and performers to the event. New performers are added in performance order as confirmed bookings, reusing matching team artist records. Existing bookings are not duplicated; only missing performance times and empty memos are filled. Existing conditions and booking statuses are preserved. Event time updates check the current values to prevent overwriting concurrent edits. If the timetable is already registered, event information alone can be applied.
 
 Append mode skips exact duplicate schedule identities. Replace mode checks an exact snapshot of the registered schedule before deleting/replacing anything. Import UUIDs make successful retries idempotent. Source files are retained as ordinary event documents and opened with short-lived signed URLs.
 
-Apply `supabase/manual/timetable_import.sql` before deploying. Build via `npm run build` so that the prebuild asset preparation runs.
+Apply `supabase/manual/timetable_import.sql` and then `supabase/manual/timetable_event_sync.sql` before deploying. Build via `npm run build` so that the prebuild asset preparation runs.
 
 Run `node --test tests/timetable-import.test.mjs` for parser, validation and duplicate/snapshot checks. Database checks should use rollback transactions. Browser verification should cover embedded PDF text, image OCR, review/edit/save, original-file retention, append/replace, read-only permissions, and narrow screens.

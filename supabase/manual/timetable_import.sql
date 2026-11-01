@@ -37,7 +37,7 @@ begin
   if v_existing.event_id<>p_event_id or v_existing.created_by<>auth.uid() then raise exception '登録IDが一致しません'; end if;
   return v_existing.row_count;
  end if;
- if jsonb_typeof(p_rows) is distinct from 'array' or jsonb_array_length(p_rows) not between 1 and 200 then raise exception '登録行は1〜200行にしてください'; end if;
+ if jsonb_typeof(p_rows) is distinct from 'array' or jsonb_array_length(p_rows) not between 0 and 200 then raise exception '登録行は200行までにしてください'; end if;
  if jsonb_typeof(p_performers) is distinct from 'array' or jsonb_array_length(p_performers)>100 or octet_length(p_performers::text)>100000 or length(coalesce(p_source_text,''))>100000 then raise exception '出演者情報または読み取りテキストが大きすぎます'; end if;
  for v_row in select value from jsonb_array_elements(p_rows) loop
   if length(trim(coalesce(v_row->>'title','')))=0 or length(v_row->>'title')>500 or length(coalesce(v_row->>'artist_name',''))>500 or length(coalesce(v_row->>'note',''))>2000 then raise exception '内容・出演者・備考を確認してください'; end if;
@@ -45,6 +45,7 @@ begin
   if coalesce(v_row->>'kind','') not in ('loadin','soundcheck','rehearsal','prep','open','live','changeover','merch','other') then raise exception '区分を確認してください'; end if;
  end loop;
  if p_replace then
+  if jsonb_array_length(p_rows)=0 then raise exception '置き換える予定を1件以上選択してください'; end if;
   if jsonb_typeof(p_expected) is distinct from 'array' then raise exception '再読み込みしてください'; end if;
   select coalesce(jsonb_agg(jsonb_build_object('id',id,'title',title,'start_time',start_time,'end_time',end_time,'sort_order',sort_order,'kind',kind,'artist_name',artist_name,'note',note) order by id),'[]') into v_current from public.timetable_items where event_id=p_event_id;
   select coalesce(jsonb_agg(value order by value->>'id'),'[]') into v_expected from jsonb_array_elements(p_expected);
@@ -62,7 +63,6 @@ begin
   insert into public.timetable_items(event_id,title,start_time,end_time,sort_order,kind,artist_name,note) values(p_event_id,trim(v_row->>'title'),(v_row->>'start_time')::time,nullif(v_row->>'end_time','')::time,v_order,v_row->>'kind',trim(coalesce(v_row->>'artist_name','')),trim(coalesce(v_row->>'note','')));
   v_count:=v_count+1;v_order:=v_order+1;
  end loop;
- if v_count=0 then raise exception '同じ予定がすでに登録されています'; end if;
  insert into public.event_timetable_imports(id,event_id,team_id,source_document_id,performers,source_text,row_count) values(p_import_id,p_event_id,v_team,v_document,p_performers,coalesce(p_source_text,''),v_count);
  return v_count;
 end $$;
