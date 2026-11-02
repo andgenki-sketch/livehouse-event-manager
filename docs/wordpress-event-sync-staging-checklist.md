@@ -34,3 +34,5 @@ The current receiver is **acknowledgment-only**. Its signed requests use a five-
 - Do not put WordPress or Supabase secrets into GitHub, source files or chat.
 
 - WordPress event dates now include UTC companion metadata. Validate against the installed The Events Calendar version and the site's calendar listing before enabling writes.
+
+- The authenticated staging API now retries transient HTTP 408/429/5xx, timeouts and connection failures at most once (two attempts total), signing a new nonce each time. HTTP 400/401/403/409 are not retried. This is **not** a durable outbox; failures after the request ends still require manual retry or future queue support.
