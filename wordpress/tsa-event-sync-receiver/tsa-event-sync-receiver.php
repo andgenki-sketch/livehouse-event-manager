@@ -84,7 +84,13 @@ function tsa_sync_receive_event($request) {
         ));
         foreach ($legacy as $legacy_id) {
             $legacy_post = get_post($legacy_id);
-            if ($legacy_post && trim(wp_strip_all_tags($legacy_post->post_title)) === trim($data['title'])) {
+            if (!$legacy_post || trim(wp_strip_all_tags($legacy_post->post_title)) !== trim($data['title'])) {
+                continue;
+            }
+            // The Events Calendar stores its canonical date in _EventStartDate.
+            // Only an exact title AND same local event date needs manual reconciliation.
+            $legacy_start = get_post_meta($legacy_id, '_EventStartDate', true);
+            if (is_string($legacy_start) && substr($legacy_start, 0, 10) === $data['event_date']) {
                 $match = 'review_required';
                 break;
             }
