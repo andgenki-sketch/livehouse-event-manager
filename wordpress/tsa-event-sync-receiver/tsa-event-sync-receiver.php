@@ -82,8 +82,12 @@ function tsa_sync_receive_event($request) {
             's' => $data['title'],
             'suppress_filters' => true,
         ));
-        if (!empty($legacy)) {
-            $match = 'review_required';
+        foreach ($legacy as $legacy_id) {
+            $legacy_post = get_post($legacy_id);
+            if ($legacy_post && trim(wp_strip_all_tags($legacy_post->post_title)) === trim($data['title'])) {
+                $match = 'review_required';
+                break;
+            }
         }
     }
     return rest_ensure_response(array(
