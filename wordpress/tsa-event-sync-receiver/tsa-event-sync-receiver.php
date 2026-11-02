@@ -98,6 +98,74 @@ function tsa_sync_receive_event($request) {
             }
         }
     }
+    // Fail closed on legacy collisions: no automatic takeover of manually managed posts.
+    if ($match === 'review_required') {
+        return new WP_Error('tsa_sync_legacy_collision', 'Existing event requires manual mapping', array('status' => 409));
+    }
+
+    // Production writes require a separate, explicit server-side switch.
+    // The default remains dry-run even with a valid signing secret.
+    $writes_enabled = defined('TSA_EVENT_SYNC_ENABLE_WRITES') && TSA_EVENT_SYNC_ENABLE_WRITES === true;
+    if ($writes_enabled) {
+        $nonce = $request->get_header('x-tsa-nonce');
+        if (!is_string($nonce) || !preg_match('/^[a-f0-9]{32}$/', $nonce)) {
+            return new WP_Error('tsa_sync_nonce_required', 'Request nonce required', array('status' => 401));
+        }
+        $nonce_key = 'tsa_sync_nonce_' . hash('sha256', $nonce);
+        if (get_transient($nonce_key)) {
+            return new WP_Error('tsa_sync_replayed', 'Repeated request', array('status' => 409));
+        }
+        // WordPress transients are a basic replay barrier, not an atomic distributed lock.
+        // Keep writes disabled until concurrency and retry behavior pass staging tests.
+        set_transient($nonce_key, 1, 600);
+        if ($data['action'] === 'unpublish') {
+            if (count($existing) === 1) {
+                $updated = wp_update_post(array('ID' => $existing[0], 'post_status' => 'draft'), true);
+                if (is_wp_error($updated)) return $updated;
+            }
+        } else {
+            $date = $data['event_date'];
+            $start = !empty($data['start_time']) ? $data['start_time'] : '00:00';
+            if (!preg_match('/^([01][0-9]|2[0-3]):[0-5][0-9]$/', $start) ||
+                !checkdate((int) substr($date, 5, 2), (int) substr($date, 8, 2), (int) substr($date, 0, 4))) {
+                return new WP_Error('tsa_sync_invalid_date', 'Invalid event date or time', array('status' => 400));
+            }
+            $start_datetime = $date . ' ' . $start . ':00';
+            $end_datetime = (new DateTimeImmutable($start_datetime, new DateTimeZone('Asia/Tokyo')))
+                ->modify('+1 hour')->format('Y-m-d H:i:s');
+            $post_args = array(
+                'post_type' => 'tribe_events',
+                'post_status' => 'publish',
+                'post_title' => sanitize_text_field($data['title']),
+                'post_content' => wp_kses_post(isset($data['public_description']) ? $data['public_description'] : ''),
+            );
+            if (count($existing) === 1) $post_args['ID'] = $existing[0];
+            $post_id = wp_insert_post($post_args, true);
+            if (is_wp_error($post_id)) return $post_id;
+            update_post_meta($post_id, '_tsa_sync_external_id', $data['external_id']);
+            update_post_meta($post_id, '_EventStartDate', $start_datetime);
+            update_post_meta($post_id, '_EventEndDate', $end_datetime);
+            update_post_meta($post_id, '_EventTimezone', 'Asia/Tokyo');
+            $theme_meta = get_post_meta($post_id, 'wpos_event', true);
+            if (!is_array($theme_meta)) $theme_meta = array();
+            $theme_meta['place'] = sanitize_text_field(isset($data['venue']) ? $data['venue'] : '');
+            $theme_meta['open'] = sanitize_text_field(isset($data['open_time']) ? $data['open_time'] : '');
+            $theme_meta['start'] = sanitize_text_field($start);
+            $advance = isset($data['advance_price']) && is_numeric($data['advance_price']) ? (int) $data['advance_price'] : null;
+            $door = isset($data['door_price']) && is_numeric($data['door_price']) ? (int) $data['door_price'] : null;
+            $theme_meta['price'] = ($advance !== null ? 'ADV ¥' . number_format($advance) : '') .
+                ($door !== null ? ' / DOOR ¥' . number_format($door) : '');
+            update_post_meta($post_id, 'wpos_event', $theme_meta);
+            // Existing featured images, taxonomy, and other manual fields are preserved.
+        }
+        return rest_ensure_response(array(
+            'accepted' => true,
+            'dry_run' => false,
+            'mapping_status' => $match,
+            'action' => $data['action'],
+            'external_id' => $data['external_id'],
+        ));
+    }
     return rest_ensure_response(array(
         'accepted' => true,
         'dry_run' => true,
