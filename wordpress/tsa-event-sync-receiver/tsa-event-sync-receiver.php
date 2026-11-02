@@ -77,7 +77,7 @@ function tsa_sync_receive_event($request) {
         $legacy = get_posts(array(
             'post_type' => 'tribe_events',
             'post_status' => array('publish', 'future', 'draft', 'pending', 'private'),
-            'numberposts' => 1,
+            'numberposts' => 100,
             'fields' => 'ids',
             's' => $data['title'],
             'suppress_filters' => true,
