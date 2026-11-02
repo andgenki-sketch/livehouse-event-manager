@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
-import { signedWordPressRequest, sendWordPressEvent } from '../lib/wordpress-sync-transport.mjs';
+import { signedWordPressRequest, sendWordPressEvent, sendWordPressEventWithRetry } from '../lib/wordpress-sync-transport.mjs';
 
 const secret = 'a'.repeat(40);
 const payload = { external_id: 'test-event', action: 'unpublish' };
@@ -35,4 +35,30 @@ test('signed requests have distinct replay nonces', () => {
   const first = signedWordPressRequest(payload, secret);
   const second = signedWordPressRequest(payload, secret);
   assert.notEqual(first.headers['x-tsa-nonce'], second.headers['x-tsa-nonce']);
+});
+
+test('retries transient server errors with a new nonce', async () => {
+  let calls = 0;
+  const nonces = [];
+  const fetcher = async (_url, options) => {
+    calls++;
+    nonces.push(options.headers['x-tsa-nonce']);
+    if (calls === 1) return { ok: false, status: 503 };
+    return { ok: true, json: async () => ({ accepted: true, dry_run: true, ...payload }) };
+  };
+  const result = await sendWordPressEventWithRetry(payload, {
+    endpoint: 'https://example.com/wp-json/tsa-sync/v1/events', secret, fetcher
+  });
+  assert.equal(result.accepted, true);
+  assert.equal(calls, 2);
+  assert.notEqual(nonces[0], nonces[1]);
+});
+
+test('does not retry validation failures', async () => {
+  let calls = 0;
+  await assert.rejects(sendWordPressEventWithRetry(payload, {
+    endpoint: 'https://example.com/wp-json/tsa-sync/v1/events', secret,
+    fetcher: async () => { calls++; return { ok: false, status: 400 }; }
+  }));
+  assert.equal(calls, 1);
 });
