@@ -6,9 +6,10 @@ import { signedWordPressRequest, sendWordPressEvent } from '../lib/wordpress-syn
 const secret = 'a'.repeat(40);
 const payload = { external_id: 'test-event', action: 'unpublish' };
 test('signs the exact JSON request body', () => {
-  const signed = signedWordPressRequest(payload, secret, 1790000000);
-  const expected = createHmac('sha256', secret).update('1790000000.' + signed.body).digest('hex');
+  const signed = signedWordPressRequest(payload, secret, 1790000000, 'b'.repeat(32));
+  const expected = createHmac('sha256', secret).update('1790000000.' + 'b'.repeat(32) + '.' + signed.body).digest('hex');
   assert.equal(signed.headers['x-tsa-signature'], 'sha256=' + expected);
+  assert.equal(signed.headers['x-tsa-nonce'], 'b'.repeat(32));
 });
 test('refuses insecure endpoints', async () => {
   await assert.rejects(sendWordPressEvent(payload, { endpoint: 'http://example.com/wp-json/tsa-sync/v1/events', secret }));
@@ -28,4 +29,10 @@ test('rejects a response that falsely implies a real publication', async () => {
     endpoint, secret,
     fetcher: async () => ({ ok: true, json: async () => ({ accepted: true, dry_run: false, ...payload }) })
   }));
+});
+
+test('signed requests have distinct replay nonces', () => {
+  const first = signedWordPressRequest(payload, secret);
+  const second = signedWordPressRequest(payload, secret);
+  assert.notEqual(first.headers['x-tsa-nonce'], second.headers['x-tsa-nonce']);
 });
