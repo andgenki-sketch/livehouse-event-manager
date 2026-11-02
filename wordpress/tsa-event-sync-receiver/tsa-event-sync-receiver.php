@@ -55,9 +55,41 @@ function tsa_sync_receive_event($request) {
             return new WP_Error('tsa_sync_invalid', 'Invalid public event fields', array('status' => 400));
         }
     }
+    // Read-only duplicate assessment. Never attach a manual event by title/date.
+    // The external ID will become the canonical mapping key once writes are enabled.
+    $existing = get_posts(array(
+        'post_type' => 'tribe_events',
+        'post_status' => array('publish', 'future', 'draft', 'pending', 'private', 'trash'),
+        'numberposts' => 2,
+        'fields' => 'ids',
+        'meta_key' => '_tsa_sync_external_id',
+        'meta_value' => $data['external_id'],
+        'suppress_filters' => true,
+    ));
+    if (count($existing) > 1) {
+        return new WP_Error('tsa_sync_duplicate_mapping', 'Duplicate external event mappings', array('status' => 409));
+    }
+    $match = 'none';
+    if (count($existing) === 1) {
+        $match = 'mapped';
+    } elseif ($data['action'] === 'upsert') {
+        // Potential legacy event collision: requires manual review before upsert.
+        $legacy = get_posts(array(
+            'post_type' => 'tribe_events',
+            'post_status' => array('publish', 'future', 'draft', 'pending', 'private'),
+            'numberposts' => 1,
+            'fields' => 'ids',
+            'title' => $data['title'],
+            'suppress_filters' => true,
+        ));
+        if (!empty($legacy)) {
+            $match = 'review_required';
+        }
+    }
     return rest_ensure_response(array(
         'accepted' => true,
         'dry_run' => true,
+        'mapping_status' => $match,
         'action' => $data['action'],
         'external_id' => $data['external_id'],
     ));
