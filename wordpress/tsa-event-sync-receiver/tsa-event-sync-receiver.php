@@ -51,7 +51,7 @@ function tsa_sync_receive_event($request) {
     if ($data['action'] === 'upsert') {
         if (empty($data['title']) || !is_string($data['title']) ||
             empty($data['event_date']) || !is_string($data['event_date']) ||
-            !preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $data['event_date'])) {
+            !preg_match('/^\d{4}-\d{2}-\d{2}$/', $data['event_date'])) {
             return new WP_Error('tsa_sync_invalid', 'Invalid public event fields', array('status' => 400));
         }
     }
