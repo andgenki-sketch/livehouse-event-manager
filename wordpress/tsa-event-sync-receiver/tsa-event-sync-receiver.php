@@ -24,12 +24,14 @@ add_action('rest_api_init', function () {
 function tsa_sync_authenticate($request) {
     $timestamp = $request->get_header('x-tsa-timestamp');
     $signature = $request->get_header('x-tsa-signature');
+    $nonce = $request->get_header('x-tsa-nonce');
     if (!is_string($timestamp) || !preg_match('/^[0-9]{10}$/', $timestamp) ||
         abs(time() - (int) $timestamp) > 300 ||
+        !is_string($nonce) || !preg_match('/^[a-f0-9]{32}$/', $nonce) ||
         !is_string($signature) || !preg_match('/^sha256=[a-f0-9]{64}$/', $signature)) {
         return new WP_Error('tsa_sync_unauthorized', 'Unauthorized', array('status' => 401));
     }
-    $expected = 'sha256=' . hash_hmac('sha256', $timestamp . '.' . $request->get_body(), TSA_EVENT_SYNC_SECRET);
+    $expected = 'sha256=' . hash_hmac('sha256', $timestamp . '.' . $nonce . '.' . $request->get_body(), TSA_EVENT_SYNC_SECRET);
     if (!hash_equals($expected, $signature)) {
         return new WP_Error('tsa_sync_unauthorized', 'Unauthorized', array('status' => 401));
     }
