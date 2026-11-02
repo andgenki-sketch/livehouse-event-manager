@@ -21,14 +21,10 @@ add_action('rest_api_init', function () {
     ));
 });
 
-// Retain replay markers for at least the signature window, then prune them.
-// This hook runs at most hourly on sites with WP-Cron activity.
-add_action('tsa_sync_cleanup_nonces', function () {
-    global $wpdb;
-    $prefix = $wpdb->esc_like('tsa_sync_nonce_') . '%';
-    $cutoff = time() - 86400;
-    $wpdb->query($wpdb->prepare(
-        "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s AND option_value REGEXP '^[0-9]+
+// Replay nonce options are permanent until explicitly cleaned by an administrator.
+// This avoids unsafe wildcard database deletion; cleanup must be implemented and tested
+// separately before enabling live writes.
+function tsa_sync_authenticate($request) {
     $timestamp = $request->get_header('x-tsa-timestamp');
     $signature = $request->get_header('x-tsa-signature');
     $nonce = $request->get_header('x-tsa-nonce');
