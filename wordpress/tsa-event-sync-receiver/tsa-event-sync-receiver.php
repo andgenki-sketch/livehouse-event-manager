@@ -156,6 +156,14 @@ function tsa_sync_receive_event($request) {
             update_post_meta($post_id, '_EventStartDate', $start_datetime);
             update_post_meta($post_id, '_EventEndDate', $end_datetime);
             update_post_meta($post_id, '_EventTimezone', 'Asia/Tokyo');
+            // Explicit timezone metadata keeps TEC's UTC queries consistent.
+            $tz = new DateTimeZone('Asia/Tokyo');
+            $start_utc = (new DateTimeImmutable($start_datetime, $tz))
+                ->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+            $end_utc = (new DateTimeImmutable($end_datetime, $tz))
+                ->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+            update_post_meta($post_id, '_EventStartDateUTC', $start_utc);
+            update_post_meta($post_id, '_EventEndDateUTC', $end_utc);
             $theme_meta = get_post_meta($post_id, 'wpos_event', true);
             if (!is_array($theme_meta)) $theme_meta = array();
             $theme_meta['place'] = sanitize_text_field(isset($data['venue']) ? $data['venue'] : '');
