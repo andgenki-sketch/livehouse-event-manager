@@ -47,8 +47,4 @@ grant update(status,owner_note,reviewed_at) on public.paid_leave_requests to aut
 create policy "leave request owner update" on public.paid_leave_requests for update to authenticated
  using (exists(select 1 from public.team_members m where m.team_id=paid_leave_requests.team_id and m.user_id=(select auth.uid()) and m.role='owner'))
  with check (exists(select 1 from public.team_members m where m.team_id=paid_leave_requests.team_id and m.user_id=(select auth.uid()) and m.role='owner'));
-create policy "leave employee cancellation" on public.paid_leave_requests for update to authenticated
- using (user_id=(select auth.uid()) and status in ('submitted','adjustment_requested'))
- with check (user_id=(select auth.uid()) and status='cancelled');
--- NOTE: employee UPDATE policy must also protect owner_note/reviewed_at; before production release,
--- implement an RPC with old-row checks or separate cancellation endpoint.
+-- Cancellation by employees requires a separate audited RPC and is not enabled yet.
