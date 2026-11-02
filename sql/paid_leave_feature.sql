@@ -26,6 +26,15 @@ create table if not exists public.paid_leave_requests (
 create unique index if not exists paid_leave_active_day_idx on public.paid_leave_requests(staff_id,leave_date) where status in ('submitted','scheduled','taken','adjustment_requested');
 create index if not exists paid_leave_requests_team_date_idx on public.paid_leave_requests(team_id,leave_date);
 alter table public.paid_leave_grants enable row level security;
+create table if not exists public.paid_leave_staff_settings(team_id uuid not null references public.teams(id),staff_id uuid not null references public.venue_staff(id),eligible boolean not null default false,hire_date date,created_at timestamptz not null default now(),primary key(team_id,staff_id));
+alter table public.paid_leave_staff_settings enable row level security;
+grant select on public.paid_leave_staff_settings to authenticated;
+grant insert,update on public.paid_leave_staff_settings to authenticated;
+create policy "leave settings owner read" on public.paid_leave_staff_settings for select to authenticated using(exists(select 1 from public.team_members m where m.team_id=paid_leave_staff_settings.team_id and m.user_id=(select auth.uid()) and m.role='owner') or exists(select 1 from public.venue_staff s where s.id=staff_id and s.team_id=paid_leave_staff_settings.team_id and s.user_id=(select auth.uid())));
+create policy "leave settings owner insert" on public.paid_leave_staff_settings for insert to authenticated with check(exists(select 1 from public.team_members m where m.team_id=paid_leave_staff_settings.team_id and m.user_id=(select auth.uid()) and m.role='owner') and exists(select 1 from public.venue_staff s where s.id=staff_id and s.team_id=paid_leave_staff_settings.team_id));
+create policy "leave settings owner update" on public.paid_leave_staff_settings for update to authenticated using(exists(select 1 from public.team_members m where m.team_id=paid_leave_staff_settings.team_id and m.user_id=(select auth.uid()) and m.role='owner')) with check(exists(select 1 from public.team_members m where m.team_id=paid_leave_staff_settings.team_id and m.user_id=(select auth.uid()) and m.role='owner'));
+grant insert on public.paid_leave_grants to authenticated;
+create policy "leave grants owner insert" on public.paid_leave_grants for insert to authenticated with check(exists(select 1 from public.team_members m where m.team_id=paid_leave_grants.team_id and m.user_id=(select auth.uid()) and m.role='owner') and exists(select 1 from public.venue_staff s where s.id=staff_id and s.team_id=paid_leave_grants.team_id));
 alter table public.paid_leave_requests enable row level security;
 grant select on public.paid_leave_grants to authenticated;
 grant select,insert,update on public.paid_leave_requests to authenticated;
@@ -39,7 +48,7 @@ create policy "leave requests own or owner read" on public.paid_leave_requests f
 );
 create policy "leave requests employee submit" on public.paid_leave_requests for insert to authenticated with check (
  user_id=(select auth.uid()) and status='submitted' and reviewed_at is null and owner_note='' and
- exists(select 1 from public.venue_staff s where s.id=staff_id and s.team_id=paid_leave_requests.team_id and s.user_id=(select auth.uid()) and s.active=true)
+ exists(select 1 from public.venue_staff s join public.paid_leave_staff_settings settings on settings.staff_id=s.id and settings.team_id=s.team_id and settings.eligible=true where s.id=staff_id and s.team_id=paid_leave_requests.team_id and s.user_id=(select auth.uid()) and s.active=true)
 );
 -- Do not allow general UPDATE to change sensitive fields; protect them with column-level privileges and triggers.
 revoke update on public.paid_leave_requests from authenticated;
