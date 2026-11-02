@@ -79,7 +79,7 @@ function tsa_sync_receive_event($request) {
             'post_status' => array('publish', 'future', 'draft', 'pending', 'private'),
             'numberposts' => 1,
             'fields' => 'ids',
-            'title' => $data['title'],
+            's' => $data['title'],
             'suppress_filters' => true,
         ));
         if (!empty($legacy)) {
