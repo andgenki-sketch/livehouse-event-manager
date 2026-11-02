@@ -114,12 +114,13 @@ function tsa_sync_receive_event($request) {
             return new WP_Error('tsa_sync_nonce_required', 'Request nonce required', array('status' => 401));
         }
         $nonce_key = 'tsa_sync_nonce_' . hash('sha256', $nonce);
-        if (get_transient($nonce_key)) {
+        // add_option is atomic for a unique option_name in WordPress' database.
+        // It prevents two simultaneous requests from claiming the same nonce.
+        if (!add_option($nonce_key, time(), '', 'no')) {
             return new WP_Error('tsa_sync_replayed', 'Repeated request', array('status' => 409));
         }
-        // WordPress transients are a basic replay barrier, not an atomic distributed lock.
-        // Keep writes disabled until concurrency and retry behavior pass staging tests.
-        set_transient($nonce_key, 1, 600);
+        // Options persist intentionally. A periodic cleanup task must be added
+        // before high-volume production use to bound storage growth.
         if ($data['action'] === 'unpublish') {
             if (count($existing) === 1) {
                 $updated = wp_update_post(array('ID' => $existing[0], 'post_status' => 'draft'), true);
