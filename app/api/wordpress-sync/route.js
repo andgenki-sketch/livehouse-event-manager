@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { projectWordPressEvent } from '../../../lib/wordpress-event-projection.mjs';
-import { sendWordPressEvent } from '../../../lib/wordpress-sync-transport.mjs';
+import { sendWordPressEventWithRetry } from '../../../lib/wordpress-sync-transport.mjs';
 
 export const runtime = 'nodejs';
 
@@ -60,7 +60,7 @@ export async function POST(request) {
   try { payload = projectWordPressEvent(event); }
   catch { return Response.json({ error: 'Invalid public event data' }, { status: 422 }); }
   try {
-    const result = await sendWordPressEvent(payload, {
+    const result = await sendWordPressEventWithRetry(payload, {
       endpoint: process.env.WORDPRESS_SYNC_ENDPOINT,
       secret: process.env.WORDPRESS_SYNC_SECRET
     });
