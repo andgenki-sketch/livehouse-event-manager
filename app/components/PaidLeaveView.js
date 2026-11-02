@@ -2,10 +2,10 @@
 import {useEffect,useMemo,useState} from 'react';
 
 const dateLabel=v=>v?new Date(v+'T00:00:00').toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'}):'';
-export default function PaidLeaveView({client,team,currentStaff,staff=[],schedules=[],events=[]}){
+export default function PaidLeaveView({client,team,currentStaff,staff=[],schedules=[],events=[],onChanged}){
  const owner=team?.role==='owner', [requests,setRequests]=useState([]),[grants,setGrants]=useState([]),[settings,setSettings]=useState([]),[chosenStaff,setChosenStaff]=useState(''),[hireDate,setHireDate]=useState(''),[eligible,setEligible]=useState(true),[grantDate,setGrantDate]=useState('2026-09-01'),[grantDays,setGrantDays]=useState(''),[grantExpiry,setGrantExpiry]=useState('2028-08-31'),[date,setDate]=useState('2026-12-10'),[note,setNote]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[editing,setEditing]=useState(''),[reason,setReason]=useState('');
  const staffId=currentStaff?.id;
- const load=async()=>{if(!team?.id)return;const [r,g,z]=await Promise.all([client.from('paid_leave_requests').select('*').eq('team_id',team.id).order('leave_date',{ascending:false}),client.from('paid_leave_grants').select('*').eq('team_id',team.id).order('granted_on',{ascending:false}),client.from('paid_leave_staff_settings').select('*').eq('team_id',team.id)]);if(r.error||g.error||z.error){setError((r.error||g.error||z.error).message);return}setRequests(r.data||[]);setGrants(g.data||[]);setSettings(z.data||[]);setError('')};
+ const load=async()=>{if(!team?.id)return;const [r,g,z]=await Promise.all([client.from('paid_leave_requests').select('*').eq('team_id',team.id).order('leave_date',{ascending:false}),client.from('paid_leave_grants').select('*').eq('team_id',team.id).order('granted_on',{ascending:false}),client.from('paid_leave_staff_settings').select('*').eq('team_id',team.id)]);if(r.error||g.error||z.error){setError((r.error||g.error||z.error).message);return}setRequests(r.data||[]);setGrants(g.data||[]);setSettings(z.data||[]);onChanged?.();setError('')};
  useEffect(()=>{load()},[team?.id,staffId]);
  const mine=requests.filter(r=>r.staff_id===staffId);const allowed=owner||settings.some(x=>x.staff_id===staffId&&x.eligible);
  const booked=new Set(requests.filter(r=>['submitted','scheduled','taken'].includes(r.status)).map(r=>r.staff_id+'|'+r.leave_date));
