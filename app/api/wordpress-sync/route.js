@@ -50,6 +50,9 @@ export async function POST(request) {
   if (memberError || !['owner', 'member'].includes(member?.role)) {
     return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
+  if (process.env.WORDPRESS_SYNC_STAGING_ENABLED !== 'true') {
+    return Response.json({ error: 'WordPress sync is disabled until staging is approved' }, { status: 503 });
+  }
   if (!process.env.WORDPRESS_SYNC_ENDPOINT || !process.env.WORDPRESS_SYNC_SECRET) {
     return Response.json({ error: 'WordPress staging integration is not configured' }, { status: 503 });
   }
