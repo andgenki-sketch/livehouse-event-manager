@@ -27,8 +27,10 @@ The current receiver is **acknowledgment-only**. Its signed requests use a five-
 - App requires `WORDPRESS_SYNC_STAGING_ENABLED=true` before any outbound sync request. Leave unset in production.
 - App transport defaults to requiring `dry_run=true` from WordPress, even if the receiver has write capability. It does not authorize live publication.
 - WordPress receiver defaults to no writes. `TSA_EVENT_SYNC_ENABLE_WRITES` must remain absent or false until staging, backups, theme compatibility, concurrency and manual legacy reconciliation are verified and the owner approves production rollout.
-- Requests use HMAC over `timestamp.nonce.body` and include a 128-bit random nonce. The receiver stores used nonces as WordPress transients; transients are not a distributed atomic lock, so do not enable production writes until an atomic replay lock is implemented and tested.
+- Requests use HMAC over `timestamp.nonce.body` and include a 128-bit random nonce. The receiver now atomically claims used nonces through a unique WordPress option name, with hourly WP-Cron cleanup after 24 hours. Verify concurrency, cleanup, and replay behavior on staging before enabling writes.
 - Mapped events use the `_tsa_sync_external_id` meta key. Existing manual posts are never automatically claimed. The collision check compares exact title and canonical local date; ambiguous posts need manual review.
 - Write mode currently creates or updates a `tribe_events` post, stores event date metadata and selected `wpos_event` fields, and changes mapped posts to draft on unpublish. The end time defaults to start + 1 hour; verify The Events Calendar and theme behavior before using it.
 - Flyer import, taxonomy/PICKUP mapping, durable outbox/retry, and reliable status history are **not implemented**. Do not advertise full automatic publication until they are.
 - Do not put WordPress or Supabase secrets into GitHub, source files or chat.
+
+- WordPress event dates now include UTC companion metadata. Validate against the installed The Events Calendar version and the site's calendar listing before enabling writes.
