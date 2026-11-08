@@ -59,3 +59,48 @@ test('does not count salary twice when staff has multiple events',()=>{
  assert.equal(result.salary,250000);
  assert.equal(result.hourly,0);
 });
+
+
+test('position-specific all-day hours produce different costs for PA and reception',()=>{
+ const people=[{id:'a',name:'PA'},{id:'b',name:'受付'}];
+ const pay=people.map(person=>({staff_id:person.id,effective_from:'2026-11-01',hourly_wage:1300,monthly_salary:0,transportation_fee:0}));
+ const result=estimateMonthlyShiftLabor({month:'2026-11',staff:people,compensation:pay,schedules:[
+  s('2026-11-14','all','PA','a'),s('2026-11-14','all','受付','b')
+ ],rules:[
+  {position_name:'PA',shift_kind:'all',paid_hours:10},
+  {position_name:'受付',shift_kind:'all',paid_hours:6}
+ ]});
+ assert.equal(result.hourly,(10+6)*1300);
+ assert.equal(result.unconfiguredPairs.length,0);
+});
+test('position and period both affect forecast, while overlapping roles do not duplicate hours',()=>{
+ const result=calc([
+  s('2026-11-07','day','PA'),s('2026-11-07','day','照明'),
+  s('2026-11-07','night','受付')
+ ],DEFAULT_SHIFT_PAID_HOURS,{rules:[
+  {position_name:'PA',shift_kind:'day',paid_hours:7},
+  {position_name:'照明',shift_kind:'day',paid_hours:8},
+  {position_name:'受付',shift_kind:'night',paid_hours:4}
+ ]});
+ assert.equal(result.hourly,(8+4)*1300);
+ assert.equal(result.transport,500);
+});
+test('actual planned clock times supersede saved position rules',()=>{
+ const result=calc([
+  s('2026-11-08','all','PA','hourly',{planned_start:'15:00',planned_end:'21:00',break_minutes:60})
+ ],DEFAULT_SHIFT_PAID_HOURS,{rules:[{position_name:'PA',shift_kind:'all',paid_hours:12}]});
+ assert.equal(result.hourly,5*1300);
+ assert.deepEqual(result.unconfiguredPairs,[]);
+});
+test('unconfigured role and period are marked provisional',()=>{
+ const result=calc([s('2026-11-08','all','PA')],DEFAULT_SHIFT_PAID_HOURS,{rules:[{position_name:'PA',shift_kind:'night',paid_hours:9}]});
+ assert.equal(result.hourly,8*1300);
+ assert.deepEqual(result.unconfiguredPairs,[{position_name:'PA',shift_kind:'all'}]);
+});
+test('studio early and late roles can use independent paid hours',()=>{
+ const result=calc([s('2026-11-08','all','スタジオ早番'),s('2026-11-08','all','スタジオ遅番')],DEFAULT_SHIFT_PAID_HOURS,{rules:[
+  {position_name:'スタジオ早番',shift_kind:'studioEarly',paid_hours:4},
+  {position_name:'スタジオ遅番',shift_kind:'studioLate',paid_hours:6}
+ ]});
+ assert.equal(result.hourly,10*1300);
+});

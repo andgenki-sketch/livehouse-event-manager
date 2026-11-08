@@ -15,7 +15,9 @@ function shiftKind(shift) {
   if (role==='スタジオ遅番') return 'studioLate';
   return shift.work_period==='day'?'day':shift.work_period==='night'?'night':'all';
 }
-function paidHours(shift, assumptions) {
+export function shiftLaborKind(shift) { return shiftKind(shift); }
+export function shiftLaborRuleKey(role,kind) { return JSON.stringify([String(role||'').trim(),kind]); }
+function paidHours(shift, assumptions, ruleMap) {
   const start=String(shift.planned_start||''),end=String(shift.planned_end||'');
   if (/^\d{2}:\d{2}/.test(start)&&/^\d{2}:\d{2}/.test(end)) {
     const mins=s=>{const [h,m]=s.slice(0,5).split(':').map(Number);return h*60+m;};
@@ -23,13 +25,14 @@ function paidHours(shift, assumptions) {
     return Math.max(0,(time-safeMoney(shift.break_minutes))/60);
   }
   const kind=shiftKind(shift);
-  const value=Number(assumptions[kind]);
+  const specific=ruleMap.get(shiftLaborRuleKey(shift.role_name,kind));
+  const value=Number(specific===undefined?assumptions[kind]:specific);
   return Number.isFinite(value)?Math.max(0,Math.min(24,value)):0;
 }
-function dailyHours(rows, assumptions) {
+function dailyHours(rows, assumptions, ruleMap) {
   const byPeriod=new Map();
   for (const row of rows) {
-    const key=shiftKind(row),hours=paidHours(row,assumptions);
+    const key=shiftKind(row),hours=paidHours(row,assumptions,ruleMap);
     byPeriod.set(key,Math.max(byPeriod.get(key)||0,hours));
   }
   const venue=Math.max(byPeriod.get('all')||0,(byPeriod.get('day')||0)+(byPeriod.get('night')||0));
@@ -47,7 +50,8 @@ function monthPay(staffId, month, history, staff) {
     transport:safeMoney(recent?.transportation_fee)||(!recent?safeMoney(staff.transportation_fee):0)
   };
 }
-export function estimateMonthlyShiftLabor({month,staff=[],schedules=[],compensation=[],hours=DEFAULT_SHIFT_PAID_HOURS}) {
+export function estimateMonthlyShiftLabor({month,staff=[],schedules=[],compensation=[],hours=DEFAULT_SHIFT_PAID_HOURS,rules=[]}) {
+  const ruleMap=new Map(rules.filter(r=>r&&r.position_name&&r.shift_kind).map(r=>[shiftLaborRuleKey(r.position_name,r.shift_kind),Number(r.paid_hours)]));
   const active=staff.filter(s=>s?.id&&s.active!==false);
   const activeIds=new Set(active.map(s=>s.id));
   const thisMonth=schedules.filter(x=>String(x.shift_date||'').startsWith(month)&&activeIds.has(x.staff_id)&&x.status!=='canceled');
@@ -57,13 +61,19 @@ export function estimateMonthlyShiftLabor({month,staff=[],schedules=[],compensat
     if (!daily.has(key))daily.set(key,[]);
     daily.get(key).push(row);
   }
-  const byStaff=new Map();
+  const byStaff=new Map(),unconfigured=new Map();
+  for (const row of thisMonth) {
+    if (row.planned_start&&row.planned_end) continue;
+    const kind=shiftKind(row),role=String(row.role_name||'').trim();
+    const key=shiftLaborRuleKey(role,kind);
+    if (!ruleMap.has(key)) unconfigured.set(key,{position_name:role||'担当未設定',shift_kind:kind});
+  }
   for(const [key,rows] of daily) {
     const id=rows[0].staff_id;
     if (!byStaff.has(id)) byStaff.set(id,{days:0,hours:0});
     const item=byStaff.get(id);
     item.days+=1;
-    item.hours+=dailyHours(rows,hours);
+    item.hours+=dailyHours(rows,hours,ruleMap);
   }
   let fixed=0,hourly=0,transport=0,missingRates=[],hourlyDays=0;
   for (const person of active) {
@@ -86,6 +96,7 @@ export function estimateMonthlyShiftLabor({month,staff=[],schedules=[],compensat
     shiftCount:thisMonth.length,
     workers:byStaff.size,
     missingRates,
+    unconfiguredPairs:[...unconfigured.values()],
     hourlyDays
   };
 }

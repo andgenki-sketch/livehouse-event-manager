@@ -779,3 +779,28 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .shift-forecast-caveat{margin:10px 0 0;font-size:11px;line-height:1.65;color:#64748b}
 @media(max-width:950px){.shift-forecast-hours{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.shift-labor-forecast{padding:14px}.shift-forecast-over{padding:13px}.shift-forecast-metrics{grid-template-columns:minmax(0,1fr)}.shift-forecast-metrics strong{font-size:26px}.shift-forecast-breakdown{grid-template-columns:minmax(0,1fr)}.shift-forecast-hours{grid-template-columns:minmax(0,1fr)}}
+
+
+/* Shift labor forecast: position × performance-period hours rules. */
+.shift-forecast-default-note{border-radius:8px;background:#fffbeb;border:1px solid #f6d68b;color:#875b13;padding:10px 12px;font-size:12px;line-height:1.6;margin:12px 0}
+.shift-forecast-unsaved{border-radius:8px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4f91;padding:9px 12px;font-size:12px;margin:12px 0}
+.shift-forecast-rule-scroll{max-width:100%;overflow-x:auto;border:1px solid #dae4f0;border-radius:9px;background:#fff}
+.shift-forecast-rule-table{width:100%;min-width:620px;border-collapse:collapse;font-variant-numeric:tabular-nums;table-layout:fixed}
+.shift-forecast-rule-table th,.shift-forecast-rule-table td{border-bottom:1px solid #e5eaf2;border-right:1px solid #eff2f7;padding:7px 6px;text-align:center;vertical-align:middle}
+.shift-forecast-rule-table thead th{background:#f2f6fc;font-size:12px;color:#344054;white-space:nowrap}
+.shift-forecast-rule-table thead th:first-child{min-width:90px;width:19%;text-align:left;padding-left:12px}
+.shift-forecast-rule-table tbody th{font-size:13px;text-align:left;color:#1e293b;background:#fbfcfe;font-weight:700;padding-left:12px;white-space:nowrap}
+.shift-forecast-rule-table tr:last-child th,.shift-forecast-rule-table tr:last-child td{border-bottom:0}
+.shift-forecast-rule-table td.not-used{color:#c0c6d2;background:#fcfcfe}
+.shift-forecast-hour-cell{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px}
+.shift-forecast-hour-cell input{width:75px;max-width:100%;height:39px;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#1e293b;font-size:15px;text-align:right;padding:7px 6px}
+.shift-forecast-hour-cell small{font-size:10px;color:#64748b;font-weight:600}
+.shift-forecast-rule-table .shift-forecast-hour-cell:has(small) input:focus{outline:2px solid #60a5fa;outline-offset:1px}
+.shift-forecast-save-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:11px}
+.shift-forecast-save-row .hint{flex:1;min-width:210px;margin:0}
+.shift-forecast-save-row button{min-height:42px;white-space:nowrap}
+.shift-forecast-feedback{font-size:12px;font-weight:600;color:#155d41}
+@media(max-width:700px){
+ .shift-forecast-rule-scroll{margin-right:0}
+ .shift-forecast-save-row button{width:100%}
+}
