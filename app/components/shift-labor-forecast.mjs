@@ -16,6 +16,16 @@ function shiftKind(shift) {
   return shift.work_period==='day'?'day':shift.work_period==='night'?'night':'all';
 }
 export function shiftLaborKind(shift) { return shiftKind(shift); }
+export function shiftPaymentMode(shift,config) {
+ const override=shift?.payment_override;
+ return override==='hourly'||override==='external'?override:(config?.default_mode==='external'?'external':'hourly');
+}
+export function externalDailyRate(rows,config) {
+ const kinds=new Set(rows.map(shiftKind));
+ const full=kinds.has('all')||(kinds.has('day')&&kinds.has('night'))||(kinds.has('studioEarly')&&kinds.has('studioLate'));
+ const rate=full?'all_rate':kinds.has('day')||kinds.has('studioEarly')?'day_rate':'night_rate';
+ return {rate:Math.max(0,Number(config?.[rate]||0)),kind:full?'all':rate==='day_rate'?'day':'night'};
+}
 export function shiftLaborRuleKey(role,kind) { return JSON.stringify([String(role||'').trim(),kind]); }
 function paidHours(shift, assumptions, ruleMap) {
   const start=String(shift.planned_start||''),end=String(shift.planned_end||'');
@@ -54,8 +64,9 @@ function monthPay(staffId, month, history, staff) {
  * Monthly payroll fixed portion is counted once per active employee, regardless
  * of the number of assigned shifts. Salary history at the chosen month applies.
  */
-export function fixedMonthlySalaryTotal({month,staff=[],compensation=[]}) {
- return Math.round(staff.filter(person=>person?.id&&person.active!==false)
+export function fixedMonthlySalaryTotal({month,staff=[],compensation=[],externalConfigs=[]}) {
+ const byExternal=new Map(externalConfigs.map(r=>[r.staff_id,r]));
+ return Math.round(staff.filter(person=>person?.id&&person.active!==false&&byExternal.get(person.id)?.default_mode!=='external')
   .reduce((sum,person)=>sum+monthPay(person.id,month,compensation,person).monthlySalary,0));
 }
 /**
@@ -71,7 +82,8 @@ export function resolveMonthlyLaborBudget(row,fixedSalary=0) {
  const fixed=Number(fixedSalary||0);
  return {mode:'variable',hourly,fixed,total:hourly+fixed};
 }
-export function estimateMonthlyShiftLabor({month,staff=[],schedules=[],compensation=[],hours=DEFAULT_SHIFT_PAID_HOURS,rules=[]}) {
+export function estimateMonthlyShiftLabor({month,staff=[],schedules=[],compensation=[],hours=DEFAULT_SHIFT_PAID_HOURS,rules=[],externalConfigs=[]}) {
+  const externalByStaff=new Map(externalConfigs.map(r=>[r.staff_id,r]));
   const ruleMap=new Map(rules.filter(r=>r&&r.position_name&&r.shift_kind).map(r=>[shiftLaborRuleKey(r.position_name,r.shift_kind),Number(r.paid_hours)]));
   const active=staff.filter(s=>s?.id&&s.active!==false);
   const activeIds=new Set(active.map(s=>s.id));
@@ -83,41 +95,53 @@ export function estimateMonthlyShiftLabor({month,staff=[],schedules=[],compensat
     daily.get(key).push(row);
   }
   const byStaff=new Map(),unconfigured=new Map();
-  for (const row of thisMonth) {
-    if (row.planned_start&&row.planned_end) continue;
-    const kind=shiftKind(row),role=String(row.role_name||'').trim();
-    const key=shiftLaborRuleKey(role,kind);
-    if (!ruleMap.has(key)) unconfigured.set(key,{position_name:role||'担当未設定',shift_kind:kind});
-  }
+  const mixedDays=[],missingExternalRates=[];
+  let outsourcing=0,externalDays=0,externalWorkers=new Set();
   for(const [key,rows] of daily) {
-    const id=rows[0].staff_id;
-    if (!byStaff.has(id)) byStaff.set(id,{days:0,hours:0});
-    const item=byStaff.get(id);
-    item.days+=1;
-    item.hours+=dailyHours(rows,hours,ruleMap);
+    const id=rows[0].staff_id,config=externalByStaff.get(id);
+    const externalRows=rows.filter(row=>shiftPaymentMode(row,config)==='external');
+    const hourlyRows=rows.filter(row=>shiftPaymentMode(row,config)!=='external');
+    const item=byStaff.get(id)||{days:0,hours:0};
+    if(hourlyRows.length){
+      item.days+=1;
+      item.hours+=dailyHours(hourlyRows,hours,ruleMap);
+      byStaff.set(id,item);
+      for(const row of hourlyRows){
+        if(row.planned_start&&row.planned_end)continue;
+        const kind=shiftKind(row),role=String(row.role_name||'').trim();
+        const ruleKey=shiftLaborRuleKey(role,kind);
+        if(!ruleMap.has(ruleKey))unconfigured.set(ruleKey,{position_name:role||'担当未設定',shift_kind:kind});
+      }
+    }
+    if(externalRows.length){
+      externalDays+=1;externalWorkers.add(id);
+      const {rate,kind}=externalDailyRate(externalRows,config);
+      outsourcing+=rate;
+      if(rate<=0)missingExternalRates.push({staff_id:id,shift_date:rows[0].shift_date,kind});
+    }
+    if(hourlyRows.length&&externalRows.length)mixedDays.push(key);
   }
   let fixed=0,hourly=0,transport=0,missingRates=[],hourlyDays=0;
   for (const person of active) {
     const pay=monthPay(person.id,month,compensation,person);
     const plan=byStaff.get(person.id);
-    if (pay.monthlySalary>0)fixed+=pay.monthlySalary;
+    const isExternal=externalByStaff.get(person.id)?.default_mode==='external';
+    if(!isExternal&&pay.monthlySalary>0)fixed+=pay.monthlySalary;
     else if(plan?.days) {
-      if (pay.hourlyWage>0)hourly+=Math.round(plan.hours*pay.hourlyWage);
+      if(pay.hourlyWage>0)hourly+=Math.round(plan.hours*pay.hourlyWage);
       else missingRates.push(person.name||'スタッフ');
       hourlyDays+=plan.days;
     }
     if(plan?.days)transport+=plan.days*pay.transport;
   }
+  const total=Math.round(fixed+hourly+transport);
   return {
-    total:Math.round(fixed+hourly+transport),
-    salary:Math.round(fixed),
-    hourly:Math.round(hourly),
+    total,salary:Math.round(fixed),hourly:Math.round(hourly),
     transport:Math.round(transport),
-    shiftDays:daily.size,
-    shiftCount:thisMonth.length,
-    workers:byStaff.size,
-    missingRates,
-    unconfiguredPairs:[...unconfigured.values()],
-    hourlyDays
+    outsourcing:Math.round(outsourcing),
+    combinedTotal:Math.round(total+outsourcing),
+    externalDays,externalWorkers:externalWorkers.size,mixedDays,missingExternalRates,
+    shiftDays:daily.size,shiftCount:thisMonth.length,workers:new Set([...byStaff.keys(),...externalWorkers]).size,
+    missingRates,unconfiguredPairs:[...unconfigured.values()],hourlyDays
   };
 }
