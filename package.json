@@ -4,9 +4,10 @@
     "build": "next build",
     "start": "next start",
     "prepare:timetable": "node scripts/prepare-timetable-reader.mjs",
-    "prebuild": "npm run prepare:timetable",
+    "prebuild": "npm run prepare:timetable && npm run test:hall-deductions",
     "predev": "npm run prepare:timetable",
-    "test:timetable": "node --test tests/timetable-import.test.mjs"
+    "test:timetable": "node --test tests/timetable-import.test.mjs",
+    "test:hall-deductions": "node --test tests/hall-deductions.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "latest",
