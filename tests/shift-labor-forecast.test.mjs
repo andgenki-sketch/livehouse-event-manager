@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {estimateMonthlyShiftLabor,DEFAULT_SHIFT_PAID_HOURS} from '../app/components/shift-labor-forecast.mjs';
+import {estimateMonthlyShiftLabor,DEFAULT_SHIFT_PAID_HOURS,fixedMonthlySalaryTotal,resolveMonthlyLaborBudget} from '../app/components/shift-labor-forecast.mjs';
 
 const staff=[{id:'salary',name:'社員',active:true},{id:'hourly',name:'アルバイト',active:true}];
 const compensation=[
@@ -103,4 +103,30 @@ test('studio early and late roles can use independent paid hours',()=>{
   {position_name:'スタジオ遅番',shift_kind:'studioLate',paid_hours:6}
  ]});
  assert.equal(result.hourly,10*1300);
+});
+
+test('fixed monthly salary is added to the entered hourly-only labor budget',()=>{
+ const month='2026-11';
+ const fixed=fixedMonthlySalaryTotal({month,staff,compensation});
+ const plan=resolveMonthlyLaborBudget({hourly_labor_budget:100000,labor_budget:350000},fixed);
+ assert.equal(fixed,250000);
+ assert.deepEqual(plan,{mode:'variable',hourly:100000,fixed:250000,total:350000});
+});
+test('monthly salaries are counted once per employee and respect effective payroll histories',()=>{
+ const employees=[...staff,{id:'second',name:'社員2',active:true}];
+ const history=[...compensation,
+  {staff_id:'salary',effective_from:'2026-12-01',monthly_salary:300000},
+  {staff_id:'second',effective_from:'2026-10-01',monthly_salary:220000}
+ ];
+ assert.equal(fixedMonthlySalaryTotal({month:'2026-11',staff:employees,compensation:history}),470000);
+ assert.equal(fixedMonthlySalaryTotal({month:'2026-12',staff:employees,compensation:history}),520000);
+});
+test('legacy budget remains the original total until hourly budget explicitly saved',()=>{
+ const legacy=resolveMonthlyLaborBudget({labor_budget:400000,hourly_labor_budget:null},250000);
+ assert.deepEqual(legacy,{mode:'legacy',hourly:null,fixed:null,total:400000});
+ assert.deepEqual(resolveMonthlyLaborBudget(undefined,250000),{mode:'unset',hourly:null,fixed:null,total:null});
+});
+test('zero hourly budget still adds monthly salary without treating it as unset',()=>{
+ const plan=resolveMonthlyLaborBudget({hourly_labor_budget:0,labor_budget:250000},250000);
+ assert.deepEqual(plan,{mode:'variable',hourly:0,fixed:250000,total:250000});
 });
