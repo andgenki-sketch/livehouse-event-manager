@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {estimateMonthlyShiftLabor,DEFAULT_SHIFT_PAID_HOURS,fixedMonthlySalaryTotal,resolveMonthlyLaborBudget} from '../app/components/shift-labor-forecast.mjs';
+import {estimateMonthlyShiftLabor,DEFAULT_SHIFT_PAID_HOURS,fixedMonthlySalaryTotal,resolveMonthlyLaborBudget,compareShiftLaborBudget} from '../app/components/shift-labor-forecast.mjs';
 
 const staff=[{id:'salary',name:'社員',active:true},{id:'hourly',name:'アルバイト',active:true}];
 const compensation=[
@@ -193,4 +193,51 @@ test('mixed payment modes for same person and date flags review',()=>{
  assert.equal(result.outsourcing,16500);
  assert.equal(result.hourly,5*1400);
  assert.equal(result.mixedDays.length,1);
+});
+
+test('2026-11 hourly budget 100,000 plus salary 850,000 yields 950,000 total, not 100,000',()=>{
+ const c=compareShiftLaborBudget({row:{hourly_labor_budget:100000,labor_budget:950000},
+  salary:850000,hourly:203581});
+ assert.equal(c.budget,950000);
+ assert.equal(c.forecast,1053581);
+ assert.equal(c.remaining,-103581);
+ assert.equal(c.hourlyDifference,103581);
+ assert.equal(c.status,'over');
+ assert.equal(Math.round(c.ratio),111);
+});
+test('legacy total budget cannot be mistaken for 100,000 yen hourly budget',()=>{
+ const c=compareShiftLaborBudget({row:{hourly_labor_budget:null,labor_budget:100000},salary:850000,hourly:203581});
+ assert.equal(c.status,'legacy');
+ assert.equal(c.remaining,null);
+ assert.equal(c.ratio,null);
+ assert.equal(c.hourlyDifference,null);
+});
+test('a salary-inclusive labor budget stays within 80 percent with hourly budget slack',()=>{
+ const c=compareShiftLaborBudget({row:{hourly_labor_budget:150000},salary:850000,hourly:10000});
+ assert.equal(c.budget,1000000);
+ assert.equal(c.forecast,860000);
+ assert.equal(c.remaining,140000);
+ assert.equal(c.hourlyDifference,-140000);
+ assert.equal(c.status,'normal'); // fixed monthly salary alone must not trigger a warning
+});
+test('no budget is not interpreted as over budget',()=>{
+ const c=compareShiftLaborBudget({row:undefined,salary:850000,hourly:300000});
+ assert.equal(c.status,'unset');
+ assert.equal(c.ratio,null);
+});
+test('zero hourly budget still includes fixed salary and flags hourly overage',()=>{
+ const c=compareShiftLaborBudget({row:{hourly_labor_budget:0},salary:850000,hourly:10000});
+ assert.equal(c.budget,850000);
+ assert.equal(c.forecast,860000);
+ assert.equal(c.remaining,-10000);
+ assert.equal(c.status,'over');
+});
+
+test('hourly budget reaches 80 percent and triggers a warning independently of monthly salary',()=>{
+ const c=compareShiftLaborBudget({row:{hourly_labor_budget:100000},salary:850000,hourly:80000});
+ assert.equal(c.budget,950000);
+ assert.equal(c.forecast,930000);
+ assert.equal(c.remaining,20000);
+ assert.equal(c.hourlyRatio,80);
+ assert.equal(c.status,'warning');
 });

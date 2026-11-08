@@ -82,6 +82,27 @@ export function resolveMonthlyLaborBudget(row,fixedSalary=0) {
  const fixed=Number(fixedSalary||0);
  return {mode:'variable',hourly,fixed,total:hourly+fixed};
 }
+/**
+ * Salary-inclusive budget comparison; hourly-only targets are stored separately.
+ * Legacy budgets are NEVER treated as hourly spending limits automatically.
+ */
+export function compareShiftLaborBudget({row,salary=0,hourly=0}) {
+ const plan=resolveMonthlyLaborBudget(row,salary);
+ const forecast=Number(salary||0)+Number(hourly||0);
+ if(plan.mode!=='variable')
+  return {plan,forecast,budget:plan.total,remaining:null,ratio:null,
+    status:plan.mode, hourlyDifference:null};
+ const budget=Number(plan.total);
+ const remaining=budget-forecast;
+ const ratio=budget>0?forecast/budget*100:null;
+ const hourlyBudget=Number(plan.hourly||0),hourlyForecast=Number(hourly||0);
+ const hourlyDifference=hourlyForecast-hourlyBudget;
+ const hourlyRatio=hourlyBudget>0?hourlyForecast/hourlyBudget*100:null;
+ // Only the controllable hourly portion triggers attention; fixed salaries
+ // should not make every month look near its spending limit on day one.
+ const status=hourlyDifference>0?'over':hourlyBudget>0&&hourlyForecast>=hourlyBudget*.8?'warning':'normal';
+ return {plan,forecast,budget,remaining,ratio,status,hourlyDifference,hourlyRatio};
+}
 export function estimateMonthlyShiftLabor({month,staff=[],schedules=[],compensation=[],hours=DEFAULT_SHIFT_PAID_HOURS,rules=[],externalConfigs=[]}) {
   const externalByStaff=new Map(externalConfigs.map(r=>[r.staff_id,r]));
   const ruleMap=new Map(rules.filter(r=>r&&r.position_name&&r.shift_kind).map(r=>[shiftLaborRuleKey(r.position_name,r.shift_kind),Number(r.paid_hours)]));

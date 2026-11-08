@@ -862,3 +862,12 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .shift-forecast-total-budget .total{padding-top:9px;border-top:1px solid #cbdcf0;color:#193a66;font-weight:800}
 .shift-forecast-total-budget .total strong{font-size:20px;font-variant-numeric:tabular-nums}
 @media(max-width:650px){.shift-forecast-total-budget .total strong{font-size:18px}}
+
+
+/* Show both salary-inclusive budget and the controllable hourly-wage variance. */
+.shift-forecast-hourly-comparison{border-top:1px dashed #bfd0e5;padding-top:8px;gap:12px}
+.shift-forecast-hourly-comparison span{color:#365476}
+.shift-forecast-hourly-comparison strong{font-variant-numeric:tabular-nums;font-size:16px;color:#166b46}
+.shift-forecast-hourly-comparison strong.shift-forecast-excess{color:#b42318}
+.shift-forecast-legacy{border-color:#c7a671}
+.shift-forecast-legacy .shift-forecast-status{background:#fff5df;color:#925d19}
