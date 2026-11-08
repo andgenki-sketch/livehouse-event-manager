@@ -95,9 +95,13 @@ export function compareShiftLaborBudget({row,salary=0,hourly=0}) {
  const budget=Number(plan.total);
  const remaining=budget-forecast;
  const ratio=budget>0?forecast/budget*100:null;
- const status=remaining<0?'over':budget>0&&forecast>=budget*.8?'warning':'normal';
- return {plan,forecast,budget,remaining,ratio,status,
-  hourlyDifference:Number(hourly||0)-Number(plan.hourly||0)};
+ const hourlyBudget=Number(plan.hourly||0),hourlyForecast=Number(hourly||0);
+ const hourlyDifference=hourlyForecast-hourlyBudget;
+ const hourlyRatio=hourlyBudget>0?hourlyForecast/hourlyBudget*100:null;
+ // Only the controllable hourly portion triggers attention; fixed salaries
+ // should not make every month look near its spending limit on day one.
+ const status=hourlyDifference>0?'over':hourlyBudget>0&&hourlyForecast>=hourlyBudget*.8?'warning':'normal';
+ return {plan,forecast,budget,remaining,ratio,status,hourlyDifference,hourlyRatio};
 }
 export function estimateMonthlyShiftLabor({month,staff=[],schedules=[],compensation=[],hours=DEFAULT_SHIFT_PAID_HOURS,rules=[],externalConfigs=[]}) {
   const externalByStaff=new Map(externalConfigs.map(r=>[r.staff_id,r]));
