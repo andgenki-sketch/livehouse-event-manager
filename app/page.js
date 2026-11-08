@@ -191,7 +191,7 @@ function FinanceRegister({events,settlements,attendance,schedules=[],expenses,bu
 <div className="budget-pulse-grid">
  <BudgetPulseCard title="売上" budget={b?.revenue_budget} actual={sales} kind="revenue" detail="収支登録済みの売上から集計"/>
  <BudgetPulseCard title="人件費" budget={b?.labor_budget} actual={actualLabor} detail="イベント勤怠分の暫定実績"/>
- <BudgetPulseCard title="経費（人件費・外注費を除く）" budget={b?.cost_budget} actual={actualOtherCosts} detail="仕入・その他の登録済み経費"/>
+ <BudgetPulseCard title="経費" budget={b?.cost_budget} actual={actualOtherCosts} detail="人件費・外注費を除く、仕入・その他の登録済み経費"/>
 </div>
 <div className="finance-result-bar">
  <div><small>現在の収支（暫定・外注費控除後）</small><strong>{fmt(sales-actualLabor-actualOtherCosts-outsourcingCost)}</strong></div>
