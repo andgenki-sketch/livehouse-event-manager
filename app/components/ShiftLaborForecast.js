@@ -14,7 +14,7 @@ const yen=n=>'¥'+Math.round(Number(n)||0).toLocaleString('ja-JP');
 const baselinePositions=[...TECHNICAL_POSITIONS,...OPERATIONS_POSITIONS,'スタジオ早番','スタジオ遅番'];
 const periodsFor=position=>position==='スタジオ早番'?['studioEarly']:position==='スタジオ遅番'?['studioLate']:['day','night','all'];
 
-export default function ShiftLaborForecast({client,team,month,staff=[],schedules=[],compensation=[],budgets=[],payrollLoadError=''}) {
+export default function ShiftLaborForecast({client,team,month,staff=[],schedules=[],compensation=[],externalConfigs=[],budgets=[],payrollLoadError=''}) {
  const [savedRules,setSavedRules]=useState([]);
  const [edited,setEdited]=useState({});
  const [loading,setLoading]=useState(true);
@@ -46,7 +46,7 @@ export default function ShiftLaborForecast({client,team,month,staff=[],schedules
   }
   return [...merged.values()];
  },[savedRules,edited]);
- const result=useMemo(()=>estimateMonthlyShiftLabor({month,staff,schedules,compensation,rules:activeRules}),[month,staff,schedules,compensation,activeRules]);
+ const result=useMemo(()=>estimateMonthlyShiftLabor({month,staff,schedules,compensation,rules:activeRules,externalConfigs}),[month,staff,schedules,compensation,externalConfigs,activeRules]);
  const positions=useMemo(()=>[...new Set([
   ...baselinePositions,
   ...savedRules.map(r=>r.position_name),
@@ -111,11 +111,13 @@ export default function ShiftLaborForecast({client,team,month,staff=[],schedules
    </div>}
    <div className="shift-forecast-breakdown">
     <div><span>月給社員（固定）</span><b>{yen(result.salary)}</b></div>
-    <div><span>時給スタッフ（シフト見込み）</span><b>{yen(result.hourly)}</b></div>
+    <div><span>時給スタッフ（シフト見込み）</span><b>{yen(result.hourly)}</b></div><div><span>外注費（シフト日額見込み・別枠）</span><b>{yen(result.outsourcing)}</b></div>
     <div><span>交通費（時給予算の比較から除外）</span><b>{yen(result.transport)}</b></div>
-    <div><span>総予測人件費（月給＋時給＋交通費）</span><b>{yen(result.total)}</b></div>
+    <div><span>給与支払見込み（月給＋時給＋交通費）</span><b>{yen(result.total)}</b></div><div><span>給与＋外注費の支払見込み</span><b>{yen(result.combinedTotal)}</b></div>
     <div><span>登録済みシフト</span><b>{result.workers}名・{result.shiftDays}人日</b></div>
    </div>
+   {result.missingExternalRates?.length>0&&<p className="shift-forecast-alert" role="alert">{result.missingExternalRates.length}件の外注シフトに日額設定がありません。外注費見込みは過少です。</p>}
+   {result.mixedDays?.length>0&&<p className="shift-forecast-default-note">{result.mixedDays.length}日で同じスタッフに「給与扱い」と「外注扱い」が混在しています。実際の支払区分を確認してください。</p>}
    {result.missingRates.length>0&&<p className="shift-forecast-alert" role="alert">給与設定がないシフト担当者が{result.missingRates.length}名います。給与設定の登録が必要です（予測額は過少になります）。</p>}
    {loadError&&<p className="shift-forecast-alert" role="alert">{loadError}（現在は仮の勤務時間で算出しています）</p>}
    {loading&&<p className="hint">ポジション別の勤務時間設定を読み込み中です。</p>}
@@ -142,7 +144,7 @@ export default function ShiftLaborForecast({client,team,month,staff=[],schedules
     </div>
     {saveMessage&&<p role="status" className="shift-forecast-feedback">{saveMessage}</p>}
    </details>
-   <p className="shift-forecast-caveat">※勤務時間・給与の概算です。時給予算との比較は時給給与分のみで行い、交通費は別途表示します。総予測人件費には交通費を含みます。未作成シフト、時間外・深夜割増、法定福利費、給与調整等は含みません。1日の同一区分に複数ポジションがある場合は最も長い時間を採用し、昼・夜は合算します。月給社員はシフトなしでも1か月分を計上します。</p>
+   <p className="shift-forecast-caveat">※勤務時間・給与・外注費の概算です。時給予算との比較は時給給与分のみで行い、外注日額は予算外の別枠です。外注費見込みは経費登録へ自動計上されません。請求書等の外注費実績と足し合わせないでください。交通費は別途表示します。総予測人件費には交通費を含みます。未作成シフト、時間外・深夜割増、法定福利費、給与調整等は含みません。1日の同一区分に複数ポジションがある場合は最も長い時間を採用し、昼・夜は合算します。月給社員はシフトなしでも1か月分を計上します。</p>
   </>}
  </section>;
 }
