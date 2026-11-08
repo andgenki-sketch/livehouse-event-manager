@@ -848,3 +848,17 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
     padding:10px 0 calc(10px + env(safe-area-inset-bottom))!important;
   }
 }
+
+
+/* Monthly budget editor: owner enters only hourly/variable wages. */
+.budget-salary-preview{display:grid;gap:7px;background:#f2f6fc;border:1px solid #d8e2ee;border-radius:10px;padding:12px;margin:4px 0}
+.budget-salary-preview>div{display:flex;justify-content:space-between;align-items:center;gap:9px;flex-wrap:wrap;font-size:13px;color:#475467}
+.budget-salary-preview strong{font-size:15px;color:#1e293b;font-variant-numeric:tabular-nums}
+.budget-salary-preview .total{border-top:1px solid #cbd5e1;padding-top:9px;font-weight:800;color:#172033}
+.budget-salary-preview .total strong{font-size:19px;color:#1155aa}
+.shift-forecast-total-budget{display:grid;gap:7px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin-top:11px}
+.shift-forecast-total-budget>div{display:flex;justify-content:space-between;align-items:center;gap:9px;flex-wrap:wrap;font-size:13px}
+.shift-forecast-total-budget b{font-variant-numeric:tabular-nums}
+.shift-forecast-total-budget .total{padding-top:9px;border-top:1px solid #cbdcf0;color:#193a66;font-weight:800}
+.shift-forecast-total-budget .total strong{font-size:20px;font-variant-numeric:tabular-nums}
+@media(max-width:650px){.shift-forecast-total-budget .total strong{font-size:18px}}
