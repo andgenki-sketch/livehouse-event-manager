@@ -50,6 +50,27 @@ function monthPay(staffId, month, history, staff) {
     transport:safeMoney(recent?.transportation_fee)||(!recent?safeMoney(staff.transportation_fee):0)
   };
 }
+/**
+ * Monthly payroll fixed portion is counted once per active employee, regardless
+ * of the number of assigned shifts. Salary history at the chosen month applies.
+ */
+export function fixedMonthlySalaryTotal({month,staff=[],compensation=[]}) {
+ return Math.round(staff.filter(person=>person?.id&&person.active!==false)
+  .reduce((sum,person)=>sum+monthPay(person.id,month,compensation,person).monthlySalary,0));
+}
+/**
+ * Keep legacy total labor budget records unchanged until the owner explicitly
+ * enters an hourly budget. New records store variable wages separately, and
+ * dynamically add the effective monthly salaries for owner displays.
+ */
+export function resolveMonthlyLaborBudget(row,fixedSalary=0) {
+ if(!row)return {mode:'unset',hourly:null,fixed:null,total:null};
+ if(row.hourly_labor_budget===null||row.hourly_labor_budget===undefined)
+  return {mode:'legacy',hourly:null,fixed:null,total:Number(row.labor_budget||0)};
+ const hourly=Number(row.hourly_labor_budget||0);
+ const fixed=Number(fixedSalary||0);
+ return {mode:'variable',hourly,fixed,total:hourly+fixed};
+}
 export function estimateMonthlyShiftLabor({month,staff=[],schedules=[],compensation=[],hours=DEFAULT_SHIFT_PAID_HOURS,rules=[]}) {
   const ruleMap=new Map(rules.filter(r=>r&&r.position_name&&r.shift_kind).map(r=>[shiftLaborRuleKey(r.position_name,r.shift_kind),Number(r.paid_hours)]));
   const active=staff.filter(s=>s?.id&&s.active!==false);

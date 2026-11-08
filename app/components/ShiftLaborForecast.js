@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
-import {estimateMonthlyShiftLabor,DEFAULT_SHIFT_PAID_HOURS,shiftLaborRuleKey} from './shift-labor-forecast.mjs';
+import {estimateMonthlyShiftLabor,DEFAULT_SHIFT_PAID_HOURS,shiftLaborRuleKey,resolveMonthlyLaborBudget} from './shift-labor-forecast.mjs';
 import {TECHNICAL_POSITIONS,OPERATIONS_POSITIONS} from './StaffManagement';
 
 const PERIODS=[
@@ -82,29 +82,38 @@ export default function ShiftLaborForecast({client,team,month,staff=[],schedules
 
  const [year,mon]=month.split('-').map(Number);
  const budgetRow=budgets.find(x=>x.year===year&&x.month===mon);
- const hasBudget=!!budgetRow,budget=Number(budgetRow?.labor_budget||0);
- const ratio=hasBudget&&budget>0?result.total/budget*100:null;
- const remaining=budget-result.total;
+ const laborPlan=resolveMonthlyLaborBudget(budgetRow,result.salary);
+ const hasBudget=!!budgetRow,isVariable=laborPlan.mode==='variable',
+ budget=Number(isVariable?laborPlan.hourly:(laborPlan.total||0)),
+ used=Number(isVariable?result.hourly:result.total);
+ const ratio=hasBudget&&budget>0?used/budget*100:null;
+ const remaining=budget-used;
  const missingPay=!!result.missingRates.length||!!payrollLoadError;
- const status=!hasBudget?'unset':result.total>budget?'over':budget>0&&result.total>=budget*.8?'warning':'normal';
+ const status=!hasBudget?'unset':used>budget?'over':budget>0&&used>=budget*.8?'warning':'normal';
  const title=status==='over'?'予算超過見込み':status==='warning'?'予算に接近中':status==='unset'?'予算未設定':'予算内の見込み';
  const missingKinds=result.unconfiguredPairs?.length||0;
  return <section className={'shift-labor-forecast shift-forecast-'+status} aria-label="月間シフト人件費の概算">
   <div className="shift-forecast-heading"><div><h3>{year}年{mon}月 シフト人件費の予測</h3><p>ポジション・勤務区分ごとの設定で自動計算（オーナー専用）</p></div><span className="shift-forecast-status">{missingPay?'給与情報の確認が必要':title}</span></div>
   {payrollLoadError?<p role="alert">{payrollLoadError} 給与設定を読み直してから予測を確認してください。</p>:<>
    <div className="shift-forecast-metrics">
-    <div><small>予測人件費</small><strong>{yen(result.total)}</strong></div>
-    <div><small>人件費予算</small><strong>{hasBudget?yen(budget):'未設定'}</strong></div>
+    <div><small>{isVariable?'時給人件費の予測':'予測人件費'}</small><strong>{yen(used)}</strong></div>
+    <div><small>{isVariable?'時給人件費の予算':'人件費予算（旧方式）'}</small><strong>{hasBudget?yen(budget):'未設定'}</strong></div>
     <div><small>{hasBudget?(remaining<0?'予算超過見込み':'予算残額'):'確定シフト'}</small><strong>{hasBudget?yen(Math.abs(remaining)):result.shiftDays+'人日'}</strong></div>
    </div>
+   {isVariable&&<div className="shift-forecast-total-budget">
+    <div><span>時給人件費予算</span><b>{yen(laborPlan.hourly)}</b></div>
+    <div><span>社員月給（自動加算）</span><b>＋ {yen(result.salary)}</b></div>
+    <div className="total"><span>総人件費予算</span><strong>{yen(laborPlan.total)}</strong></div>
+   </div>}
    {hasBudget&&<div className="shift-forecast-budget">
-    <div className="shift-forecast-track" role="progressbar" aria-label="人件費予算に対する予測消化率" aria-valuemin={0} aria-valuemax={100} aria-valuenow={ratio===null?0:Math.min(100,Math.round(ratio))}><span style={{width:ratio===null?(result.total?'100%':'0%'):Math.min(100,Math.max(0,ratio))+'%'}}/></div>
+    <div className="shift-forecast-track" role="progressbar" aria-label="人件費予算に対する予測消化率" aria-valuemin={0} aria-valuemax={100} aria-valuenow={ratio===null?0:Math.min(100,Math.round(ratio))}><span style={{width:ratio===null?(used?'100%':'0%'):Math.min(100,Math.max(0,ratio))+'%'}}/></div>
     <p>{ratio===null?'予算0円':Math.round(ratio)+'%'}{budget===0&&result.total>0?' ／ 予算超過':status==='over'?' ／ 予算を超える見込み':''}</p>
    </div>}
    <div className="shift-forecast-breakdown">
     <div><span>月給社員（固定）</span><b>{yen(result.salary)}</b></div>
     <div><span>時給スタッフ（シフト見込み）</span><b>{yen(result.hourly)}</b></div>
-    <div><span>交通費（出勤日数による）</span><b>{yen(result.transport)}</b></div>
+    <div><span>交通費（時給予算の比較から除外）</span><b>{yen(result.transport)}</b></div>
+    <div><span>総予測人件費（月給＋時給＋交通費）</span><b>{yen(result.total)}</b></div>
     <div><span>登録済みシフト</span><b>{result.workers}名・{result.shiftDays}人日</b></div>
    </div>
    {result.missingRates.length>0&&<p className="shift-forecast-alert" role="alert">給与設定がないシフト担当者が{result.missingRates.length}名います。給与設定の登録が必要です（予測額は過少になります）。</p>}
@@ -133,7 +142,7 @@ export default function ShiftLaborForecast({client,team,month,staff=[],schedules
     </div>
     {saveMessage&&<p role="status" className="shift-forecast-feedback">{saveMessage}</p>}
    </details>
-   <p className="shift-forecast-caveat">※勤務時間・給与の概算です。未作成シフト、時間外・深夜割増、法定福利費、給与調整等は含みません。1日の同一区分に複数ポジションがある場合は最も長い時間を採用し、昼・夜は合算します。月給社員はシフトなしでも1か月分を計上します。</p>
+   <p className="shift-forecast-caveat">※勤務時間・給与の概算です。時給予算との比較は時給給与分のみで行い、交通費は別途表示します。総予測人件費には交通費を含みます。未作成シフト、時間外・深夜割増、法定福利費、給与調整等は含みません。1日の同一区分に複数ポジションがある場合は最も長い時間を採用し、昼・夜は合算します。月給社員はシフトなしでも1か月分を計上します。</p>
   </>}
  </section>;
 }
