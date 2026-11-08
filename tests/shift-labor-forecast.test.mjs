@@ -218,7 +218,7 @@ test('a salary-inclusive labor budget stays within 80 percent with hourly budget
  assert.equal(c.forecast,860000);
  assert.equal(c.remaining,140000);
  assert.equal(c.hourlyDifference,-140000);
- assert.equal(c.status,'warning');
+ assert.equal(c.status,'normal'); // fixed monthly salary alone must not trigger a warning
 });
 test('no budget is not interpreted as over budget',()=>{
  const c=compareShiftLaborBudget({row:undefined,salary:850000,hourly:300000});
@@ -231,4 +231,13 @@ test('zero hourly budget still includes fixed salary and flags hourly overage',(
  assert.equal(c.forecast,860000);
  assert.equal(c.remaining,-10000);
  assert.equal(c.status,'over');
+});
+
+test('hourly budget reaches 80 percent and triggers a warning independently of monthly salary',()=>{
+ const c=compareShiftLaborBudget({row:{hourly_labor_budget:100000},salary:850000,hourly:80000});
+ assert.equal(c.budget,950000);
+ assert.equal(c.forecast,930000);
+ assert.equal(c.remaining,20000);
+ assert.equal(c.hourlyRatio,80);
+ assert.equal(c.status,'warning');
 });
