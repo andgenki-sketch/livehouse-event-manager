@@ -130,3 +130,67 @@ test('zero hourly budget still adds monthly salary without treating it as unset'
  const plan=resolveMonthlyLaborBudget({hourly_labor_budget:0,labor_budget:250000},250000);
  assert.deepEqual(plan,{mode:'variable',hourly:0,fixed:250000,total:250000});
 });
+
+const yama={staff_id:'contractor',default_mode:'external',day_rate:16500,night_rate:16500,all_rate:27500};
+const contractor={id:'contractor',name:'山岡真司',active:true};
+const contractorRows=rows=>estimateMonthlyShiftLabor({month:'2026-11',staff:[contractor],schedules:rows,compensation:[],externalConfigs:[yama]});
+test('contractor day two shifts and full one shift total 60,500 yen independent of payroll',()=>{
+ const result=contractorRows([
+  s('2026-11-01','day','PA','contractor'),
+  s('2026-11-02','day','照明','contractor'),
+  s('2026-11-03','all','PA','contractor')
+ ]);
+ assert.equal(result.outsourcing,60500);
+ assert.equal(result.hourly,0);
+ assert.equal(result.salary,0);
+ assert.equal(result.total,0);
+ assert.equal(result.combinedTotal,60500);
+ assert.equal(result.externalDays,3);
+ assert.deepEqual(result.missingRates,[]);
+});
+test('two half-day contractor shifts on one day are billed once at all-day amount',()=>{
+ const result=contractorRows([
+  s('2026-11-04','day','PA','contractor'),
+  s('2026-11-04','night','照明','contractor')
+ ]);
+ assert.equal(result.outsourcing,27500);
+ assert.equal(result.externalDays,1);
+});
+test('multiple same-day same-period contractor roles do not double bill',()=>{
+ const result=contractorRows([
+  s('2026-11-05','day','PA','contractor'),
+  s('2026-11-05','day','照明','contractor')
+ ]);
+ assert.equal(result.outsourcing,16500);
+});
+test('hourly override on contractor shift is excluded from outsourcing and uses hourly pay',()=>{
+ const wages=[{staff_id:'contractor',effective_from:'2026-11-01',hourly_wage:1400,monthly_salary:0,transportation_fee:0}];
+ const result=estimateMonthlyShiftLabor({month:'2026-11',staff:[contractor],
+  schedules:[s('2026-11-06','all','PA','contractor',{payment_override:'hourly'})],
+  compensation:wages,externalConfigs:[yama]});
+ assert.equal(result.hourly,11200);
+ assert.equal(result.outsourcing,0);
+ assert.equal(result.total,11200);
+});
+test('contractor is excluded from fixed salary budget, even with older salary history',()=>{
+ const wages=[{staff_id:'contractor',effective_from:'2026-09-01',monthly_salary:200000,hourly_wage:0}];
+ assert.equal(fixedMonthlySalaryTotal({month:'2026-11',staff:[contractor],compensation:wages,externalConfigs:[yama]}),0);
+ const result=estimateMonthlyShiftLabor({month:'2026-11',staff:[contractor],compensation:wages,
+ schedules:[s('2026-11-07','all','PA','contractor')],externalConfigs:[yama]});
+ assert.equal(result.salary,0);
+ assert.equal(result.outsourcing,27500);
+});
+test('unconfigured external day rate warns rather than treating zero as actual',()=>{
+ const result=estimateMonthlyShiftLabor({month:'2026-11',staff:[contractor],
+  schedules:[s('2026-11-07','all','PA','contractor',{payment_override:'external'})],externalConfigs:[]});
+ assert.equal(result.outsourcing,0);
+ assert.equal(result.missingExternalRates.length,1);
+});
+test('mixed payment modes for same person and date flags review',()=>{
+ const wages=[{staff_id:'contractor',effective_from:'2026-11-01',hourly_wage:1400}];
+ const result=estimateMonthlyShiftLabor({month:'2026-11',staff:[contractor],compensation:wages,externalConfigs:[yama],
+  schedules:[s('2026-11-08','day','PA','contractor'),s('2026-11-08','night','受付','contractor',{payment_override:'hourly'})]});
+ assert.equal(result.outsourcing,16500);
+ assert.equal(result.hourly,5*1400);
+ assert.equal(result.mixedDays.length,1);
+});
