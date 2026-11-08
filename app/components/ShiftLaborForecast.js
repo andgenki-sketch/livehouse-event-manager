@@ -85,10 +85,10 @@ export default function ShiftLaborForecast({client,team,month,staff=[],schedules
  const comparison=compareShiftLaborBudget({row:budgetRow,salary:result.salary,hourly:result.hourly});
  const laborPlan=comparison.plan,hasBudget=!!budgetRow,isVariable=laborPlan.mode==='variable',isLegacy=laborPlan.mode==='legacy';
  const budget=Number(comparison.budget||0),used=comparison.forecast,hourlyBudget=isVariable?Number(laborPlan.hourly):null;
- const hourlyDifference=comparison.hourlyDifference,ratio=comparison.ratio,remaining=comparison.remaining;
+ const hourlyDifference=comparison.hourlyDifference,hourlyRatio=comparison.hourlyRatio,ratio=comparison.ratio,remaining=comparison.remaining;
  const missingPay=!!result.missingRates.length||!!payrollLoadError;
  const status=comparison.status;
- const title=isLegacy?'旧方式の予算設定':status==='over'?'予算超過見込み':status==='warning'?'予算に接近中':status==='unset'?'予算未設定':'予算内の見込み';
+ const title=isLegacy?'旧方式の予算設定':status==='over'?'時給予算を超過':status==='warning'?'時給予算の残り20%以下':status==='unset'?'予算未設定':'時給予算の範囲内';
  const missingKinds=result.unconfiguredPairs?.length||0;
  return <section className={'shift-labor-forecast shift-forecast-'+status} aria-label="月間シフト人件費の概算">
   <div className="shift-forecast-heading"><div><h3>{year}年{mon}月 シフト人件費の予測</h3><p>ポジション・勤務区分ごとの設定で自動計算（オーナー専用）</p></div><span className="shift-forecast-status">{missingPay?'給与情報の確認が必要':title}</span></div>
@@ -103,12 +103,13 @@ export default function ShiftLaborForecast({client,team,month,staff=[],schedules
     <div><span>社員月給予算（給与設定から自動加算）</span><b>＋ {yen(result.salary)}</b></div>
     <div className="total"><span>総人件費予算</span><strong>{yen(laborPlan.total)}</strong></div>
     <div className="shift-forecast-hourly-comparison"><span>現在の時給人件費の予測</span><b>{yen(result.hourly)}</b></div>
+    <div className="shift-forecast-hourly-comparison"><span>時給予算の消化率</span><b>{hourlyRatio===null?(result.hourly>0?'時給予算0円':'—'):Math.round(hourlyRatio)+'%'}</b></div>
     <div className="shift-forecast-hourly-comparison"><span>{hourlyDifference>0?'時給予算の超過見込み':'時給予算の残額'}</span><strong className={hourlyDifference>0?'shift-forecast-excess':''}>{yen(Math.abs(hourlyDifference))}</strong></div>
    </div>}
    {isLegacy&&<p className="shift-forecast-alert" role="alert">この月は旧方式の「人件費合計予算」が設定されています。時給予算として自動解釈すると誤った警告になるため、予算超過判定を保留しています。「収支登録 → 月次予算設定・編集」で時給分の予算を入力して保存してください。</p>}
    {hasBudget&&!isLegacy&&<div className="shift-forecast-budget">
     <div className="shift-forecast-track" role="progressbar" aria-label="人件費予算に対する予測消化率" aria-valuemin={0} aria-valuemax={100} aria-valuenow={ratio===null?0:Math.min(100,Math.round(ratio))}><span style={{width:ratio===null?(used?'100%':'0%'):Math.min(100,Math.max(0,ratio))+'%'}}/></div>
-    <p>{ratio===null?'予算0円':Math.round(ratio)+'%'}{budget===0&&used>0?' ／ 予算超過':status==='over'?' ／ 予算を超える見込み':''}</p>
+    <p>{ratio===null?'総予算0円':'総人件費予算に対して '+Math.round(ratio)+'%'}{budget===0&&used>0?' ／ 予算超過':status==='over'?' ／ 時給分が予算超過':''}</p>
    </div>}
    <div className="shift-forecast-breakdown">
     <div><span>月給社員（固定）</span><b>{yen(result.salary)}</b></div>
