@@ -740,3 +740,42 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 @media(max-width:1000px){.daily-finance-row{grid-template-columns:repeat(2,minmax(0,1fr))}.daily-finance-row span:first-child{grid-column:1/-1}}
 @media(max-width:700px){.report-deduction-line{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.report-deduction-line label:first-child{grid-column:1/-1}.report-deduction-remove{width:max-content}.report-deduction-net strong{margin-left:0;width:100%}.expense-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:470px){.expense-kpis{grid-template-columns:minmax(0,1fr)}}
+
+
+/* Owner-only: monthly estimated labor cost while building shift schedules. */
+.shift-labor-forecast{background:#fff;border:1px solid #d6e0eb;border-radius:13px;padding:18px 20px;margin:14px 0 20px;min-width:0}
+.shift-forecast-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.shift-forecast-heading h3{font-size:17px;margin:0;color:#172033}
+.shift-forecast-heading p{font-size:12px;color:#667085;margin:4px 0 0}
+.shift-forecast-status{display:inline-block;background:#eaf1ff;color:#2457a7;font-size:12px;font-weight:800;border-radius:99px;padding:6px 10px}
+.shift-forecast-over{border:2px solid #d44d4d;padding:17px 19px}
+.shift-forecast-over .shift-forecast-status{background:#fff0f0;color:#b42318}
+.shift-forecast-warning{border-color:#d99a22}
+.shift-forecast-warning .shift-forecast-status{background:#fff3dd;color:#895000}
+.shift-forecast-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.shift-forecast-metrics>div{background:#f8fafc;border:1px solid #e2e8f0;padding:14px;border-radius:9px;min-width:0}
+.shift-forecast-metrics small{display:block;color:#5b677c;font-size:12px;margin-bottom:5px}
+.shift-forecast-metrics strong{display:block;font-size:clamp(18px,2vw,27px);color:#172033;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.shift-forecast-over .shift-forecast-metrics>div:last-child strong{color:#b42318}
+.shift-forecast-budget{margin-top:13px}
+.shift-forecast-track{background:#e6ecf3;height:12px;border-radius:20px;overflow:hidden}
+.shift-forecast-track span{display:block;height:100%;background:#2563eb;transition:width .2s}
+.shift-forecast-warning .shift-forecast-track span{background:#d99217}
+.shift-forecast-over .shift-forecast-track span{background:#dc3545}
+.shift-forecast-budget p{color:#475467;font-size:12px;font-weight:700;margin:6px 0 0;text-align:right}
+.shift-forecast-breakdown{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 18px;margin-top:15px;padding:12px 0;border-top:1px solid #e3eaf2;border-bottom:1px solid #e3eaf2}
+.shift-forecast-breakdown>div{display:flex;gap:10px;align-items:center;justify-content:space-between;min-width:0;font-size:12px}
+.shift-forecast-breakdown span{color:#52617a}
+.shift-forecast-breakdown b{font-size:14px;color:#243349;white-space:nowrap;font-variant-numeric:tabular-nums}
+.shift-forecast-alert{border:1px solid #f2b4b4;background:#fff5f5;color:#9c2e2e;font-size:12px;line-height:1.6;border-radius:8px;margin:12px 0;padding:10px}
+.shift-forecast-assumptions{margin:12px 0}
+.shift-forecast-assumptions summary{font-size:13px;font-weight:700;color:#1a63bd;cursor:pointer;padding:8px 0}
+.shift-forecast-assumptions p{font-size:12px;color:#59677c;line-height:1.65;margin:6px 0 12px}
+.shift-forecast-hours{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.shift-forecast-hours label{display:flex;align-items:center;gap:5px;min-width:0;font-size:12px;color:#243349;font-weight:700}
+.shift-forecast-hours label span:first-child{flex:1;min-width:0}
+.shift-forecast-hours input{min-width:0;width:60px;height:38px;box-sizing:border-box;border:1px solid #cad5e5;border-radius:7px;padding:7px;font-size:14px;background:#fff;color:#172033}
+.shift-forecast-hours label span:last-child{flex-shrink:0}
+.shift-forecast-caveat{margin:10px 0 0;font-size:11px;line-height:1.65;color:#64748b}
+@media(max-width:950px){.shift-forecast-hours{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.shift-labor-forecast{padding:14px}.shift-forecast-over{padding:13px}.shift-forecast-metrics{grid-template-columns:minmax(0,1fr)}.shift-forecast-metrics strong{font-size:26px}.shift-forecast-breakdown{grid-template-columns:minmax(0,1fr)}.shift-forecast-hours{grid-template-columns:minmax(0,1fr)}}
