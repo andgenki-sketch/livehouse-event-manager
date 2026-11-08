@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
-import {estimateMonthlyShiftLabor,DEFAULT_SHIFT_PAID_HOURS,shiftLaborRuleKey,resolveMonthlyLaborBudget} from './shift-labor-forecast.mjs';
+import {estimateMonthlyShiftLabor,DEFAULT_SHIFT_PAID_HOURS,shiftLaborRuleKey,compareShiftLaborBudget} from './shift-labor-forecast.mjs';
 import {TECHNICAL_POSITIONS,OPERATIONS_POSITIONS} from './StaffManagement';
 
 const PERIODS=[
@@ -82,18 +82,12 @@ export default function ShiftLaborForecast({client,team,month,staff=[],schedules
 
  const [year,mon]=month.split('-').map(Number);
  const budgetRow=budgets.find(x=>x.year===year&&x.month===mon);
- const laborPlan=resolveMonthlyLaborBudget(budgetRow,result.salary);
- const hasBudget=!!budgetRow,isVariable=laborPlan.mode==='variable',isLegacy=laborPlan.mode==='legacy';
- // Compare the TOTAL salary + variable wage forecast with the TOTAL monthly budget.
- // Travel allowance and contractor fees remain separately displayed, not in this budget.
- const budget=Number(laborPlan.total||0);
- const used=Number(result.salary+result.hourly);
- const hourlyBudget=isVariable?Number(laborPlan.hourly):null;
- const hourlyDifference=hourlyBudget===null?null:result.hourly-hourlyBudget;
- const ratio=hasBudget&&!isLegacy&&budget>0?used/budget*100:null;
- const remaining=budget-used;
+ const comparison=compareShiftLaborBudget({row:budgetRow,salary:result.salary,hourly:result.hourly});
+ const laborPlan=comparison.plan,hasBudget=!!budgetRow,isVariable=laborPlan.mode==='variable',isLegacy=laborPlan.mode==='legacy';
+ const budget=Number(comparison.budget||0),used=comparison.forecast,hourlyBudget=isVariable?Number(laborPlan.hourly):null;
+ const hourlyDifference=comparison.hourlyDifference,ratio=comparison.ratio,remaining=comparison.remaining;
  const missingPay=!!result.missingRates.length||!!payrollLoadError;
- const status=!hasBudget?'unset':isLegacy?'legacy':used>budget?'over':budget>0&&used>=budget*.8?'warning':'normal';
+ const status=comparison.status;
  const title=isLegacy?'旧方式の予算設定':status==='over'?'予算超過見込み':status==='warning'?'予算に接近中':status==='unset'?'予算未設定':'予算内の見込み';
  const missingKinds=result.unconfiguredPairs?.length||0;
  return <section className={'shift-labor-forecast shift-forecast-'+status} aria-label="月間シフト人件費の概算">
