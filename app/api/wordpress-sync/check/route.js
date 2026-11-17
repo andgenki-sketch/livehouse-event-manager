@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { sendWordPressEventWithRetry } from '../../../../lib/wordpress-sync-transport.mjs';
-import { classifyWordPressConnectionFailure } from '../../../../lib/wordpress-sync-diagnostics.mjs';
+import { classifyWordPressConnectionFailure, wordpressKeyFingerprint } from '../../../../lib/wordpress-sync-diagnostics.mjs';
 
 export const runtime = 'nodejs';
 
@@ -41,6 +41,7 @@ export async function POST(request) {
       !process.env.WORDPRESS_SYNC_ENDPOINT || !process.env.WORDPRESS_SYNC_SECRET) {
     return Response.json({ error: 'WordPress preview sync is not configured' }, { status: 503 });
   }
+  const keyFingerprint = wordpressKeyFingerprint(process.env.WORDPRESS_SYNC_SECRET);
   // A random never-used ID and unpublish action keep the probe harmless even
   // if a future receiver accidentally enables writes. Dry-run is mandatory.
   const payload = { external_id: 'tsa-probe-' + randomBytes(16).toString('hex'), action: 'unpublish' };
@@ -49,8 +50,8 @@ export async function POST(request) {
       endpoint: process.env.WORDPRESS_SYNC_ENDPOINT,
       secret: process.env.WORDPRESS_SYNC_SECRET
     });
-    return Response.json({ connected: true, dry_run: result.dry_run });
+    return Response.json({ connected: true, dry_run: result.dry_run, key_fingerprint: keyFingerprint });
   } catch (error) {
-    return Response.json({ error: 'WordPress connection failed', code: classifyWordPressConnectionFailure(error) }, { status: 502 });
+    return Response.json({ error: 'WordPress connection failed', code: classifyWordPressConnectionFailure(error), key_fingerprint: keyFingerprint }, { status: 502 });
   }
 }
