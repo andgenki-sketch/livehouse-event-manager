@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { sendWordPressEventWithRetry } from '../../../../lib/wordpress-sync-transport.mjs';
+import { classifyWordPressConnectionFailure } from '../../../../lib/wordpress-sync-diagnostics.mjs';
 
 export const runtime = 'nodejs';
 
@@ -49,7 +50,7 @@ export async function POST(request) {
       secret: process.env.WORDPRESS_SYNC_SECRET
     });
     return Response.json({ connected: true, dry_run: result.dry_run });
-  } catch {
-    return Response.json({ error: 'WordPress connection failed' }, { status: 502 });
+  } catch (error) {
+    return Response.json({ error: 'WordPress connection failed', code: classifyWordPressConnectionFailure(error) }, { status: 502 });
   }
 }
