@@ -49,3 +49,11 @@ test('requires an explicit true publication flag', () => {
     'unpublish'
   );
 });
+
+test('rejects unsafe flyer object paths while keeping valid relative paths', () => {
+  for (const flyer_path of ['https://example.com/a.png', '../private.png', 'team/../secret.png', '/root.png', 'team/file.png?token=secret', 'team\\\\secret.png']) {
+    assert.throws(() => projectWordPressEvent({ ...sample, flyer_path }), flyer_path);
+  }
+  assert.equal(projectWordPressEvent({ ...sample, flyer_path: 'team/flyer.png' }).flyer_path, 'team/flyer.png');
+  assert.equal(projectWordPressEvent({ ...sample, flyer_path: null }).flyer_path, null);
+});
