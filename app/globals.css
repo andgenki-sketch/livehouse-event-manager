@@ -871,3 +871,23 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .shift-forecast-hourly-comparison strong.shift-forecast-excess{color:#b42318}
 .shift-forecast-legacy{border-color:#c7a671}
 .shift-forecast-legacy .shift-forecast-status{background:#fff5df;color:#925d19}
+
+
+/* Monthly executive summary and payroll request, only for the owner payroll tab. */
+.monthly-management-report{background:#fff;border:1px solid #d5e1ee;border-radius:13px;padding:20px 22px;margin:0 0 22px;max-width:100%}
+.monthly-management-report-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.monthly-management-report-head h3{font-size:18px;line-height:1.4;margin:0;color:#182b42}
+.monthly-management-report-head p{font-size:13px;line-height:1.6;color:#637289;margin:6px 0 0}
+.monthly-management-private{font-size:11px;font-weight:700;color:#26456b;background:#e9f2fd;border-radius:999px;padding:6px 10px;white-space:nowrap}
+.monthly-management-report-fields{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:16px 0 12px}
+.monthly-management-report-fields label,.monthly-management-memo{display:flex;flex-direction:column;gap:6px;color:#334155;font-size:12px;font-weight:700}
+.monthly-management-report-fields input{font:inherit;font-size:15px;color:#162539;padding:9px 11px;min-width:175px;height:42px;background:#fff;border:1px solid #cbd5e1;border-radius:7px}
+.monthly-management-prev{height:42px;padding:9px 12px;background:#f2f6fb;border:1px solid #cbd6e2;color:#244366;border-radius:7px;cursor:pointer}
+.monthly-management-memo textarea{width:100%;min-height:70px;font:inherit;font-size:13px;padding:9px 11px;color:#1e293b;background:#fff;border:1px solid #cbd5e1;border-radius:7px;resize:vertical}
+.monthly-management-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:15px 0 0}
+.monthly-management-actions button{padding:12px 17px;min-height:44px;cursor:pointer}
+.monthly-management-actions button:disabled{cursor:wait;opacity:.6}
+.monthly-management-actions p{font-size:12px;color:#51627a;line-height:1.5;margin:0;max-width:490px}
+.monthly-management-error{color:#ac2424;font-size:13px;padding:8px 12px;background:#fff1f1;border:1px solid #efb3b3;border-radius:7px}
+.monthly-management-disclaimer{margin:13px 0 0;color:#6c788b;font-size:11px;line-height:1.65}
+@media(max-width:650px){.monthly-management-report{padding:15px 14px}.monthly-management-report-fields label,.monthly-management-report-fields input{width:100%}.monthly-management-report-fields button{width:100%}.monthly-management-actions button{width:100%}}
