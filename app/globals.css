@@ -925,3 +925,21 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .payroll-bulk-error{color:#9f2828;background:#fff2f2;border:1px solid #f1baba;padding:10px 12px;border-radius:7px;font-size:12px}
 @media(max-width:900px){.payroll-bulk-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:570px){.payroll-bulk{padding:14px}.payroll-bulk-stats{gap:7px}.payroll-bulk-stats strong{font-size:18px}.payroll-bulk-actions .primary{width:100%}}
+
+
+/* Manual verified payroll exceptions: incomplete timecards remain explicitly reviewed. */
+.payroll-bulk-manual-row td{padding:0!important;border-bottom:1px solid #d8e4f0!important}
+.payroll-bulk-manual-row{background:#fffaf0}
+.payroll-bulk-manual-form{border-left:3px solid #db9a35;padding:12px 15px;display:grid;gap:10px;min-width:0}
+.payroll-bulk-manual-title{display:flex;flex-direction:column;gap:4px}
+.payroll-bulk-manual-title strong{font-size:13px;color:#7b4b0f}
+.payroll-bulk-manual-title small{color:#8d6b46;font-size:11px;line-height:1.6}
+.payroll-bulk-manual-inputs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.payroll-bulk-manual-inputs label,.payroll-bulk-manual-reason{font-size:11px;color:#38516b;display:flex;flex-direction:column;gap:5px;font-weight:700}
+.payroll-bulk-manual-inputs input,.payroll-bulk-manual-reason textarea{max-width:100%;border:1px solid #b8cadc;border-radius:7px;padding:9px;font-size:13px;color:#162539;background:#fff}
+.payroll-bulk-manual-reason textarea{width:100%;min-height:65px;resize:vertical}
+.payroll-bulk-manual-ack{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:700;color:#213c56;cursor:pointer}
+.payroll-bulk-manual-ack input{width:18px;height:18px;accent-color:#1c61af;flex:none}
+.payroll-bulk-manual-hint,.payroll-bulk-manual-valid{font-size:11px;color:#8d5a0a;margin:0;line-height:1.6}
+.payroll-bulk-manual-valid{color:#147245}
+@media(max-width:650px){.payroll-bulk-manual-inputs{grid-template-columns:1fr}.payroll-bulk-manual-form{padding:10px}.payroll-bulk-table{min-width:520px}}

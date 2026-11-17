@@ -28,7 +28,7 @@ export default function MonthlyManagementReport({client,team}){
    const all=await Promise.all([
     eqTeam('events').select('id,team_id,title,event_date,event_genre').eq('team_id',team.id).gte('event_date',start).lt('event_date',end),
     eqTeam('expenses').select('team_id,event_id,expense_date,category,amount').eq('team_id',team.id).gte('expense_date',start).lt('expense_date',end),
-    eqTeam('payroll_confirmations').select('team_id,staff_id,payroll_month,confirmed_amount,confirmed_minutes,work_days').eq('team_id',team.id).eq('payroll_month',start),
+    eqTeam('payroll_confirmations').select('team_id,staff_id,payroll_month,confirmed_amount,confirmed_minutes,work_days,confirmation_method,exception_reason').eq('team_id',team.id).eq('payroll_month',start),
     eqTeam('venue_staff').select('id,team_id,name,active').eq('team_id',team.id),
     eqTeam('monthly_budgets').select('*').eq('team_id',team.id).eq('year',year).eq('month',monthNumber).maybeSingle(),
     eqTeam('shift_schedules').select('team_id,staff_id,shift_date,status,payment_override,role_name').eq('team_id',team.id).gte('shift_date',start).lt('shift_date',end),

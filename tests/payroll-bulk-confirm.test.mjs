@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {payrollConfirmationEligibility,payrollBulkReview,payrollSelectedTotal} from '../app/components/payroll-bulk-confirm.mjs';
+import {payrollConfirmationEligibility,payrollBulkReview,payrollSelectedTotal,canManualConfirmPayroll,manualPayrollValues} from '../app/components/payroll-bulk-confirm.mjs';
 const example=(id,total=40000,rest={})=>({
  s:{id,name:'スタッフ'+id},monthly:0,hourly:1200,total,usedMinutes:1800,
  mixedDays:[],unclocked:[],incomplete:[],isExternalOnly:false,confirmed:null,...rest
@@ -46,4 +46,36 @@ test('manual exclusions only affect the selected set and total',()=>{
 test('confirmed rows cannot be accidentally overwritten in an eligibility check',()=>{
  const c=payrollConfirmationEligibility(example('a',30000,{confirmed:{id:'old'},incomplete:[]}));
  assert.equal(c.status,'confirmed');
+});
+
+test('incomplete timecards are manual-review candidates but not automatic confirmation',()=>{
+ const r=payrollBulkReview([example('a',20000,{incomplete:[{}]}),example('b',45000,{unclocked:[{}]})]);
+ assert.equal(r.eligible.length,0);
+ assert.equal(r.manualCandidates.length,2);
+ assert.equal(r.blocked.length,2);
+});
+test('external-only staff and mixed-payroll days can never use the exception path',()=>{
+ assert.equal(canManualConfirmPayroll(example('a',20000,{isExternalOnly:true,incomplete:[{}]})),false);
+ assert.equal(canManualConfirmPayroll(example('b',20000,{mixedDays:['2026-11-02'],incomplete:[{}]})),false);
+ assert.equal(canManualConfirmPayroll(example('c',20000,{incomplete:[{}],confirmed:{id:'confirmed'}})),false);
+});
+test('manual confirmation demands owner acknowledgement and independently verified fields',()=>{
+ const valid={amount:'29545',hours:'23.5',days:'4',reason:'勤務時間を本人と照合済み',acknowledged:true};
+ assert.deepEqual(manualPayrollValues(valid),{ok:true,amount:29545,minutes:1410,days:4,reason:'勤務時間を本人と照合済み'});
+ assert.equal(manualPayrollValues({...valid,acknowledged:false}).ok,false);
+ assert.equal(manualPayrollValues({...valid,amount:''}).ok,false);
+ assert.equal(manualPayrollValues({...valid,hours:''}).ok,false);
+ assert.equal(manualPayrollValues({...valid,days:''}).ok,false);
+ assert.equal(manualPayrollValues({...valid,reason:'短い'}).ok,false);
+});
+test('payroll exception amounts cannot be negative, fractional yen or zero',()=>{
+ const base={amount:'10000',hours:'5.5',days:'1',reason:'本人に確認済みの申告記録',acknowledged:true};
+ for(const amount of ['-100','0','2.5','abc','NaN','Infinity']){
+  assert.equal(manualPayrollValues({...base,amount}).ok,false,amount);
+ }
+});
+test('manual hour and day range checks reject implausible input',()=>{
+ const base={amount:'10000',hours:'5',days:'1',reason:'本人に確認済みの申告記録',acknowledged:true};
+ for(const hours of ['-1','745','a','1.234'])assert.equal(manualPayrollValues({...base,hours}).ok,false,hours);
+ for(const days of ['0','32','1.5','abc'])assert.equal(manualPayrollValues({...base,days}).ok,false,days);
 });

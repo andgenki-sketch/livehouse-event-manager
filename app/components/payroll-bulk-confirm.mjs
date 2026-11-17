@@ -17,13 +17,35 @@ export function payrollConfirmationEligibility(row){
  if(!row?.s?.id)return {status:'blocked',label:'スタッフ情報がありません'};
  return {status:'eligible',label:'一括確定可能'};
 }
+/** Incomplete/missing punches require explicit owner evidence, not estimates. */
+export function canManualConfirmPayroll(row){
+ if(!row?.s?.id||row.confirmed||row.isExternalOnly||(row.mixedDays||[]).length)return false;
+ return (row.unclocked||[]).length>0||(row.incomplete||[]).length>0;
+}
+/**
+ * Owner must provide verified payable amount, actual time, worked days, and
+ * an audit note. Never seed any of these from an incomplete timecard.
+ */
+export function manualPayrollValues(entry){
+ const reason=String(entry?.reason||'').trim();
+ const amountText=String(entry?.amount??'').trim();
+ const hoursText=String(entry?.hours??'').trim();
+ const daysText=String(entry?.days??'').trim();
+ if(!entry?.acknowledged)return {ok:false,reason:'勤務内容の確認チェックが必要'};
+ if(!/^\d+$/.test(amountText)||Number(amountText)<=0||!Number.isSafeInteger(Number(amountText)))return {ok:false,reason:'確認済み支給額（1円以上）を入力'};
+ if(!/^(?:\d+)(?:\.\d{1,2})?$/.test(hoursText)||Number(hoursText)<0||Number(hoursText)>744)return {ok:false,reason:'確認済み勤務時間（時間）を入力'};
+ if(!/^\d+$/.test(daysText)||Number(daysText)<1||Number(daysText)>31)return {ok:false,reason:'確認済み勤務日数を入力'};
+ if(reason.length<5||reason.length>500)return {ok:false,reason:'確認内容・根拠を5〜500文字で入力'};
+ return {ok:true,amount:Number(amountText),minutes:Math.round(Number(hoursText)*60),days:Number(daysText),reason};
+}
 export function payrollBulkReview(rows=[]){
- const results=rows.map(row=>({row,...payrollConfirmationEligibility(row)}));
+ const results=rows.map(row=>({row,...payrollConfirmationEligibility(row),canManualConfirm:canManualConfirmPayroll(row)}));
  return {
   results,
   eligible:results.filter(item=>item.status==='eligible'),
   confirmed:results.filter(item=>item.status==='confirmed'),
   blocked:results.filter(item=>item.status==='blocked'),
+  manualCandidates:results.filter(item=>item.status==='blocked'&&item.canManualConfirm),
   excluded:results.filter(item=>item.status==='external'||item.status==='no_pay')
  };
 }
