@@ -38,14 +38,35 @@ export function manualPayrollValues(entry){
  if(reason.length<5||reason.length>500)return {ok:false,reason:'確認内容・根拠を5〜500文字で入力'};
  return {ok:true,amount:Number(amountText),minutes:Math.round(Number(hoursText)*60),days:Number(daysText),reason};
 }
+/**
+ * A fixed monthly salary does not depend on calculating hours from incomplete
+ * punches. The owner may affirm the displayed salary + travel + adjustments
+ * without entering speculative work hours/days.
+ */
+export function canQuickConfirmMonthlySalary(row){
+ if(!canManualConfirmPayroll(row)||Number(row?.monthly||0)<=0)return false;
+ if(!Number.isSafeInteger(Number(row.total))||Number(row.total)<=0)return false;
+ const parts=[row.monthly,row.transportTotal||0,row.adj?.adjustment_amount||0];
+ if(!parts.every(value=>Number.isSafeInteger(Number(value))))return false;
+ return Number(row.monthly)+Number(row.transportTotal||0)+Number(row.adj?.adjustment_amount||0)===Number(row.total);
+}
+export function monthlySalaryExceptionValues(row,approved=false){
+ if(!canQuickConfirmMonthlySalary(row))return {ok:false,reason:'月給設定・給与額・支払区分を確認してください'};
+ if(!approved)return {ok:false,reason:'月給・交通費・調整額を確認してチェックしてください'};
+ const amount=Number(row.total),monthly=Number(row.monthly),transport=Number(row.transportTotal||0),
+  adjustment=Number(row.adj?.adjustment_amount||0);
+ const reason=`月給制・打刻不完全。オーナーが月給${monthly}円、交通費${transport}円、調整額${adjustment}円、支給合計${amount}円を確認。勤務時間・日数は未検証。`;
+ return {ok:true,amount,minutes:0,days:0,reason};
+}
 export function payrollBulkReview(rows=[]){
- const results=rows.map(row=>({row,...payrollConfirmationEligibility(row),canManualConfirm:canManualConfirmPayroll(row)}));
+ const results=rows.map(row=>({row,...payrollConfirmationEligibility(row),canManualConfirm:canManualConfirmPayroll(row),canQuickSalary:canQuickConfirmMonthlySalary(row)}));
  return {
   results,
   eligible:results.filter(item=>item.status==='eligible'),
   confirmed:results.filter(item=>item.status==='confirmed'),
   blocked:results.filter(item=>item.status==='blocked'),
-  manualCandidates:results.filter(item=>item.status==='blocked'&&item.canManualConfirm),
+  manualCandidates:results.filter(item=>item.status==='blocked'&&item.canManualConfirm&&!item.canQuickSalary),
+  salaryCandidates:results.filter(item=>item.status==='blocked'&&item.canQuickSalary),
   excluded:results.filter(item=>item.status==='external'||item.status==='no_pay')
  };
 }
