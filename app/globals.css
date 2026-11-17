@@ -943,3 +943,14 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .payroll-bulk-manual-hint,.payroll-bulk-manual-valid{font-size:11px;color:#8d5a0a;margin:0;line-height:1.6}
 .payroll-bulk-manual-valid{color:#147245}
 @media(max-width:650px){.payroll-bulk-manual-inputs{grid-template-columns:1fr}.payroll-bulk-manual-form{padding:10px}.payroll-bulk-table{min-width:520px}}
+
+
+/* Salaried staff need only one checked approval, not speculative time/day input. */
+.payroll-bulk-salary-row{background:#f1f8f5}
+.payroll-bulk-salary-row>td{padding:0!important;border-bottom:1px solid #c8e3d2!important}
+.payroll-bulk-salary-review{padding:9px 12px;border-left:3px solid #309371;display:flex;flex-direction:column;gap:5px;min-width:0}
+.payroll-bulk-salary-review strong{font-size:12px;color:#146446}
+.payroll-bulk-salary-review span{font-size:12px;color:#223c33;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.payroll-bulk-salary-review small{color:#526d62;font-size:11px;line-height:1.5}
+.payroll-bulk-salary-notice{background:#edf8f2;border:1px solid #a8d8c0;padding:10px 13px;border-radius:8px;margin-top:12px;color:#185c3c;font-size:12px;line-height:1.55}
+.payroll-bulk-salary-notice p{margin:5px 0 0}
