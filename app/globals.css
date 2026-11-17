@@ -891,3 +891,37 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .monthly-management-error{color:#ac2424;font-size:13px;padding:8px 12px;background:#fff1f1;border:1px solid #efb3b3;border-radius:7px}
 .monthly-management-disclaimer{margin:13px 0 0;color:#6c788b;font-size:11px;line-height:1.65}
 @media(max-width:650px){.monthly-management-report{padding:15px 14px}.monthly-management-report-fields label,.monthly-management-report-fields input{width:100%}.monthly-management-report-fields button{width:100%}.monthly-management-actions button{width:100%}}
+
+
+/* Owner-only batch payroll confirmation, before individual payroll cards. */
+.payroll-bulk{border:1px solid #d3e0ed;background:#fff;border-radius:13px;padding:18px 20px;margin:15px 0 22px}
+.payroll-bulk-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.payroll-bulk-heading h3{font-size:18px;margin:0;color:#19304a}
+.payroll-bulk-heading p{font-size:12px;color:#627286;margin:5px 0 0;line-height:1.6}
+.payroll-bulk-period{font-size:12px;font-weight:700;color:#416281;background:#eef4fb;border-radius:99px;padding:6px 10px}
+.payroll-bulk-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:15px 0}
+.payroll-bulk-stats>div{border:1px solid #dce6f2;border-radius:9px;padding:10px 12px;background:#f8fafc;min-width:0}
+.payroll-bulk-stats small{color:#61718a;font-size:11px;display:block;margin-bottom:4px}
+.payroll-bulk-stats strong{font-size:20px;color:#19304a;line-height:1.35;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.payroll-bulk-details{border:1px solid #dce5ef;border-radius:9px;overflow:hidden}
+.payroll-bulk-details summary{padding:11px 14px;color:#264f7c;font-size:13px;font-weight:700;cursor:pointer;background:#f1f6fc}
+.payroll-bulk-table-wrap{overflow-x:auto;max-height:340px;overflow-y:auto}
+.payroll-bulk-table{min-width:460px;width:100%;border-collapse:collapse;font-size:12px}
+.payroll-bulk-table th,.payroll-bulk-table td{border-bottom:1px solid #e4ebf2;padding:9px 11px;text-align:left}
+.payroll-bulk-table thead{background:#eaf1f8;color:#34445b;position:sticky;top:0;z-index:1}
+.payroll-bulk-table th:first-child,.payroll-bulk-table td:first-child{width:54px;text-align:center}
+.payroll-bulk-table th.num,.payroll-bulk-table td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.payroll-bulk-table input[type=checkbox]{width:18px;height:18px;accent-color:#1d5eae;cursor:pointer}
+.payroll-bulk-table input:disabled{cursor:not-allowed}
+.payroll-bulk-confirmed,.payroll-bulk-external,.payroll-bulk-no_pay{background:#f8fafc;color:#67758a}
+.payroll-bulk-blocked{color:#9b341e;background:#fffbf5}
+.payroll-bulk-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.payroll-bulk-actions .primary{padding:12px 17px;min-height:44px;font-weight:700}
+.payroll-bulk-actions .primary:disabled{opacity:.55;cursor:not-allowed}
+.payroll-bulk-actions p{font-size:11px;line-height:1.6;color:#697a8d;max-width:550px;margin:0}
+.payroll-bulk-warning{margin-top:12px;padding:10px 12px;background:#fff8ed;border:1px solid #ecca9f;color:#844810;border-radius:7px;font-size:12px;line-height:1.65}
+.payroll-bulk-warning p{margin:4px 0 0;overflow-wrap:anywhere}
+.payroll-bulk-success{color:#166345;background:#eaf8f0;padding:10px 12px;border-radius:7px;font-size:12px}
+.payroll-bulk-error{color:#9f2828;background:#fff2f2;border:1px solid #f1baba;padding:10px 12px;border-radius:7px;font-size:12px}
+@media(max-width:900px){.payroll-bulk-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:570px){.payroll-bulk{padding:14px}.payroll-bulk-stats{gap:7px}.payroll-bulk-stats strong{font-size:18px}.payroll-bulk-actions .primary{width:100%}}
