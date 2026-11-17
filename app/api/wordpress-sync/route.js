@@ -59,12 +59,18 @@ export async function POST(request) {
   let payload;
   try { payload = projectWordPressEvent(event); }
   catch { return Response.json({ error: 'Invalid public event data' }, { status: 422 }); }
+  // Live publication is a separate opt-in after the WordPress single-event trial.
+  const liveEnabled = process.env.WORDPRESS_SYNC_LIVE_ENABLED === 'true';
   try {
     const result = await sendWordPressEventWithRetry(payload, {
       endpoint: process.env.WORDPRESS_SYNC_ENDPOINT,
-      secret: process.env.WORDPRESS_SYNC_SECRET
+      secret: process.env.WORDPRESS_SYNC_SECRET,
+      requireDryRun: !liveEnabled
     });
-    return Response.json({ accepted: true, dry_run: result.dry_run, event_id: event.id });
+    if (liveEnabled && result.dry_run !== false) {
+      return Response.json({ error: 'WordPress publication has not been enabled on the site' }, { status: 409 });
+    }
+    return Response.json({ accepted: true, dry_run: result.dry_run, event_id: event.id, post_id: result.post_id || null });
   } catch {
     return Response.json({ error: 'WordPress staging sync failed' }, { status: 502 });
   }
