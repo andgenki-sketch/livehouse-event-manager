@@ -23,7 +23,7 @@ async function testWordPressConnection() {
     });
     const result = await response.json();
     if (!response.ok || result.connected !== true || result.dry_run !== true) {
-      throw new Error(result?.error || 'WordPress接続確認に失敗しました');
+      throw new Error(result?.code ? '診断コード：' + result.code : 'WordPress接続確認に失敗しました');
     }
     alert('WordPressとの署名付き接続に成功しました。これはテストです。公式サイトのイベントはまだ変更されていません。');
   } catch (error) {
