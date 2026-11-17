@@ -12,7 +12,7 @@ export default function PayrollReport({client,team,month}){
   setBusy(true);setError('');
   try{
    const [confirmed,people]=await Promise.all([
-    client.from('payroll_confirmations').select('staff_id,team_id,payroll_month,confirmed_amount,confirmed_minutes,work_days').eq('team_id',team.id).eq('payroll_month',month+'-01'),
+    client.from('payroll_confirmations').select('staff_id,team_id,payroll_month,confirmed_amount,confirmed_minutes,work_days,confirmation_method,exception_reason').eq('team_id',team.id).eq('payroll_month',month+'-01'),
     client.from('venue_staff').select('id,team_id,name').eq('team_id',team.id)
    ]);
    if(confirmed.error)throw confirmed.error;if(people.error)throw people.error;
