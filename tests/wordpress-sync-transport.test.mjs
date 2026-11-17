@@ -62,3 +62,35 @@ test('does not retry validation failures', async () => {
   }));
   assert.equal(calls, 1);
 });
+
+test('preserves a safe WordPress receiver error code on HTTP failure', async () => {
+  await assert.rejects(
+    sendWordPressEvent(payload, {
+      endpoint: 'https://example.com/wp-json/tsa-sync/v1/events',
+      secret,
+      fetcher: async () => ({
+        ok: false, status: 409,
+        json: async () => ({ code: 'tsa_sync_manual_day_collision', message: 'private details' })
+      })
+    }),
+    error => error.message === 'WordPress sync HTTP 409' &&
+      error.wordpressCode === 'tsa_sync_manual_day_collision' &&
+      !error.message.includes('private details')
+  );
+});
+
+test('rejects unsafe server error codes and HTML errors without exposing details', async () => {
+  for (const json of [
+    async () => ({ code: 'secret=should-not-echo' }),
+    async () => { throw new SyntaxError('HTML error'); }
+  ]) {
+    await assert.rejects(
+      sendWordPressEvent(payload, {
+        endpoint: 'https://example.com/wp-json/tsa-sync/v1/events',
+        secret,
+        fetcher: async () => ({ ok: false, status: 403, json })
+      }),
+      error => error.message === 'WordPress sync HTTP 403' && error.wordpressCode === undefined
+    );
+  }
+});
