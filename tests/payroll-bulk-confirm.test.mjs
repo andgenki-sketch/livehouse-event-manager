@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {confirmedPayrollRows,payrollReportHtml} from '../app/components/payroll-report.mjs';
 import {payrollConfirmationEligibility,payrollBulkReview,payrollSelectedTotal,canManualConfirmPayroll,manualPayrollValues,canQuickConfirmMonthlySalary,monthlySalaryExceptionValues} from '../app/components/payroll-bulk-confirm.mjs';
 const example=(id,total=40000,rest={})=>({
  s:{id,name:'スタッフ'+id},monthly:0,hourly:1200,total,usedMinutes:1800,
@@ -125,4 +126,21 @@ test('salaried staff with complete punches remain in regular payroll workflow',(
  const row=example('salary',300000,{monthly:300000,hourly:0,transportTotal:0});
  assert.equal(canQuickConfirmMonthlySalary(row),false);
  assert.equal(payrollBulkReview([row]).eligible.length,1);
+});
+
+test('salary exception PDF shows work time as unverified, never 0 actual hours or 0 actual days',()=>{
+ const team='team1',staff=[{id:'s1',team_id:team,name:'月給社員'}];
+ const confirmations=[{
+  team_id:team,staff_id:'s1',payroll_month:'2026-10-01',
+  confirmed_amount:300000,confirmed_minutes:0,work_days:0,
+  confirmation_method:'salary_exception',exception_reason:'月給制につき金額確認'
+ }];
+ const rows=confirmedPayrollRows(confirmations,staff,team,'2026-10');
+ assert.equal(rows[0].method,'salary_exception');
+ const html=payrollReportHtml({rows,month:'2026-10',teamName:'ThunderSnakeATSUGI'});
+ assert.match(html,/月給簡単確定/);
+ assert.match(html,/未確認/);
+ assert.doesNotMatch(html,/月給社員<\/td>/);
+ assert.equal(rows[0].days,0);
+ assert.equal(rows[0].minutes,0);
 });
