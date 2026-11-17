@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {payrollConfirmationEligibility,payrollBulkReview,payrollSelectedTotal,canManualConfirmPayroll,manualPayrollValues} from '../app/components/payroll-bulk-confirm.mjs';
+import {confirmedPayrollRows,payrollReportHtml} from '../app/components/payroll-report.mjs';
+import {payrollConfirmationEligibility,payrollBulkReview,payrollSelectedTotal,canManualConfirmPayroll,manualPayrollValues,canQuickConfirmMonthlySalary,monthlySalaryExceptionValues} from '../app/components/payroll-bulk-confirm.mjs';
 const example=(id,total=40000,rest={})=>({
  s:{id,name:'スタッフ'+id},monthly:0,hourly:1200,total,usedMinutes:1800,
  mixedDays:[],unclocked:[],incomplete:[],isExternalOnly:false,confirmed:null,...rest
@@ -78,4 +79,68 @@ test('manual hour and day range checks reject implausible input',()=>{
  const base={amount:'10000',hours:'5',days:'1',reason:'本人に確認済みの申告記録',acknowledged:true};
  for(const hours of ['-1','745','a','1.234'])assert.equal(manualPayrollValues({...base,hours}).ok,false,hours);
  for(const days of ['0','32','1.5','abc'])assert.equal(manualPayrollValues({...base,days}).ok,false,days);
+});
+
+test('salaried staff with missing punches can be approved with one explicit checkbox',()=>{
+ const row=example('salary',302000,{
+  monthly:300000,hourly:0,usedMinutes:0,unclocked:[{id:'one'}],transportTotal:2000,
+  adj:{adjustment_amount:0}
+ });
+ const review=payrollBulkReview([row]);
+ assert.equal(review.eligible.length,0);
+ assert.equal(review.salaryCandidates.length,1);
+ assert.equal(review.manualCandidates.length,0);
+ assert.equal(canQuickConfirmMonthlySalary(row),true);
+ assert.equal(monthlySalaryExceptionValues(row,false).ok,false);
+ const approved=monthlySalaryExceptionValues(row,true);
+ assert.equal(approved.ok,true);
+ assert.equal(approved.amount,302000);
+ assert.equal(approved.minutes,0);
+ assert.equal(approved.days,0);
+ assert.match(approved.reason,/月給制・打刻不完全/);
+});
+test('salaried staff totals include allowances and saved adjustment',()=>{
+ const row=example('salary',293500,{
+  monthly:300000,hourly:0,incomplete:[{id:'punch'}],transportTotal:3500,
+  adj:{adjustment_amount:-10000}
+ });
+ assert.equal(canQuickConfirmMonthlySalary(row),true);
+ assert.equal(monthlySalaryExceptionValues(row,true).amount,293500);
+});
+test('salaried quick confirmation never permits external-only, mixed, confirmed or invalid totals',()=>{
+ const base={monthly:300000,hourly:0,incomplete:[{}],transportTotal:0,adj:{adjustment_amount:0}};
+ assert.equal(canQuickConfirmMonthlySalary(example('x',300000,{...base,isExternalOnly:true})),false);
+ assert.equal(canQuickConfirmMonthlySalary(example('x',300000,{...base,mixedDays:['2026-11-03']})),false);
+ assert.equal(canQuickConfirmMonthlySalary(example('x',300000,{...base,confirmed:{id:'already'}})),false);
+ assert.equal(canQuickConfirmMonthlySalary(example('x',299999,base)),false);
+ assert.equal(canQuickConfirmMonthlySalary(example('x',-1,base)),false);
+});
+test('hourly staff still need full reason time and days for incomplete punches',()=>{
+ const row=example('hourly',40000,{monthly:0,hourly:1400,incomplete:[{}]});
+ assert.equal(canQuickConfirmMonthlySalary(row),false);
+ const review=payrollBulkReview([row]);
+ assert.equal(review.manualCandidates.length,1);
+ assert.equal(review.salaryCandidates.length,0);
+});
+test('salaried staff with complete punches remain in regular payroll workflow',()=>{
+ const row=example('salary',300000,{monthly:300000,hourly:0,transportTotal:0});
+ assert.equal(canQuickConfirmMonthlySalary(row),false);
+ assert.equal(payrollBulkReview([row]).eligible.length,1);
+});
+
+test('salary exception PDF shows work time as unverified, never 0 actual hours or 0 actual days',()=>{
+ const team='team1',staff=[{id:'s1',team_id:team,name:'月給社員'}];
+ const confirmations=[{
+  team_id:team,staff_id:'s1',payroll_month:'2026-10-01',
+  confirmed_amount:300000,confirmed_minutes:0,work_days:0,
+  confirmation_method:'salary_exception',exception_reason:'月給制につき金額確認'
+ }];
+ const rows=confirmedPayrollRows(confirmations,staff,team,'2026-10');
+ assert.equal(rows[0].method,'salary_exception');
+ const html=payrollReportHtml({rows,month:'2026-10',teamName:'ThunderSnakeATSUGI'});
+ assert.match(html,/月給簡単確定/);
+ assert.match(html,/未確認/);
+ assert.doesNotMatch(html,/月給社員<\/td>/);
+ assert.equal(rows[0].days,0);
+ assert.equal(rows[0].minutes,0);
 });
