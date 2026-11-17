@@ -96,19 +96,21 @@ export function buildMonthlyExecutiveSummary({month,teamId,staff=[],events=[],se
  const pending=[...expectedIds].filter(id=>!confirmedIds.has(id)).map(id=>staffMap.get(id)||'氏名未登録').sort((a,b)=>a.localeCompare(b,'ja'));
  const salaryTotal=payroll.reduce((n,r)=>n+r.amount,0);
  const manualPayroll=payroll.filter(r=>r.method==='manual_exception');
+ const salaryExceptions=payroll.filter(r=>r.method==='salary_exception');
  const hasConfirmed=payroll.length>0;
  const salesAvailable=eventRows.length===0||missingReports.length===0;
  const expenseRecordCount=ledger.length+eventRows.filter(e=>settlementMap.has(e.id)).length;
  const referenceBalance=hasConfirmed?sales-salaryTotal-expenseTotal-outsideTotal:null;
  const monthlyBudget=budget?.team_id===teamId&&budget.year===Number(month.slice(0,4))&&budget.month===Number(month.slice(5))?budget:null;
  return {
-  month,sales,salaryTotal,hasConfirmed,payroll,manualPayroll,pending,expectedCount:expectedIds.size,
+  month,sales,salaryTotal,hasConfirmed,payroll,manualPayroll,salaryExceptions,pending,expectedCount:expectedIds.size,
   confirmedCount:payroll.length,payrollComplete:hasConfirmed&&pending.length===0,
   expenseTotal,outsideTotal,ledgerExpense,eventExpense,ledgerOutside,eventOutside,
   eventsCount:eventRows.length,reportedEventsCount:eventRows.length-missingReports.length,
   missingReports,salesAvailable,ledgerCount:ledger.length,expenseRecordCount,referenceBalance,
   manuallyEnteredLabor,monthlyBudget,
   warnings:[
+   ...(salaryExceptions.length?[`月給金額のみ簡単例外確定 ${salaryExceptions.length}名。勤務時間・日数は未確認として記録されています`]:[]),
    ...(manualPayroll.length?[`打刻不完全などを手動確認して例外確定 ${manualPayroll.length}名。確認理由は給与確定履歴に記録されています`]:[]),
    ...(missingReports.length?[`収支未登録イベント ${missingReports.length}件：売上が過少の可能性があります`]:[]),
    ...(pending.length?[`給与未確定 ${pending.length}名（確定給与の支払依頼額には含めていません）`]:[]),
@@ -138,7 +140,7 @@ export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',i
   ${budgetRow('経費（イベント入力＋台帳）',data.expenseTotal,Number(budget.cost_budget||0),true)}
   ${budgetRow('外注費（別枠）',data.outsideTotal,null,true)}
  </tbody></table>`:'<p class="note">この月の予算は未設定のため、予算比較は表示できません。</p>';
- const payrollRows=data.payroll.map((row,i)=>`<tr><td class="num">${i+1}</td><td>${esc(row.name)}${row.method==='manual_exception'?'<span style="font-size:8pt;color:#97620b">（手動確認）</span>':''}</td><td class="num">${row.days}日</td><td class="num">${Math.floor(row.minutes/60)}時間${String(row.minutes%60).padStart(2,'0')}分</td><td class="num">${esc(val(row.amount))}</td></tr>`).join('');
+ const payrollRows=data.payroll.map((row,i)=>`<tr><td class="num">${i+1}</td><td>${esc(row.name)}${row.method==='manual_exception'?'<span style="font-size:8pt;color:#97620b">（実働手動確認）</span>':row.method==='salary_exception'?'<span style="font-size:8pt;color:#1b704c">（月給簡単確定）</span>':''}</td><td class="num">${row.method==='salary_exception'?'—':row.days+'日'}</td><td class="num">${row.method==='salary_exception'?'未確認':Math.floor(row.minutes/60)+'時間'+String(row.minutes%60).padStart(2,'0')+'分'}</td><td class="num">${esc(val(row.amount))}</td></tr>`).join('');
  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <title>${esc(month)}_月次経営サマリー兼給与支払依頼書</title><style>
  @page{size:A4 portrait;margin:14mm 13mm}
@@ -187,6 +189,7 @@ export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',i
  <p class="payroll-note">確定額は交通費・調整額を含む場合があります。所得税・社会保険等の控除後振込額とは限りません。${data.pending.length?' 未確定者がいるため、この金額のみを最終支払総額として送付しないでください。':''}</p>
  <h2>スタッフ別 給与確定一覧（五十音順）</h2>
  <table><thead><tr><th class="num">No.</th><th>氏名</th><th class="num">勤務日数</th><th class="num">勤務時間</th><th class="num">確定支給額</th></tr></thead><tbody>${payrollRows||'<tr><td colspan="5">確定済み給与はありません</td></tr>'}</tbody></table>
+ ${data.salaryExceptions?.length?`<p class="payroll-note">月給のみ簡単例外確定 ${data.salaryExceptions.length}名。支給額はオーナーによる確認済み、勤務時間・日数は未確認です。</p>`:''}
  ${data.manualPayroll?.length?`<p class="payroll-note">打刻不完全などを手動で例外確定した給与 ${data.manualPayroll.length}名。勤務時間・勤務日数・支給額はオーナーが確認した手動入力値です。未打刻の修正を意味しません。</p>`:''}
  ${data.pending.length?`<div class="warning"><b>未確定のスタッフ</b><p>${data.pending.map(esc).join('、')}</p></div>`:''}
  ${note.trim()?`<h2>社長への連絡・確認事項</h2><div class="memo">${esc(note)}</div>`:''}
