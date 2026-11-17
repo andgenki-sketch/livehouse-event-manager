@@ -36,3 +36,12 @@ The current receiver is **acknowledgment-only**. Its signed requests use a five-
 - WordPress event dates now include UTC companion metadata. Validate against the installed The Events Calendar version and the site's calendar listing before enabling writes.
 
 - The authenticated staging API now retries transient HTTP 408/429/5xx, timeouts and connection failures at most once (two attempts total), signing a new nonce each time. HTTP 400/401/403/409 are not retried. This is **not** a durable outbox; failures after the request ends still require manual retry or future queue support.
+
+## WordPress safe-setup v0.1.2 (manual site-admin action)
+
+- Install the safe-setup ZIP to the site's existing WordPress installation, replacing v0.1.1.
+- Under Tools → TSA Event Sync, generate a signing secret. It is saved as a non-autoloaded WordPress option `tsa_sync_signing_secret`; `TSA_EVENT_SYNC_SECRET` in `wp-config.php` takes precedence when present.
+- Copy the one-time value directly to the Vercel project's sensitive `WORDPRESS_SYNC_SECRET` environment variable. **Never paste it into chat, GitHub issues, or screenshots.**
+- Configure `WORDPRESS_SYNC_ENDPOINT=https://thunder-snake.com/wp-json/tsa-sync/v1/events` and `WORDPRESS_SYNC_STAGING_ENABLED=true` only after confirming the site and environment.
+- Redeploy before testing. Verify the authenticated dry-run acknowledgement with an authorized test event. Safe setup v0.1.2 never publishes, modifies, or deletes WordPress events.
+- The feature-branch receiver supports both the wp-config constant and the admin-generated option to avoid losing authentication when upgrading. Actual WordPress writes remain blocked pending post-type/theme metadata tests, non-duplicating event-level concurrency locks, and manual cutover.
