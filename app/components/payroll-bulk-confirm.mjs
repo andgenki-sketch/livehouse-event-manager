@@ -32,9 +32,9 @@ export function manualPayrollValues(entry){
  const hoursText=String(entry?.hours??'').trim();
  const daysText=String(entry?.days??'').trim();
  if(!entry?.acknowledged)return {ok:false,reason:'勤務内容の確認チェックが必要'};
- if(!/^\\d+$/.test(amountText)||Number(amountText)<=0||!Number.isSafeInteger(Number(amountText)))return {ok:false,reason:'確認済み支給額（1円以上）を入力'};
- if(!/^(?:\\d+)(?:\\.\\d{1,2})?$/.test(hoursText)||Number(hoursText)<0||Number(hoursText)>744)return {ok:false,reason:'確認済み勤務時間（時間）を入力'};
- if(!/^\\d+$/.test(daysText)||Number(daysText)<1||Number(daysText)>31)return {ok:false,reason:'確認済み勤務日数を入力'};
+ if(!/^\d+$/.test(amountText)||Number(amountText)<=0||!Number.isSafeInteger(Number(amountText)))return {ok:false,reason:'確認済み支給額（1円以上）を入力'};
+ if(!/^(?:\d+)(?:\.\d{1,2})?$/.test(hoursText)||Number(hoursText)<0||Number(hoursText)>744)return {ok:false,reason:'確認済み勤務時間（時間）を入力'};
+ if(!/^\d+$/.test(daysText)||Number(daysText)<1||Number(daysText)>31)return {ok:false,reason:'確認済み勤務日数を入力'};
  if(reason.length<5||reason.length>500)return {ok:false,reason:'確認内容・根拠を5〜500文字で入力'};
  return {ok:true,amount:Number(amountText),minutes:Math.round(Number(hoursText)*60),days:Number(daysText),reason};
 }
