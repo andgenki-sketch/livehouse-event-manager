@@ -5,7 +5,7 @@ export function confirmedPayrollRows(confirmations,staff,teamId,month){
  const names=new Map(staff.filter(s=>s.team_id===teamId).map(s=>[s.id,s.name]));
  return confirmations.filter(c=>c.team_id===teamId&&c.payroll_month===month+'-01').map(c=>{
   const name=names.get(c.staff_id);if(!name)throw Error('スタッフ情報を取得できませんでした');
-  return {id:c.staff_id,name,amount:number(c.confirmed_amount),minutes:number(c.confirmed_minutes),days:number(c.work_days),method:['manual_exception','salary_exception'].includes(c.confirmation_method)?c.confirmation_method:'normal',exceptionReason:c.confirmation_method==='manual_exception'?String(c.exception_reason||''):''};
+  return {id:c.staff_id,name,amount:number(c.confirmed_amount),minutes:number(c.confirmed_minutes),days:number(c.work_days),method:['manual_exception','salary_exception'].includes(c.confirmation_method)?c.confirmation_method:'normal',exceptionReason:['manual_exception','salary_exception'].includes(c.confirmation_method)?String(c.exception_reason||''):''};
  }).sort((a,b)=>a.name.localeCompare(b.name,'ja')||a.id.localeCompare(b.id));
 }
 export function payrollReportHtml({rows,month,teamName,issuedAt=new Date()}){
