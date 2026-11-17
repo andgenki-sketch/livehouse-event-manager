@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { projectWordPressEvent } from '../../../lib/wordpress-event-projection.mjs';
 import { sendWordPressEventWithRetry } from '../../../lib/wordpress-sync-transport.mjs';
+import { classifyWordPressConnectionFailure } from '../../../lib/wordpress-sync-diagnostics.mjs';
 
 export const runtime = 'nodejs';
 
@@ -71,7 +72,11 @@ export async function POST(request) {
       return Response.json({ error: 'WordPress publication has not been enabled on the site' }, { status: 409 });
     }
     return Response.json({ accepted: true, dry_run: result.dry_run, event_id: event.id, post_id: result.post_id || null });
-  } catch {
-    return Response.json({ error: 'WordPress staging sync failed' }, { status: 502 });
+  } catch (error) {
+    return Response.json({
+      error: 'WordPress event sync failed',
+      code: classifyWordPressConnectionFailure(error),
+      wordpress_code: typeof error?.wordpressCode === 'string' ? error.wordpressCode : null
+    }, { status: 502 });
   }
 }
