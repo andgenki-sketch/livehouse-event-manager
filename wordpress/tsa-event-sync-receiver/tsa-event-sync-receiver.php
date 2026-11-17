@@ -7,11 +7,23 @@
 defined('ABSPATH') || exit;
 
 /**
- * Configure TSA_EVENT_SYNC_SECRET in wp-config.php (32+ random characters).
- * The receiver does not register unless the secret is configured.
+ * The safe-setup plugin v0.1.2 stores the signing secret in a non-autoloaded
+ * WordPress option. The explicit wp-config.php constant takes precedence.
+ * Keep both paths supported when upgrading from safe setup to the receiver.
  */
+function tsa_sync_signing_secret() {
+    if (defined('TSA_EVENT_SYNC_SECRET') && is_string(TSA_EVENT_SYNC_SECRET) && strlen(TSA_EVENT_SYNC_SECRET) >= 32) {
+        return TSA_EVENT_SYNC_SECRET;
+    }
+    $stored = get_option('tsa_sync_signing_secret', '');
+    return is_string($stored) && strlen($stored) >= 32 ? $stored : '';
+}
+function tsa_sync_configured() {
+    return tsa_sync_signing_secret() !== '';
+}
+
 add_action('rest_api_init', function () {
-    if (!defined('TSA_EVENT_SYNC_SECRET') || !is_string(TSA_EVENT_SYNC_SECRET) || strlen(TSA_EVENT_SYNC_SECRET) < 32) {
+    if (!tsa_sync_configured()) {
         return;
     }
     register_rest_route('tsa-sync/v1', '/events', array(
@@ -34,7 +46,7 @@ function tsa_sync_authenticate($request) {
         !is_string($signature) || !preg_match('/^sha256=[a-f0-9]{64}$/', $signature)) {
         return new WP_Error('tsa_sync_unauthorized', 'Unauthorized', array('status' => 401));
     }
-    $expected = 'sha256=' . hash_hmac('sha256', $timestamp . '.' . $nonce . '.' . $request->get_body(), TSA_EVENT_SYNC_SECRET);
+    $expected = 'sha256=' . hash_hmac('sha256', $timestamp . '.' . $nonce . '.' . $request->get_body(), tsa_sync_signing_secret());
     if (!hash_equals($expected, $signature)) {
         return new WP_Error('tsa_sync_unauthorized', 'Unauthorized', array('status' => 401));
     }
