@@ -59,7 +59,7 @@ export default function CashflowSpreadsheet({client,team}){
    return {row:{...active,...input,month:month+'-01',scenario:view,status:'draft'},error:null};
   }catch(e){return {row:null,error:e?.message||'金額の入力を確認してください'}}
  },[form,month,view,unit,active]);
- const chosen=parsed.row&&dirty?parsed.row:active;
+ const chosen=dirty?parsed.row:active;
  const getRow=(m,scenario)=>m===month&&scenario===view&&view!=='difference'?chosen:record(m,scenario);
  const rowsByMonth=useMemo(()=>Object.fromEntries(months.map(m=>[m,getRow(m,view)])),[months,records,month,view,chosen]);
  const selectedPlan=record(month,'plan'),selectedActual=record(month,'actual');
