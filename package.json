@@ -4,7 +4,7 @@
     "build": "next build",
     "start": "next start",
     "prepare:timetable": "node scripts/prepare-timetable-reader.mjs",
-    "prebuild": "npm run prepare:timetable && npm run test:hall-deductions && npm run test:shift-labor && npm run test:management-report && npm run test:payroll-bulk && npm run test:payroll-report && npm run test:next-budget",
+    "prebuild": "npm run prepare:timetable && npm run test:hall-deductions && npm run test:shift-labor && npm run test:management-report && npm run test:payroll-bulk && npm run test:payroll-report && npm run test:next-budget && npm run test:next-budget-permissions",
     "predev": "npm run prepare:timetable",
     "test:timetable": "node --test tests/timetable-import.test.mjs",
     "test:hall-deductions": "node --test tests/hall-deductions.test.mjs",
@@ -12,7 +12,8 @@
     "test:management-report": "node --test tests/monthly-management-report.test.mjs",
     "test:payroll-bulk": "node --test tests/payroll-bulk-confirm.test.mjs",
     "test:payroll-report": "node --test tests/payroll-report-simplified.test.mjs",
-    "test:next-budget": "node --test tests/next-month-budget-report.test.mjs"
+    "test:next-budget": "node --test tests/next-month-budget-report.test.mjs",
+    "test:next-budget-permissions": "node --test tests/next-month-budget-event-permissions.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "latest",
