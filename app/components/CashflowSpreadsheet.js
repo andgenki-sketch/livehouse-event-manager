@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useMemo,useState} from 'react';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import {CASHFLOW_KEYS,calculateCashflow,cashflowMonthList,cashflowYearStart,validateCashflowEntry,yen} from './cashflow-model.mjs';
 import {CASHFLOW_SHEET_ROWS,cashflowSheetValue,cashflowSheetAnnualValue,cashflowCellToYen,cashflowYenToInput,cashflowYenToDisplay} from './cashflow-sheet-layout.mjs';
 
@@ -38,6 +38,7 @@ export default function CashflowSpreadsheet({client,team}){
  const [view,setView]=useState('plan');
  const [unit,setUnit]=useState('man');
  const [entries,setEntries]=useState([]);
+ const sheetRef=useRef(null);
  const [form,setForm]=useState({});
  const [loading,setLoading]=useState(true);
  const [saving,setSaving]=useState(false);
@@ -78,6 +79,14 @@ export default function CashflowSpreadsheet({client,team}){
   setLoading(false);
  };
  useEffect(()=>{if(owner&&team?.id)reload()},[owner,team?.id,fiscalYear]);
+ useEffect(()=>{
+  const wrap=sheetRef.current;
+  const header=wrap?.querySelector('[data-cashflow-month="'+month+'"]');
+  if(!wrap||!header)return;
+  // Keep the selected edit column visible on a narrow screen.
+  const width=Math.max(0,wrap.clientWidth-245);
+  wrap.scrollLeft=Math.max(0,header.offsetLeft-245-Math.max(0,width/3));
+ },[month,loading,fiscalYear]);
 
  const confirmLeave=()=>!dirty||window.confirm('選択中の月に未保存の入力があります。保存せずに移動しますか？');
  const selectMonth=target=>{
@@ -215,11 +224,11 @@ export default function CashflowSpreadsheet({client,team}){
   </div>
   <p className="cashflow-sheet-help">月の見出しを選ぶと、その月の列で直接入力できます。小計と月末残高は自動計算します。空欄の「—」と0円は別です。{view==='difference'?'差異は比較専用です。':'変更後は表の下にある「保存」を押してください。'}</p>
   {loading?<div className="cashflow-sheet-loading">資金繰り表を読み込み中…</div>:
-  <div className="cashflow-sheet-scroll" role="region" tabIndex={0} aria-label="12か月の資金繰り一覧">
+  <div className="cashflow-sheet-scroll" ref={sheetRef} role="region" tabIndex={0} aria-label="12か月の資金繰り一覧">
    <table className="cashflow-sheet-table">
     <thead><tr>
      <th className="cashflow-sheet-label-cell">勘定項目</th>
-     {months.map(m=><th className={m===month?'cashflow-sheet-selected':''} key={m}>
+     {months.map(m=><th data-cashflow-month={m} className={m===month?'cashflow-sheet-selected':''} key={m}>
       <button type="button" onClick={()=>selectMonth(m)} aria-label={labelMonth(m)+'を編集'}>{Number(m.slice(5))}月 <span>{m===month?'入力月':'選択'}</span></button>
      </th>)}
      <th className="cashflow-sheet-annual">合計</th>
