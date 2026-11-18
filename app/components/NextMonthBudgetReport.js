@@ -2,6 +2,7 @@
 import {useState} from 'react';
 import {buildNextMonthBudgetSummary,nextJapanMonth,nextMonthBudgetReportHtml} from './next-month-budget-report.mjs';
 import {reportMonthRange} from './monthly-management-report.mjs';
+import {fetchMonthlyBudgetEvents} from './next-month-budget-events.mjs';
 
 /** Read-only executive plan export; budgets are edited in the existing finance UI. */
 export default function NextMonthBudgetReport({client,team}){
@@ -20,18 +21,18 @@ export default function NextMonthBudgetReport({client,team}){
   setBusy(true);setError('');
   try{
    const {start,end,year,monthNumber}=reportMonthRange(month);
-   const [budget,events,staff,compensation,externalConfigs]=await Promise.all([
+   const [budget,staff,compensation,externalConfigs]=await Promise.all([
     client.from('monthly_budgets').select('team_id,year,month,revenue_budget,labor_budget,hourly_labor_budget,cost_budget,outsourcing_budget,note').eq('team_id',team.id).eq('year',year).eq('month',monthNumber).maybeSingle(),
-    client.from('events').select('id,team_id,event_date,title,status,event_genre,revenue_budget').eq('team_id',team.id).gte('event_date',start).lt('event_date',end),
     client.from('venue_staff').select('id,team_id,active,name,hourly_wage').eq('team_id',team.id),
     client.from('staff_compensation_history').select('team_id,staff_id,effective_from,monthly_salary,hourly_wage,transportation_fee').eq('team_id',team.id).lte('effective_from',start),
     client.from('staff_external_pay_settings').select('team_id,staff_id,default_mode').eq('team_id',team.id)
    ]);
-   for(const [name,result] of [['月次予算',budget],['イベント予定',events],['スタッフ',staff],['給与設定',compensation],['外注設定',externalConfigs]]){
+   for(const [name,result] of [['月次予算',budget],['スタッフ',staff],['給与設定',compensation],['外注設定',externalConfigs]]){
     if(result.error)throw Error(name+'の取得に失敗しました：'+result.error.message);
    }
+   const events=await fetchMonthlyBudgetEvents(client,team.id,start,end);
    const data=buildNextMonthBudgetSummary({month,teamId:team.id,budget:budget.data,
-    events:events.data||[],staff:staff.data||[],compensation:compensation.data||[],externalConfigs:externalConfigs.data||[]});
+    events,staff:staff.data||[],compensation:compensation.data||[],externalConfigs:externalConfigs.data||[]});
    if(preview.closed)throw Error('プレビュー画面が閉じられました');
    preview.document.open();
    preview.document.write(nextMonthBudgetReportHtml({data,teamName:team.name||'ThunderSnakeATSUGI',ownerNote}));
