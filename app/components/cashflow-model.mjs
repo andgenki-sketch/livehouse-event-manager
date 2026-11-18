@@ -26,6 +26,7 @@ export function validateCashflowEntry(entry,{complete=false}={}){
  if(!entry||!/^\d{4}-(0[1-9]|1[0-2])$/.test(String(entry.month||'')))throw Error('対象月の形式を確認してください');
  if(!['actual','plan'].includes(entry.scenario))throw Error('実績・計画区分を確認してください');
  const opening=moneyValue(entry.opening_balance);
+ const reportedClosing=moneyValue(entry.reported_closing_balance);
  const fields={};
  for(const key of CASHFLOW_KEYS){
   const n=moneyValue(entry[key]);
@@ -33,7 +34,7 @@ export function validateCashflowEntry(entry,{complete=false}={}){
   fields[key]=n;
  }
  if(complete&&(opening===null||CASHFLOW_KEYS.some(key=>fields[key]===null)))throw Error('確認済みにするには残高と全項目の入力（該当しない項目は0円）が必要です');
- return {opening_balance:opening,...fields};
+ return {opening_balance:opening,reported_closing_balance:reportedClosing,...fields};
 }
 const sumGroup=(row,keys)=>{
  const values=keys.map(key=>row?.[key]);
@@ -42,6 +43,7 @@ const sumGroup=(row,keys)=>{
 };
 export function calculateCashflow(row){
  const opening=row?.opening_balance===null||row?.opening_balance===undefined?null:Number(row.opening_balance);
+ const reportedClosing=row?.reported_closing_balance===null||row?.reported_closing_balance===undefined?null:Number(row.reported_closing_balance);
  const groups=CASHFLOW_GROUPS.map(group=>{
   const values=sumGroup(row,group.fields.map(x=>x[0]));
   return {...group,...values,expected:group.fields.length,incomplete:values.known<group.fields.length};
@@ -58,8 +60,9 @@ export function calculateCashflow(row){
  const hasInput=!!row&&(opening!==null||recorded>0);
  // A partial closing balance is a visible provisional estimate, NOT a bank balance.
  const closing=opening!==null&&recorded>0?opening+net:null;
+ const reconciliationDelta=reportedClosing!==null&&closing!==null?reportedClosing-closing:null;
  return {
-  month:row?.month||null,scenario:row?.scenario||null,opening,closing,
+  month:row?.month||null,scenario:row?.scenario||null,opening,closing,reportedClosing,reconciliationDelta,
   operatingIncome,operatingOut,operatingNet,financialIncome,financialOut,
   financeNet,net:recorded>0?net:null,groups,recorded,expected:CASHFLOW_KEYS.length,
   complete,status:row?.status||'missing',reviewed:row?.status==='reviewed'&&complete,
@@ -97,7 +100,9 @@ export function cashflowReportSection({actual=null,plan=null,mode='actual'}={}){
   ['借入金等の調達',a.recorded?a.financialIncome:null,b.recorded?b.financialIncome:null],
   ['借入金返済・利息等',a.recorded?a.financialOut:null,b.recorded?b.financialOut:null],
   ['月間資金増減',a.net,b.net],
-  ['月末現金・預金（試算）',a.closing,b.closing]
+  ['月末現金・預金（計算）',a.closing,b.closing],
+  ['月末残高（原本・帳簿等）',a.reportedClosing,b.reportedClosing],
+  ['残高の照合差額',a.reconciliationDelta,b.reconciliationDelta]
  ];
  const columns=mode==='plan'?['計画','同月実績','差異']:['実績','同月計画','差異'];
  const line=rows.map(([label,x,y])=>`<tr><td>${esc(label)}</td><td class="num">${esc(yen(x))}</td><td class="num">${esc(yen(y))}</td><td class="num">${x!==null&&y!==null?esc(yen(x-y)):'—'}</td></tr>`).join('');
@@ -112,9 +117,9 @@ export function cashflowReportSection({actual=null,plan=null,mode='actual'}={}){
  const notes=[primary?.source_note?'根拠・参照：'+primary.source_note:null,primary?.evidence_note?'入出金の確認方法：'+primary.evidence_note:null,primary?.management_note?'経営協議メモ：'+primary.management_note:null].filter(Boolean);
  return `<section class="cashflow-report" style="margin:14px 0;break-inside:avoid-page">
  <h2 style="border-left:4px solid #294358;padding-left:8px;margin:14px 0 7px">${title}</h2>
- <p style="font-size:9pt;margin:3px 0 9px">記録状況：<b>${esc(status)}</b>　入力済み ${a.recorded}/${a.expected}項目。月末残高は入力した入出金に基づく${a.complete?'計算値':'暫定試算'}です。</p>
+ <p style="font-size:9pt;margin:3px 0 9px">記録状況：<b>${esc(status)}</b>　入力済み ${a.recorded}/${a.expected}項目。月末の計算値と原本・帳簿の月末残高は別欄です。入力途中の月は暫定値となります。</p>
  <table style="width:100%;border-collapse:collapse;font-size:8pt"><thead><tr><th>主要項目</th><th class="num">${columns[0]}</th><th class="num">${columns[1]}</th><th class="num">${columns[2]}</th></tr></thead><tbody>${line}</tbody></table>
- <details><summary style="font-size:8.5pt;color:#4b6177;margin:8px 0">資金繰り勘定科目の内訳（PDF印刷時も掲載）</summary>
+ <details open><summary style="font-size:8.5pt;color:#4b6177;margin:8px 0">資金繰り勘定科目の内訳（PDF印刷時も掲載）</summary>
  <table style="width:100%;border-collapse:collapse;font-size:7.5pt"><thead><tr><th>勘定項目</th><th class="num">${columns[0]}</th><th class="num">${columns[1]}</th><th class="num">${columns[2]}</th></tr></thead><tbody>${detail}</tbody></table></details>
  ${notes.length?`<p style="font-size:8pt;white-space:pre-wrap;margin-top:7px">${notes.map(x=>esc(x)).join('　 /　 ')}</p>`:''}
  <p style="font-size:8pt;color:#68798c;margin-top:6px">資金繰りは実際の入金・支払いに基づく独立管理です。イベント売上・経費・給与の計上額と合算しません。マイナス残高は補正せず表示。差異は上段－比較列、未入力は0円扱いしません。</p>
