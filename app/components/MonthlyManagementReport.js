@@ -67,7 +67,7 @@ export default function MonthlyManagementReport({client,team}){
  };
  return <section className="monthly-management-report" aria-label="社長提出用月次サマリー">
   <div className="monthly-management-report-head">
-   <div><h3>社長提出用 月次経営サマリー・給与支払依頼書</h3>
+   <div><h3>社長提出用 月次経営サマリー</h3>
     <p>毎月15日の提出向けに、前月の売上・給与・経費・外注費を2ページのPDF用書式にまとめます。</p></div>
    <span className="monthly-management-private">オーナー専用</span>
   </div>
