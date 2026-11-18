@@ -128,7 +128,7 @@ test('salaried staff with complete punches remain in regular payroll workflow',(
  assert.equal(payrollBulkReview([row]).eligible.length,1);
 });
 
-test('salary exception PDF shows work time as unverified, never 0 actual hours or 0 actual days',()=>{
+test('salary exception PDF shows only name and amount, while retaining unverified time internally',()=>{
  const team='team1',staff=[{id:'s1',team_id:team,name:'月給社員'}];
  const confirmations=[{
   team_id:team,staff_id:'s1',payroll_month:'2026-10-01',
@@ -138,9 +138,9 @@ test('salary exception PDF shows work time as unverified, never 0 actual hours o
  const rows=confirmedPayrollRows(confirmations,staff,team,'2026-10');
  assert.equal(rows[0].method,'salary_exception');
  const html=payrollReportHtml({rows,month:'2026-10',teamName:'ThunderSnakeATSUGI'});
- assert.match(html,/月給簡単確定/);
- assert.match(html,/未確認/);
- assert.doesNotMatch(html,/月給社員<\/td>/);
+ assert.doesNotMatch(html,/月給簡単確定/);
+ assert.doesNotMatch(html,/<th[^>]*>勤務日数<\/th>|<th[^>]*>勤務時間<\/th>/);
+ assert.match(html,/<td class="name">月給社員<\/td>/);
  assert.equal(rows[0].days,0);
  assert.equal(rows[0].minutes,0);
 });
