@@ -23,5 +23,5 @@ export default function PayrollReport({client,team,month}){
    preview.document.getElementById('print-report').addEventListener('click',()=>preview.print());
   }catch(e){preview.close();setError('出力できませんでした：'+e.message)}finally{setBusy(false)}
  };
- return <div><button type="button" disabled={busy} onClick={open}>{busy?'確認中…':'確定給与のPDF保存'}</button>{error&&<p role="alert">{error}</p>}</div>;
+ return <div><button type="button" disabled={busy} onClick={open}>{busy?'確認中…':'名前・金額のみの給与PDF保存'}</button>{error&&<p role="alert">{error}</p>}</div>;
 }
