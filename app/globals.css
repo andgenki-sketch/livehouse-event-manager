@@ -954,3 +954,11 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .payroll-bulk-salary-review small{color:#526d62;font-size:11px;line-height:1.5}
 .payroll-bulk-salary-notice{background:#edf8f2;border:1px solid #a8d8c0;padding:10px 13px;border-radius:8px;margin-top:12px;color:#185c3c;font-size:12px;line-height:1.55}
 .payroll-bulk-salary-notice p{margin:5px 0 0}
+
+
+/* Payroll review: compact list with only staff name and payment amount at a glance.
+ * Detailed timecards, adjustments and confirmation records remain expandable. */
+.payroll-person.payroll-person-simple{display:flex;justify-content:space-between;align-items:center;gap:14px;width:100%;min-width:0;text-align:left;cursor:pointer;padding:5px 3px;margin:0}
+.payroll-person.payroll-person-simple strong{font-size:15px;min-width:0;overflow-wrap:anywhere}
+.payroll-person.payroll-person-simple b{font-size:18px;white-space:nowrap;font-variant-numeric:tabular-nums;margin-left:auto}
+@media(max-width:600px){.payroll-person.payroll-person-simple{display:flex}.payroll-person.payroll-person-simple strong{font-size:14px}.payroll-person.payroll-person-simple b{font-size:17px}}
