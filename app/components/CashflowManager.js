@@ -45,6 +45,8 @@ export default function CashflowManager({client,team}){
  const current=find(month,scenario);
  const reference=find(month,scenario==='actual'?'plan':'actual');
  useEffect(()=>setEditing(blanks(current,month,scenario)),[month,scenario,current?.id,current?.updated_at]);
+ const currentBase=blanks(current,month,scenario);
+ const hasUnsaved=Object.keys(currentBase).some(key=>String(editing[key]??'')!==String(currentBase[key]??''));
  const currentResult=calculateCashflow(current);
  const refResult=calculateCashflow(reference);
  const fiscalMonths=useMemo(()=>cashflowMonthList(cashflowYearStart(month)),[month]);
@@ -79,6 +81,7 @@ export default function CashflowManager({client,team}){
  };
  const review=async()=>{
   if(!current||saving||loading)return;
+  if(hasUnsaved){setError('未保存の変更があります。先に下書きを保存してください。');return;}
   try{
    const verify={...current,month,scenario};
    validateCashflowEntry(verify,{complete:true});
@@ -87,16 +90,18 @@ export default function CashflowManager({client,team}){
     throw Error('実績を確認済みにする場合は、通帳・入金明細・支払記録などの照合根拠を5文字以上で記入してください');
   }catch(e){setError(e.message);return}
   const drift=currentResult.reconciliationDelta;
+  if(drift!==null&&drift!==0&&String(current.management_note||'').trim().length<5){setError('残高の照合差額があるため、差異の原因や確認事項を経営協議メモに5文字以上で記録してください。');return;}
   if(!window.confirm(month+'の'+(scenario==='actual'?'実績':'計画')+'を確認済みにしますか？\n項目に入力した金額、残高、照合根拠を確認してください。'+(drift!==null&&drift!==0?'\n※月末残高の照合差額：'+yen(drift)+'。差額の理由を経営協議メモに残してください。':'')))return;
   setSaving(true);setError('');setFeedback('');
   try{
    const {data:auth,error:authError}=await client.auth.getUser();
    if(authError||!auth?.user?.id)throw Error('オーナー権限を確認できませんでした');
-   const {error:writeError}=await client.from('cashflow_monthly').update({
+   const {data:saved,error:writeError}=await client.from('cashflow_monthly').update({
     status:'reviewed',reviewed_at:new Date().toISOString(),reviewed_by:auth.user.id,
     updated_by:auth.user.id,updated_at:new Date().toISOString()
-   }).eq('id',current.id).eq('team_id',team.id).eq('status','draft');
+   }).eq('id',current.id).eq('team_id',team.id).eq('status','draft').select('id').maybeSingle();
    if(writeError)throw writeError;
+   if(!saved)throw Error('他の編集がある可能性があります。再読み込みして確認してください。');
    await load();
    setFeedback('確認済みにしました。後から金額を編集した場合は、再び下書きに戻ります。');
   }catch(e){setError('確認処理に失敗しました：'+(e?.message||'不明なエラー'))}
@@ -179,7 +184,7 @@ export default function CashflowManager({client,team}){
   {selectedPreview&&<div className="cashflow-preview"><b>入力中の試算</b><span>営業入金：{yen(selectedPreview.operatingIncome)}</span><span>営業支出：{yen(selectedPreview.operatingOut)}</span><span>借入金等の調達・その他収入：{yen(selectedPreview.financialIncome)}</span><span>借入返済・利息等：{yen(selectedPreview.financialOut)}</span><strong>月末計算値：{yen(selectedPreview.closing)} ／ 記載値：{yen(selectedPreview.reportedClosing)} ／ 照合差：{yen(selectedPreview.reconciliationDelta)} {selectedPreview.complete?'（全項目入力）':'（未入力項目あり・暫定）'}</strong></div>}
   <div className="cashflow-actions">
    <button type="button" className="primary" disabled={saving||loading} onClick={save}>{saving?'保存中…':'下書きを保存'}</button>
-   <button type="button" disabled={saving||loading||!current||currentResult.reviewed||!currentResult.complete} onClick={review}>確認済みにする</button>
+   <button type="button" onClick={review} disabled={saving||loading||!current||currentResult.reviewed||!currentResult.complete||hasUnsaved}>確認済みにする</button>
    <span>保存すると確認状態は下書きに戻ります。提出前に通帳・帳簿と照合してください。</span>
   </div>
   {feedback&&<p role="status" className="cashflow-success">{feedback}</p>}
