@@ -67,7 +67,7 @@ export function cashflowSheetValue(row,key){
   case 'operating_profit':return calc.net===null?null:calc.operatingNet;
   case 'finance_income_total':return hasOne(row,['long_loan_in','short_loan_in','other_finance_in'])?calc.financialIncome:null;
   case 'finance_out_total':return hasOne(row,['long_loan_out','short_loan_out','loan_interest','other_finance_out'])?calc.financialOut:null;
-  case 'finance_balance':return calc.net===null?null:calc.financeNet;
+  case 'finance_balance':return hasOne(row,['long_loan_in','short_loan_in','other_finance_in','long_loan_out','short_loan_out','loan_interest','other_finance_out'])?calc.financeNet:null;
   case 'monthly_total':return calc.net;
   case 'closing_balance':return calc.closing;
   case 'reconciliation_delta':return calc.reconciliationDelta;
