@@ -54,9 +54,14 @@ export default function MonthlyManagementReport({client,team}){
     shifts:schedules.data||[],attendance:[...attendanceMap.values()],compensation:compensation.data||[],
     externalConfigs:external.data||[]
    });
+   const cashflowResponse=await client.from('cashflow_monthly').select('*')
+    .eq('team_id',team.id).eq('month',month+'-01');
+   if(cashflowResponse.error)throw Error('資金繰りデータを取得できませんでした：'+cashflowResponse.error.message);
+   const cashflowActual=(cashflowResponse.data||[]).find(row=>row.scenario==='actual')||null;
+   const cashflowPlan=(cashflowResponse.data||[]).find(row=>row.scenario==='plan')||null;
    if(preview.closed)throw Error('出力画面が閉じられました。もう一度開いてください。');
    preview.document.open();
-   preview.document.write(monthlyExecutiveReportHtml({data,teamName:team.name||'ThunderSnakeATSUGI',note}));
+   preview.document.write(monthlyExecutiveReportHtml({data,teamName:team.name||'ThunderSnakeATSUGI',note,cashflowActual,cashflowPlan}));
    preview.document.close();
    const print=preview.document.getElementById('print-report');
    if(print)print.addEventListener('click',()=>preview.print());
