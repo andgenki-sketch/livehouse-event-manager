@@ -142,7 +142,7 @@ export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',i
  </tbody></table>`:'<p class="note">この月の予算は未設定のため、予算比較は表示できません。</p>';
  const payrollRows=sortPayrollRows(data.payroll).map(row=>`<tr><td>${esc(row.name)}</td><td class="num">${esc(val(row.amount))}</td></tr>`).join('');
  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
- <title>${esc(month)}_月次経営サマリー兼給与支払依頼書</title><style>
+ <title>${esc(month)}_月次経営サマリー</title><style>
  @page{size:A4 portrait;margin:14mm 13mm}
  *{box-sizing:border-box}body{font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;color:#172235;font-size:10pt;line-height:1.5;margin:0}
  main{max-width:870px;margin:24px auto;padding:0 18px}.header{border-bottom:2px solid #243c55;padding-bottom:13px;margin-bottom:14px}
