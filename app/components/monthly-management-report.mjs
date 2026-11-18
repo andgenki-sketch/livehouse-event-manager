@@ -1,4 +1,5 @@
 import {confirmedPayrollRows,sortPayrollRows} from './payroll-report.mjs';
+import {cashflowReportSection} from './cashflow-model.mjs';
 import {hallDeductionTotal} from './hall-deductions.mjs';
 import {shiftPaymentMode} from './shift-labor-forecast.mjs';
 
@@ -122,7 +123,7 @@ export function buildMonthlyExecutiveSummary({month,teamId,staff=[],events=[],se
  };
 }
 
-export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',issuedAt=new Date(),note=''}) {
+export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',issuedAt=new Date(),note='',cashflowActual=null,cashflowPlan=null}) {
  if(!data||!data.month)throw Error('報告書の集計がありません');
  const esc=escapeHtml,month=data.month,y=month.slice(0,4),m=Number(month.slice(5));
  const created=new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(issuedAt);
@@ -182,8 +183,9 @@ export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',i
  <tr><td><b>登録額合計（重複照合前）</b></td><td class="num"><b>${esc(val(data.expenseTotal))}</b></td><td class="num"><b>${esc(val(data.outsideTotal))}</b></td></tr>
  </tbody></table>
  <h2>月次予算との比較</h2>${budgetTable}
+ ${cashflowReportSection({actual:cashflowActual,plan:cashflowPlan,mode:'actual'})}
  ${data.warnings.length?`<div class="warning"><strong>要確認</strong>${data.warnings.map(w=>`<p>・${esc(w)}</p>`).join('')}</div>`:''}
- <p class="disclaimer">対象は登録済みのイベント収支・経費台帳・確定給与です。経費台帳とイベント収支の重複、未入力の共通経費、出演者支払、税・社会保険、借入返済、現預金の動き等は未照合です。「参考差引額」は利益または資金繰り残高ではありません。外注費のシフト予測は計上していません。</p>
+ <p class="disclaimer">対象は登録済みのイベント収支・経費台帳・確定給与です。経費台帳とイベント収支の重複、未入力の共通経費、出演者支払、税・社会保険等は既存のイベント収支とは未照合です。下の資金繰り表は別途入力された入出金を表示します。「参考差引額」は利益または資金繰り残高ではありません。外注費のシフト予測は計上していません。</p>
  <div class="page-two"><div class="header"><div class="kicker">${esc(teamName)} / PAYROLL REQUEST</div><h1>給与支払依頼・内訳</h1><div class="meta"><span>${esc(y)}年${m}月分</span><span>作成日：${esc(created)}　<span class="status">${esc(status)}</span></span></div></div>
  <div class="amount-due"><div><b>確定済み給与の合計</b><br><small>給与確定データに基づく支払依頼候補額</small></div><strong>${esc(salaryDisplay)}</strong></div>
  <p class="payroll-note">確定額は交通費・調整額を含む場合があります。所得税・社会保険等の控除後振込額とは限りません。${data.pending.length?' 未確定者がいるため、この金額のみを最終支払総額として送付しないでください。':''}</p>

@@ -962,3 +962,61 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .payroll-person.payroll-person-simple strong{font-size:15px;min-width:0;overflow-wrap:anywhere}
 .payroll-person.payroll-person-simple b{font-size:18px;white-space:nowrap;font-variant-numeric:tabular-nums;margin-left:auto}
 @media(max-width:600px){.payroll-person.payroll-person-simple{display:flex}.payroll-person.payroll-person-simple strong{font-size:14px}.payroll-person.payroll-person-simple b{font-size:17px}}
+
+
+/* Owner cash-flow actuals/plans: dedicated readout, review and fiscal comparison. */
+.cashflow-manager{max-width:1200px}
+.cashflow-manager .sectionhead p{max-width:720px}
+.cashflow-owner{font-size:12px;color:#365b76;background:#eaf1fa;border-radius:99px;padding:6px 11px;font-weight:700}
+.cashflow-toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:15px 0}
+.cashflow-toolbar label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700}
+.cashflow-toolbar button,.cashflow-section-title button,.cashflow-actions>button:not(.primary){background:#f5f8fc;color:#264f70;border:1px solid #c7d5e3;border-radius:7px;padding:9px 12px;cursor:pointer}
+.cashflow-toolbar input{padding:8px;border:1px solid #bdcbd8;border-radius:7px}
+.cashflow-scenarios{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}
+.cashflow-scenarios button{border:1px solid #bccedf;color:#284e70;background:#fff;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}
+.cashflow-scenarios button.on{background:#1e4266;color:#fff;border-color:#1e4266}
+.cashflow-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}
+.cashflow-summary>div{border:1px solid #d8e3ee;border-radius:9px;background:#fff;padding:13px;min-width:0}
+.cashflow-summary small{display:block;color:#5d6f85;font-size:11px;line-height:1.5;min-height:32px}
+.cashflow-summary strong{display:block;font-size:20px;margin-top:6px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.cashflow-summary .cashflow-negative{border-color:#e8b8b8;background:#fff8f7;color:#9e3737}
+.cashflow-review{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 13px;background:#f0f5fa;border-radius:8px;font-size:12px;color:#3c5970}
+.cashflow-review b{color:#203f61}
+.cashflow-caution{font-size:12px;color:#7a4e26;line-height:1.65}
+.cashflow-section-title{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin:17px 0 12px}
+.cashflow-section-title h3{margin:0;font-size:18px}
+.cashflow-section-title div{display:flex;gap:8px;flex-wrap:wrap}
+.cashflow-section-title button:disabled,.cashflow-actions button:disabled{opacity:.55;cursor:not-allowed}
+.cashflow-start{border:1px solid #dce6ef;border-radius:8px;background:#fff;padding:15px;margin-bottom:15px}
+.cashflow-start label{display:flex;flex-direction:column;gap:7px;max-width:360px;font-size:12px;font-weight:700}
+.cashflow-start input,.cashflow-note-fields input,.cashflow-note-fields textarea,.cashflow-field-grid input{font:inherit;max-width:100%;border:1px solid #bfcddd;border-radius:7px;padding:9px 11px;background:#fff;color:#1d3245}
+.cashflow-start p{font-size:12px;color:#657589;margin:10px 0 0}
+.cashflow-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.cashflow-group{padding:15px;background:#fff;border:1px solid #d9e3ee;border-radius:11px}
+.cashflow-group h4{margin:0 0 11px;font-size:15px;color:#233f58;border-bottom:1px solid #e1eaf2;padding-bottom:8px}
+.cashflow-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.cashflow-field-grid label{display:flex;flex-direction:column;gap:5px;position:relative;min-width:0}
+.cashflow-field-grid label span{font-size:12px;color:#425c73}
+.cashflow-field-grid label small{font-size:10px;color:#677f91;position:absolute;right:8px;bottom:12px}
+.cashflow-field-grid input{padding-right:30px;width:100%;font-variant-numeric:tabular-nums}
+.cashflow-note-fields{background:#fff;border:1px solid #dce6ef;border-radius:11px;padding:16px;display:grid;gap:13px;margin-top:14px}
+.cashflow-note-fields label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700}
+.cashflow-note-fields textarea{resize:vertical;min-height:60px}
+.cashflow-preview{border:1px solid #c1d4e6;border-radius:10px;background:#f4f8fd;padding:13px 15px;margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12px}
+.cashflow-preview strong{font-size:15px;color:#1b4a79}
+.cashflow-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:15px 0}
+.cashflow-actions .primary{padding:11px 16px}
+.cashflow-actions span{flex:1;min-width:220px;font-size:12px;line-height:1.5;color:#687b8d}
+.cashflow-success{padding:10px 13px;color:#176c4b;background:#ecf9f2;border:1px solid #a9d3bf;border-radius:8px;font-size:12px}
+.cashflow-error{padding:10px 13px;color:#9b2f2f;background:#fff1f1;border:1px solid #e3b3b3;border-radius:8px;font-size:12px}
+.cashflow-year{margin-top:20px;padding:16px;background:#fff;border:1px solid #d7e1eb;border-radius:11px}
+.cashflow-year h3{margin:0 0 6px;font-size:17px}
+.cashflow-year-scroll{overflow-x:auto}
+.cashflow-year table{border-collapse:collapse;width:100%;min-width:650px;font-size:12px}
+.cashflow-year th{text-align:left;background:#1e405e;color:white;padding:10px 9px}
+.cashflow-year td{border-bottom:1px solid #e4eaf0;padding:9px}
+.cashflow-year tbody tr:nth-child(even){background:#f8fafc}
+.cashflow-year td button{border:0;background:transparent;color:#15569b;text-decoration:underline;cursor:pointer;font:inherit}
+.cashflow-year td.negative{color:#af3030;font-weight:700}
+@media(max-width:900px){.cashflow-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.cashflow-groups{grid-template-columns:1fr}}
+@media(max-width:520px){.cashflow-group{padding:12px}.cashflow-field-grid{grid-template-columns:1fr}.cashflow-summary strong{font-size:17px}.cashflow-section-title button{font-size:11px}}

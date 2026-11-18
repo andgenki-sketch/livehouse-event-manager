@@ -33,9 +33,14 @@ export default function NextMonthBudgetReport({client,team}){
    const events=await fetchMonthlyBudgetEvents(client,team.id,start,end);
    const data=buildNextMonthBudgetSummary({month,teamId:team.id,budget:budget.data,
     events,staff:staff.data||[],compensation:compensation.data||[],externalConfigs:externalConfigs.data||[]});
+   const cashflowResponse=await client.from('cashflow_monthly').select('*')
+    .eq('team_id',team.id).eq('month',month+'-01');
+   if(cashflowResponse.error)throw Error('資金繰りデータを取得できませんでした：'+cashflowResponse.error.message);
+   const cashflowActual=(cashflowResponse.data||[]).find(row=>row.scenario==='actual')||null;
+   const cashflowPlan=(cashflowResponse.data||[]).find(row=>row.scenario==='plan')||null;
    if(preview.closed)throw Error('プレビュー画面が閉じられました');
    preview.document.open();
-   preview.document.write(nextMonthBudgetReportHtml({data,teamName:team.name||'ThunderSnakeATSUGI',ownerNote}));
+   preview.document.write(nextMonthBudgetReportHtml({data,teamName:team.name||'ThunderSnakeATSUGI',ownerNote,cashflowActual,cashflowPlan}));
    preview.document.close();
    preview.document.getElementById('print-budget')?.addEventListener('click',()=>preview.print());
   }catch(e){
