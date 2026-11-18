@@ -62,6 +62,11 @@ export async function POST(request) {
   catch { return Response.json({ error: 'Invalid public event data' }, { status: 422 }); }
   // Live publication is a separate opt-in after the WordPress single-event trial.
   const liveEnabled = process.env.WORDPRESS_SYNC_LIVE_ENABLED === 'true';
+  // Fail closed BEFORE contacting WordPress. A receiver still in single-event
+  // write mode could mutate a mapped post even if this client expects dry-run.
+  if (!liveEnabled) {
+    return Response.json({ error: 'WordPress writes are paused after a date-integrity incident' }, { status: 503 });
+  }
   try {
     const result = await sendWordPressEventWithRetry(payload, {
       endpoint: process.env.WORDPRESS_SYNC_ENDPOINT,
