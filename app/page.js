@@ -233,22 +233,23 @@ function FinanceRegister({events,settlements,attendance,schedules=[],expenses,bu
   const historicalSalary=Math.max(0,Number(x.labor_budget||0)-Number(x.hourly_labor_budget||0));
   const salary=canEditBudget&&payrollLoaded?fixedMonthlySalaryTotal({month:x.year+'-'+String(x.month).padStart(2,'0'),staff,compensation,externalConfigs}):historicalSalary;
   return n+Number(resolveMonthlyLaborBudget(x,salary).total||0);
- },0),fyCosts=fySum('cost_budget'),fmt=n=>'¥'+Number(n||0).toLocaleString('ja-JP'),variance=(actual,planned,isCost=false)=>fmt(isCost?planned-actual:actual-planned);return <div className="listpage"><div className="sectionhead"><div><h2>収支登録</h2><p>月ごとの収支を確認して、日ごとのイベント収支を登録</p></div>{canEditBudget&&<button className="primary" onClick={()=>setModal('budget')}>月次予算設定・編集</button>}</div><div className="sectionhead"><button onClick={()=>setYear(year-1)}>‹</button><h3>{year}年</h3><button onClick={()=>setYear(year+1)}>›</button></div><div className="finance-month-tabs">{Array.from({length:12},(_,i)=><button className={month===i+1?'on':''} onClick={()=>setMonth(i+1)} key={i+1}>{i+1}月</button>)}</div><h3>{year}年{month}月の予算・収支</h3>
+ },0),fyCosts=fySum('cost_budget'),fyOutside=fySum('outsourcing_budget'),fyOutsideMissing=fiscalRows.filter(row=>row.outsourcing_budget==null).length,fmt=n=>'¥'+Number(n||0).toLocaleString('ja-JP'),variance=(actual,planned,isCost=false)=>fmt(isCost?planned-actual:actual-planned);return <div className="listpage"><div className="sectionhead"><div><h2>収支登録</h2><p>月ごとの収支を確認して、日ごとのイベント収支を登録</p></div>{canEditBudget&&<button className="primary" onClick={()=>setModal('budget')}>月次予算設定・編集</button>}</div><div className="sectionhead"><button onClick={()=>setYear(year-1)}>‹</button><h3>{year}年</h3><button onClick={()=>setYear(year+1)}>›</button></div><div className="finance-month-tabs">{Array.from({length:12},(_,i)=><button className={month===i+1?'on':''} onClick={()=>setMonth(i+1)} key={i+1}>{i+1}月</button>)}</div><h3>{year}年{month}月の予算・収支</h3>
 <div className="budget-pulse-grid">
  <BudgetPulseCard title="売上" budget={b?.revenue_budget} actual={sales} kind="revenue" detail="収支登録済みの売上から集計"/>
  <BudgetPulseCard title={laborPlan.mode==='variable'&&canEditBudget?'時給人件費':'人件費'} budget={laborPlan.mode==='variable'&&canEditBudget?laborPlan.hourly:laborPlan.total} actual={laborPlan.mode==='variable'&&canEditBudget?actualHourlyLabor:actualLabor} detail={laborPlan.mode==='variable'&&canEditBudget?'月給固定 '+fmt(laborPlan.fixed)+' ＋ 時給予算 '+fmt(laborPlan.hourly)+' ＝ 総人件費予算 '+fmt(laborPlan.total)+'（実績はイベント勤怠の時給分・暫定値。未登録勤務等は含みません）':'イベント勤怠分の暫定実績。旧方式の合計予算はそのまま保持'}/>
  <BudgetPulseCard title="経費" budget={b?.cost_budget} actual={actualOtherCosts} detail="人件費・外注費を除く、仕入・その他の登録済み経費"/>
+ <BudgetPulseCard title="外注費" budget={b?.outsourcing_budget} actual={outsourcingCost} detail="給与・経費の予算と分けて集計"/>
 </div>
 <div className="finance-result-bar">
  <div><small>現在の収支（暫定・外注費控除後）</small><strong>{fmt(sales-actualLabor-actualOtherCosts-outsourcingCost)}</strong></div>
  <div><small>外注費（経費予算と別枠）</small><strong>{fmt(outsourcingCost)}</strong></div>
- <div><small>予算上の収支（月給を含む・外注費予算なし）</small><strong>{b?fmt(Number(b.revenue_budget)-Number(laborPlan.total||0)-Number(b.cost_budget)):'未設定'}</strong></div>
+ <div><small>予算上の収支（月給・外注費予算を含む）</small><strong>{b&&b.outsourcing_budget!=null?fmt(Number(b.revenue_budget)-Number(laborPlan.total||0)-Number(b.cost_budget)-Number(b.outsourcing_budget)):'未設定'}</strong></div>
 </div>
-<p className="hint finance-budget-note">時給予算の入力額には月給社員の固定給を自動加算して総人件費予算を作ります。現在の実績は登録済みイベント勤怠を中心とした暫定値で、月給社員・法定福利費・未登録共通経費は実績収支に含まれていない場合があります。人件費・経費の警告は登録済み金額だけで判定しています。外注費は経費予算から除外し、実績収支では差し引きます。外注費の予算は未設定のため予算上の収支と実績収支は直接比較できません。借入返済や現預金とは別管理です。</p>
+<p className="hint finance-budget-note">時給予算の入力額には月給社員の固定給を自動加算して総人件費予算を作ります。現在の実績は登録済みイベント勤怠を中心とした暫定値で、月給社員・法定福利費・未登録共通経費は実績収支に含まれていない場合があります。人件費・経費の警告は登録済み金額だけで判定しています。外注費は経費予算から除外し、実績収支・予算収支から独立して差し引きます。外注費予算が未設定の月は予算上の収支を算出しません。借入返済や現預金とは別管理です。</p>
  <section className="card" style={{marginBottom:16}}>
  <h3>{fiscalYear}年9月〜{fiscalYear+1}年8月 年度予算</h3>
  <p className="hint">入力済み {fiscalRows.length}/12か月（未設定月は集計対象外）</p>
- <div className="moneycards"><div><small>年間売上予算</small><b>{fmt(fySales)}</b></div><div><small>年間人件費予算</small><b>{fmt(fyLabor)}</b></div><div><small>年間経費予算</small><b>{fmt(fyCosts)}</b></div><div><small>年間予算収支</small><b>{fmt(fySales-fyLabor-fyCosts)}</b></div></div>
+ <div className="moneycards"><div><small>年間売上予算</small><b>{fmt(fySales)}</b></div><div><small>年間人件費予算</small><b>{fmt(fyLabor)}</b></div><div><small>年間経費予算</small><b>{fmt(fyCosts)}</b></div><div><small>年間外注費予算</small><b>{fyOutsideMissing?'未設定月 '+fyOutsideMissing+'件':fmt(fyOutside)}</b></div><div><small>年間予算収支</small><b>{fyOutsideMissing?'未算出':fmt(fySales-fyLabor-fyCosts-fyOutside)}</b></div></div>
  </section>
  <h3>日ごとの収支</h3><div className="daily-finance-list">{monthly.length?monthly.map(e=>{const s=sm.get(e.id),r=rev(s,e.event_genre==='ホールレンタル'),x=exp(s,e.id),nonLabor=monthlyExpense(s,e.id)-x,external=outsourcing(s,e.id);return <button className="daily-finance-row" key={e.id} onClick={()=>{setSelected(e);setModal('money')}}><span><b>{Number(e.event_date.slice(8,10))}日</b><small>{e.title}</small></span><span>売上 <b>¥{r.toLocaleString()}</b></span><span>人件費 <b>¥{x.toLocaleString()}</b></span><span>経費 <b>¥{nonLabor.toLocaleString()}</b></span><span>外注費 <b>¥{external.toLocaleString()}</b></span><strong>収支 ¥{(r-x-nonLabor-external).toLocaleString()}</strong><em>{s?'編集':'登録'}</em></button>}):<p>この月のイベントはありません。</p>}</div></div>}
 
