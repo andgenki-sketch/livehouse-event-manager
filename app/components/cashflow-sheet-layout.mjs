@@ -98,7 +98,7 @@ export function cashflowYenToInput(value,unit){
  const n=Number(value),factor=unitFactor(unit);
  if(!Number.isSafeInteger(n)||!factor)throw Error('値の変換に失敗しました');
  if(factor===1)return String(n);
- return (n/10000).toFixed(4).replace(/\\.?0+$/,'');
+ return (n/10000).toFixed(4).replace(/\.?0+$/,'');
 }
 export function cashflowYenToDisplay(value,unit){
  if(value===null||value===undefined)return '—';
