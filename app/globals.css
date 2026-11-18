@@ -1020,3 +1020,75 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .cashflow-year td.negative{color:#af3030;font-weight:700}
 @media(max-width:900px){.cashflow-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.cashflow-groups{grid-template-columns:1fr}}
 @media(max-width:520px){.cashflow-group{padding:12px}.cashflow-field-grid{grid-template-columns:1fr}.cashflow-summary strong{font-size:17px}.cashflow-section-title button{font-size:11px}}
+
+
+/* Workbook-inspired 12-month cashflow matrix. Labels and fiscal totals stay
+ * visible while scrolling; only the selected month is editable in-line. */
+.cashflow-sheet-page{max-width:100%;min-width:0;display:flex;flex-direction:column;gap:13px}
+.cashflow-sheet-head{display:flex;justify-content:space-between;align-items:start;gap:14px;flex-wrap:wrap}
+.cashflow-sheet-head h2{font-size:23px;color:#192f45;margin:0 0 6px}
+.cashflow-sheet-head p{color:#687b8c;font-size:12px;margin:0;line-height:1.7}
+.cashflow-sheet-head>span{padding:6px 10px;background:#edf3f9;border-radius:99px;color:#3c607f;font-size:11px;font-weight:700}
+.cashflow-sheet-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:13px;padding:13px;background:#fff;border:1px solid #dbe5ed;border-radius:10px}
+.cashflow-sheet-switch{display:flex;gap:3px;border:1px solid #cbd7e3;border-radius:7px;padding:3px;flex-wrap:wrap}
+.cashflow-sheet-switch button{padding:8px 12px;border:0;border-radius:5px;background:transparent;color:#405e78;font-size:12px;font-weight:700;cursor:pointer}
+.cashflow-sheet-switch button.active{background:#234a6c;color:#fff}
+.cashflow-sheet-years{display:flex;gap:12px;align-items:center;flex-wrap:wrap;color:#233f57;font-size:13px}
+.cashflow-sheet-years button{border:1px solid #d2deea;border-radius:6px;background:#f7fafc;padding:8px 12px;color:#3b5a75;cursor:pointer;font-size:12px}
+.cashflow-sheet-help{color:#576d83;font-size:12px;line-height:1.65;margin:0 2px}
+.cashflow-sheet-loading{border:1px solid #dae5ef;padding:35px;text-align:center;background:#fff;border-radius:8px;color:#697c8e}
+.cashflow-sheet-scroll{overflow:auto;max-height:min(72vh,900px);border:1px solid #c7d5e1;border-radius:9px;background:#fff;scrollbar-gutter:stable}
+.cashflow-sheet-table{width:max-content;min-width:100%;border-spacing:0;border-collapse:separate;table-layout:fixed;font-variant-numeric:tabular-nums;font-size:12px}
+.cashflow-sheet-table th,.cashflow-sheet-table td{border-right:1px solid #d9e3ec;border-bottom:1px solid #e1e8ef;padding:8px 9px}
+.cashflow-sheet-table thead th{position:sticky;top:0;background:#234664;color:#fff;text-align:center;z-index:4;padding:0;min-width:108px;white-space:nowrap}
+.cashflow-sheet-table thead th button{font:inherit;font-weight:700;color:inherit;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;padding:9px 10px;border:0;cursor:pointer}
+.cashflow-sheet-table thead th button span{font-size:9px;color:#c9ddeb;margin-top:3px;font-weight:400}
+.cashflow-sheet-table thead th.cashflow-sheet-selected{background:#2d72a8}
+.cashflow-sheet-table thead th.cashflow-sheet-selected button span{color:#e7f5ff;font-weight:700}
+.cashflow-sheet-table .cashflow-sheet-label-cell{position:sticky;left:0;min-width:245px;width:245px;max-width:245px;z-index:2;background:#fff;font-weight:500;color:#2f4357;text-align:left;white-space:normal;padding-left:13px;box-shadow:2px 0 3px #172f4512}
+.cashflow-sheet-table thead .cashflow-sheet-label-cell{z-index:7;background:#234664;color:#fff;font-size:13px;font-weight:700;padding:10px 13px}
+.cashflow-sheet-table td{text-align:right;min-width:108px;height:37px;white-space:nowrap;cursor:default;color:#23394e}
+.cashflow-sheet-table td span{display:inline-block}
+.cashflow-sheet-table td.cashflow-sheet-selected{background:#eaf3ff}
+.cashflow-sheet-table td.cashflow-sheet-editable{padding:2px 4px;min-width:108px}
+.cashflow-sheet-table td.cashflow-sheet-editable input{display:block;min-width:0;width:100%;max-width:105px;margin:0;border:1px solid #8eb6df;border-radius:5px;padding:6px 5px;text-align:right;background:#fff;font:inherit;color:#183b5d;box-shadow:none}
+.cashflow-sheet-table td.cashflow-sheet-editable input:focus{outline:2px solid #2f79bc;outline-offset:1px}
+.cashflow-sheet-table td.cashflow-sheet-negative{color:#b33d39;font-weight:600}
+.cashflow-sheet-table tr:hover:not(.cashflow-sheet-section) td:not(.cashflow-sheet-editable){background:#f2f6fa}
+.cashflow-sheet-table tr:hover td.cashflow-sheet-selected{background:#eaf3ff}
+.cashflow-sheet-table tr:hover th.cashflow-sheet-label-cell{background:#f3f7fb}
+.cashflow-sheet-table .cashflow-sheet-annual{position:sticky;right:0;min-width:123px;background:#f0f5fa;color:#243e56;font-weight:700;text-align:right;z-index:3;box-shadow:-2px 0 4px #192c401a}
+.cashflow-sheet-table thead th.cashflow-sheet-annual{background:#193954;color:#fff;z-index:7;padding:9px 12px;text-align:center}
+.cashflow-sheet-table .cashflow-sheet-annual small{font-size:9px;color:#8b601e}
+.cashflow-sheet-table .cashflow-sheet-section th{background:#dde9f4;color:#264962;letter-spacing:.03em;text-align:left;font-size:11px;font-weight:700;padding:7px 13px;border-bottom:1px solid #c7d6e3}
+.cashflow-sheet-table .cashflow-sheet-status-row th,.cashflow-sheet-table .cashflow-sheet-status-row td{background:#f6f8fb;color:#64798a;font-size:10px;text-align:center;height:29px;font-weight:600}
+.cashflow-sheet-table .cashflow-sheet-status-row .cashflow-sheet-label-cell{text-align:left}
+.cashflow-sheet-table .cashflow-sheet-status-row .cashflow-sheet-selected{background:#dfedfc}
+.cashflow-sheet-table .cashflow-sheet-subtotal td,.cashflow-sheet-table .cashflow-sheet-subtotal th.cashflow-sheet-label-cell{background:#f3f6f9;font-weight:700}
+.cashflow-sheet-table .cashflow-sheet-total td,.cashflow-sheet-table .cashflow-sheet-total th.cashflow-sheet-label-cell{background:#e8f0f8;font-weight:800;color:#224666;border-top:1px solid #c2d4e5}
+.cashflow-sheet-table .cashflow-sheet-balance td,.cashflow-sheet-table .cashflow-sheet-balance th.cashflow-sheet-label-cell{background:#e7ecf3;font-weight:800;border-top:1px solid #b4c5d5}
+.cashflow-sheet-table .cashflow-sheet-variance td,.cashflow-sheet-table .cashflow-sheet-variance th.cashflow-sheet-label-cell{background:#f6f0e7;font-weight:700}
+.cashflow-sheet-table .cashflow-sheet-negative{color:#ae3933!important}
+.cashflow-sheet-table .cashflow-sheet-subtotal td.cashflow-sheet-selected,.cashflow-sheet-table .cashflow-sheet-total td.cashflow-sheet-selected,.cashflow-sheet-table .cashflow-sheet-balance td.cashflow-sheet-selected,.cashflow-sheet-table .cashflow-sheet-variance td.cashflow-sheet-selected{background:#d9eafc}
+.cashflow-sheet-footnote{color:#697b8c;font-size:11px;line-height:1.65;margin:0 2px}
+.cashflow-sheet-edit-footer{background:#fff;border:1px solid #d5e1eb;border-radius:11px;padding:17px;display:grid;gap:12px}
+.cashflow-sheet-edit-title{display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:15px}
+.cashflow-sheet-edit-title h3{margin:0 0 5px;font-size:17px;color:#1d3952}
+.cashflow-sheet-edit-title p{font-size:11px;color:#607489;margin:0}
+.cashflow-sheet-edit-summary{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:#4c667b}
+.cashflow-sheet-edit-summary span{display:flex;flex-direction:column;gap:4px}
+.cashflow-sheet-edit-summary b{font-size:16px;color:#1f415f;white-space:nowrap}
+.cashflow-sheet-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.cashflow-sheet-actions button,.cashflow-sheet-edit-footer>button{background:#f5f8fc;border:1px solid #cbd9e6;border-radius:7px;padding:10px 13px;font-size:12px;font-weight:700;color:#365b7a;cursor:pointer}
+.cashflow-sheet-actions button.primary{background:#165fbd;color:#fff;border-color:#165fbd}
+.cashflow-sheet-actions button:disabled{opacity:.45;cursor:not-allowed}
+.cashflow-sheet-notes{border:1px solid #dce5ee;border-radius:8px;background:#fafcfe;overflow:hidden}
+.cashflow-sheet-notes summary{padding:11px 13px;cursor:pointer;font-size:12px;font-weight:700;color:#405f78}
+.cashflow-sheet-notes-grid{border-top:1px solid #e1eaf2;padding:12px 13px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.cashflow-sheet-notes-grid label{display:flex;flex-direction:column;gap:6px;font-size:11px;color:#455f75;font-weight:700}
+.cashflow-sheet-notes-grid label:first-child{grid-column:1/-1}
+.cashflow-sheet-notes-grid input,.cashflow-sheet-notes-grid textarea{background:#fff;color:#243f57;border:1px solid #bdcedf;border-radius:7px;padding:9px;resize:vertical;font:inherit;font-size:12px}
+.cashflow-sheet-review-note{font-size:11px;color:#647a8b;line-height:1.65;margin:0}
+.cashflow-sheet-alert,.cashflow-sheet-error{padding:10px 12px;border:1px solid #edb8b8;background:#fff3f3;color:#943735;border-radius:7px;font-size:12px}
+.cashflow-sheet-success{padding:10px 12px;border:1px solid #b6dcc7;background:#f0faf5;color:#236644;border-radius:7px;font-size:12px}
+@media(max-width:750px){.cashflow-sheet-table .cashflow-sheet-label-cell{min-width:180px;width:180px;max-width:180px;font-size:11px}.cashflow-sheet-table thead th,.cashflow-sheet-table td{min-width:94px}.cashflow-sheet-table td.cashflow-sheet-editable input{max-width:94px}.cashflow-sheet-notes-grid{grid-template-columns:1fr}.cashflow-sheet-notes-grid label:first-child{grid-column:auto}.cashflow-sheet-edit-summary b{font-size:14px}}
