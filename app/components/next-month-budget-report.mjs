@@ -1,4 +1,5 @@
 import {reportMonthRange} from './monthly-management-report.mjs';
+import {cashflowReportSection} from './cashflow-model.mjs';
 import {fixedMonthlySalaryTotal,resolveMonthlyLaborBudget} from './shift-labor-forecast.mjs';
 
 const yen=value=>'¥'+Math.round(Number(value)||0).toLocaleString('ja-JP');
@@ -53,7 +54,7 @@ export function buildNextMonthBudgetSummary({month,teamId,budget=null,events=[],
   goalsComplete,warnings};
 }
 
-export function nextMonthBudgetReportHtml({data,teamName='ThunderSnakeATSUGI',issuedAt=new Date(),ownerNote=''}) {
+export function nextMonthBudgetReportHtml({data,teamName='ThunderSnakeATSUGI',issuedAt=new Date(),ownerNote='',cashflowActual=null,cashflowPlan=null}) {
  if(!data?.month)throw Error('予算計画データを確認してください');
  const month=data.month,year=month.slice(0,4),n=Number(month.slice(5));
  const issued=new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(issuedAt);
@@ -86,6 +87,7 @@ export function nextMonthBudgetReportHtml({data,teamName='ThunderSnakeATSUGI',is
  <h1>月次予算計画サマリー</h1><div class="meta"><span>${esc(year)}年${n}月 計画</span><span>作成日：${esc(issued)}　${esc(planStatus)}</span></div></header>
  <div class="metrics">${totalCard('売上目標',data.revenue)}${totalCard('総人件費予算',data.labor)}${totalCard('経費予算（人件費・外注費除く）',data.cost)}${totalCard('外注費予算（独立管理）',data.contractor)}</div>
  <div class="balance"><div><b>予算上の差引額</b><div><small>売上 − 総人件費 − 経費 − 外注費</small></div></div><strong>${data.projectedBalance===null?'未算出':esc(yen(data.projectedBalance))}</strong></div>
+ ${cashflowReportSection({actual:cashflowActual,plan:cashflowPlan,mode:'plan'})}
  <h2>人件費予算の内訳</h2>
  <table><thead><tr><th>区分</th><th class="num">予算</th></tr></thead><tbody>
  ${budgetRow('社員月給（固定分）',data.salary)}${budgetRow('時給スタッフ（変動分）',data.hourly)}${budgetRow('総人件費（合計）',data.labor)}
@@ -96,6 +98,6 @@ export function nextMonthBudgetReportHtml({data,teamName='ThunderSnakeATSUGI',is
  ${data.plannedEvents.length?`<table><thead><tr><th>日付</th><th>イベント（先頭8件）</th><th class="num">個別売上予算</th></tr></thead><tbody>${candidateList}</tbody></table>${missingTargets}`:''}
  ${data.comments||String(ownerNote||'').trim()?`<h2>重点施策・社長への共有事項</h2><div class="comment">${data.comments?'【月次予算メモ】\n'+esc(data.comments):''}${data.comments&&ownerNote?'\n\n':''}${ownerNote?'【提出時の連絡】\n'+esc(ownerNote):''}</div>`:''}
  ${data.warnings.length?`<div class="warning"><b>提出前の確認事項</b>${data.warnings.map(x=>`<p>・${esc(x)}</p>`).join('')}</div>`:''}
- <div class="fineprint">この資料は予算計画であり、確定売上・契約金額・利益・キャッシュフローではありません。スタッフ月給は対象月に有効な給与設定を参照します。イベント個別予算は入力済みのみ合算（0円は未設定扱い）。未登録の費用や税・社会保険、支払時期等は未反映の場合があります。機密情報につき社内でのみ取り扱ってください。</div>
+ <div class="fineprint">この資料の損益予算は確定売上・契約金額・利益・現預金残高ではありません。資金繰り計画は別途入力した入出金予測です。スタッフ月給は対象月に有効な給与設定を参照します。イベント個別予算は入力済みのみ合算（0円は未設定扱い）。未登録の費用や税・社会保険、支払時期等は未反映の場合があります。機密情報につき社内でのみ取り扱ってください。</div>
  </main></body></html>`;
 }
