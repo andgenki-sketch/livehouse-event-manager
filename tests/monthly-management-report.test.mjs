@@ -106,3 +106,10 @@ test('multiple settlements costs and ledger costs are explicitly flagged for dou
  assert.match(r.warnings.join(' '),/二重登録/);
  assert.ok(r.monthlyBudget);
 });
+
+test('monthly report browser/PDF document title is only the monthly management summary',()=>{
+ const html=monthlyExecutiveReportHtml({data:build()});
+ assert.match(html,/<title>2026-10_月次経営サマリー<\/title>/);
+ assert.doesNotMatch(html,/兼給与支払依頼書/);
+ assert.match(html,/給与支払依頼・内訳/); // report contents remain intact
+});
