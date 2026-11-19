@@ -63,7 +63,7 @@ export function nextMonthBudgetReportHtml({data,teamName='ThunderSnakeATSUGI',is
  const candidateList=data.plannedEvents.slice(0,8).map(e=>`<tr><td>${esc(String(e.event_date||'').slice(5).replace('-','/'))}</td><td>${esc(e.title||'名称未入力')}</td><td class="num">${Number(e.revenue_budget||0)>0?esc(yen(e.revenue_budget)):'未設定'}</td></tr>`).join('');
  const missingTargets=data.plannedEvents.length>8?`<p class="muted">ほか ${data.plannedEvents.length-8}件はアプリ内のイベント一覧で確認してください。</p>`:'';
  const totalCard=(label,value)=>`<div class="metric"><small>${esc(label)}</small><strong>${esc(display(value))}</strong></div>`;
- const planStatus=data.goalsComplete?'予算入力済み（内容確認）':'要設定・要確認';
+ const planStatus=data.goalsComplete&&cashflowPlan?.status==='reviewed'?'予算入力済み・資金繰り確認済み':'要設定・要確認';
  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(month)}_月次予算計画サマリー</title><style>
  @page{size:A4 portrait;margin:12mm 13mm}
  *{box-sizing:border-box}body{font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;color:#172c40;font-size:9.5pt;line-height:1.55;margin:0;background:#fff}
