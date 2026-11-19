@@ -200,7 +200,7 @@ export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',i
  <h2>月次予算との比較</h2>${budgetTable}
 
  ${data.warnings.length?`<div class="warning"><strong>要確認</strong>${data.warnings.map(w=>`<p>・${esc(w)}</p>`).join('')}</div>`:''}
- <p class="disclaimer">対象は登録済みのイベント収支・経費台帳・確定給与です。経費台帳とイベント収支の重複、未入力の共通経費、出演者支払、税・社会保険等は既存のイベント収支とは未照合です。下の資金繰り表は別途入力された入出金を表示します。「参考差引額」は利益または資金繰り残高ではありません。外注費のシフト予測は計上していません。</p>
+ <p class="disclaimer">対象は登録済みのイベント収支・経費台帳・確定給与です。経費台帳とイベント収支の重複、未入力の共通経費、出演者支払、税・社会保険等は既存のイベント収支とは未照合です。前ページの資金繰り明細は別途入力された入出金を表示します。「参考差引額」は利益または資金繰り残高ではありません。外注費のシフト予測は計上していません。</p>
 
  <div class="confidential">社内機密 / 給与・経営情報 / 閲覧・作成はオーナー権限のみ</div>
  </div></main></body></html>`;
