@@ -76,7 +76,7 @@ export function cashflowExecutiveDiscussion({actual=null,plan=null,mode='actual'
  const assignee=String(record?.discussion_assignee||'').trim();
  const due=record?.discussion_deadline?String(record.discussion_deadline).slice(0,10):'';
  const memo=String(record?.management_note||'').trim();
- const text=(value,empty)=>escapeHtml(trimmed(value)||empty);
+ const text=(value,empty)=>escapeHtml(trimmed(value,150)||empty);
  return `<section class="cfe-discussion">
   <h2>経営協議事項・次のアクション</h2>
   <table class="cfe-decision"><tbody>
@@ -110,7 +110,7 @@ export function cashflowExecutiveDetails({actual=null,plan=null,mode='actual'}={
   <table class="cfe-detail-table"><thead><tr><th>勘定項目</th><th class="num">${sameMode}</th><th class="num">${otherMode}</th><th class="num">差異</th></tr></thead><tbody>${body}</tbody></table>
   <p class="cfe-caption">記録状況：${!row?'未登録':a.reviewed?'確認済み':a.complete?'照合待ち':'入力途中・暫定'}。
    計算上の月末残高と原本・帳簿等の月末残高は別管理。計画と実績の入出金時期が異なる場合があります。</p>
-  ${notes.length?`<div class="cfe-source-notes">${notes.map(s=>`<p>${escapeHtml(s)}</p>`).join('')}</div>`:''}
+  ${notes.length?`<div class="cfe-source-notes">${notes.map(s=>`<p>${escapeHtml(trimmed(s,360))}</p>`).join('')}</div>`:''}
   </section>`;
 }
 export const cashflowExecutiveStyles=`
