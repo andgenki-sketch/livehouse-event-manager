@@ -161,7 +161,7 @@ export default function CashflowSpreadsheet({client,team}){
    const cashless=cashflowCellToYen(cashlessSplit,unit);
    if(cashless===null||cashless>selectedSales.total)throw Error('入金済みのキャッシュレス額が売上登録額を超えています');
    const split=salesAllocation({reference:selectedSales,receivedCash:selectedSales.total-cashless,receivedCashless:cashless});
-   if(!window.confirm('【入金確認】'+labelMonth(month)+'のイベント売上登録額 '+yen(selectedSales.total)+' を、現金 '+yen(split.sales_cash)+'／キャッシュレス '+yen(split.sales_cashless)+' として資金繰り実績に入力しますか？\\nイベント収支の数字は入金証明ではありません。実際に今月入金されたこと、未収・未決済分がないことを確認してから続行してください。\\n保存ボタンを押すまでDBには反映されません。'))return;
+   if(!window.confirm('【入金確認】'+labelMonth(month)+'のイベント売上登録額 '+yen(selectedSales.total)+' を、現金 '+yen(split.sales_cash)+'／キャッシュレス '+yen(split.sales_cashless)+' として資金繰り実績に入力しますか？ 既に入力した売上実績がある場合は上書きします。\\nイベント収支の数字は入金証明ではありません。実際に今月入金されたこと、未収・未決済分がないことを確認してから続行してください。\\n保存ボタンを押すまでDBには反映されません。'))return;
    setForm(prev=>({
     ...prev,
     sales_cash:cashflowYenToInput(split.sales_cash,unit),
@@ -176,7 +176,7 @@ export default function CashflowSpreadsheet({client,team}){
   if(view!=='actual'||!selectedPayroll||saving||loading)return;
   try{
    const amount=payrollPaymentSuggestion(selectedPayroll);
-   if(!window.confirm('【支払確認】'+payrollWorkMonth+'分の確定給与 '+yen(amount)+'（'+selectedPayroll.confirmed+'名）を'+labelMonth(month)+'の従業員給与支出へ反映しますか？\\n給与確定額は振込記録ではありません。実際にこの月に支払われ、控除等を調整した支出額と一致していることをご確認ください。\\n保存ボタンを押すまでDBには反映されません。'))return;
+   if(!window.confirm('【支払確認】'+payrollWorkMonth+'分の確定給与 '+yen(amount)+'（'+selectedPayroll.confirmed+'名）を'+labelMonth(month)+'の従業員給与支出へ反映しますか？ 既に入力した従業員給与実績がある場合は上書きします。\\n給与確定額は振込記録ではありません。実際にこの月に支払われ、控除等を調整した支出額と一致していることをご確認ください。\\n保存ボタンを押すまでDBには反映されません。'))return;
    setForm(prev=>({
     ...prev,employee_salary:cashflowYenToInput(amount,unit),
     source_note:noteWithSource(prev.source_note,'確定給与 '+payrollWorkMonth+'分（'+selectedPayroll.confirmed+'名、支払月確認入力）')
@@ -389,7 +389,7 @@ export default function CashflowSpreadsheet({client,team}){
     </div>
    </div>
    {carryCandidate!==null&&<p className="cashflow-sheet-carry-note">前月実績の確認済み残高 {yen(carryCandidate)} を「前月繰越現金・預金」へ自動入力しました。保存すると当月実績に記録されます。</p>}
-   {carryCandidate===null&&!active?.opening_balance&&<p className="cashflow-sheet-carry-note">前月の実績残高が未確認のため、自動繰越は保留しています。最初の月は月初残高を手入力し、前月の実績を確認済みにすると次月以降に引き継げます。</p>}
+   {carryCandidate===null&&(active?.opening_balance===null||active?.opening_balance===undefined)&&<p className="cashflow-sheet-carry-note">前月の実績残高が未確認のため、自動繰越は保留しています。最初の月は月初残高を手入力し、前月の実績を確認済みにすると次月以降に引き継げます。</p>}
   </section>}
   {editable?<section className="cashflow-sheet-edit-footer">
    <div className="cashflow-sheet-edit-title"><div><h3>{labelMonth(month)}の{view==='plan'?'資金計画':'資金実績'}</h3><p>{reviewState?'確認済み':active?'下書き・要照合':'未登録'}　／　{dirty?'未保存の変更あり':'保存済み内容を表示'}</p></div>
