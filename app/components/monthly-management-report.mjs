@@ -127,7 +127,7 @@ export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',i
  if(!data||!data.month)throw Error('報告書の集計がありません');
  const esc=escapeHtml,month=data.month,y=month.slice(0,4),m=Number(month.slice(5));
  const created=new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(issuedAt);
- const status=data.payrollComplete&&data.salesAvailable?'提出前確認':'要確認';
+ const status=data.payrollComplete&&data.salesAvailable&&cashflowActual?.status==='reviewed'?'提出前確認':'要確認';
  const salaryDisplay=data.hasConfirmed?yen(data.salaryTotal):'未確定';
  const balanceDisplay=data.referenceBalance===null?'未算出':yen(data.referenceBalance);
  const val=(n)=>yen(n);
