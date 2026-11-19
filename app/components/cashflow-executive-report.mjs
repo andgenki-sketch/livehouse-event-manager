@@ -58,7 +58,7 @@ export function cashflowExecutiveHighlights({actual=null,plan=null,mode='actual'
  }).join('');
  const cashStatus=!row?'未登録':a.reviewed?'確認済み':a.complete?'全項目入力済み・照合待ち':'入力途中・暫定';
  return `<section class="cfe-headline">
-  <h2>資金繰りの要点</h2>
+  <h2>${isPlan?'資金繰り計画':'資金繰り実績'}の要点</h2>
   <p class="cfe-status">資金繰り：<b>${escapeHtml(cashStatus)}</b> ／ 損益計算とは別の入出金管理です。${partial?' ※ は未入力項目が残る暫定値':''}</p>
   <div class="cfe-metrics">
    ${metric(isPlan?'月間資金増減（計画）':'月間資金増減（実績）',viewValue(a.net,partial))}
