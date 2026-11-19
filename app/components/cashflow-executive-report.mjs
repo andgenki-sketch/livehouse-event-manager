@@ -145,5 +145,5 @@ export const cashflowExecutiveStyles=`
  .cfe-detail-table tr.cfe-variance td{background:#f8f0e7;font-weight:700}
  .cfe-source-notes{font-size:7pt;line-height:1.35;overflow-wrap:anywhere}
  .cfe-source-notes p{margin:3px 0}
- @media print{.report-page{margin-top:0!important}.cfe-details-page{break-after:page;page-break-after:always}}
+ @media print{.report-page{margin-top:0!important}}
 `;
