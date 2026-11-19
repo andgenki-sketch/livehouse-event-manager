@@ -1,5 +1,5 @@
 import {confirmedPayrollRows,sortPayrollRows} from './payroll-report.mjs';
-import {cashflowReportSection} from './cashflow-model.mjs';
+import {cashflowExecutiveHighlights,cashflowExecutiveDiscussion,cashflowExecutiveDetails,cashflowExecutiveStyles} from './cashflow-executive-report.mjs';
 import {hallDeductionTotal} from './hall-deductions.mjs';
 import {shiftPaymentMode} from './shift-labor-forecast.mjs';
 
@@ -127,7 +127,7 @@ export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',i
  if(!data||!data.month)throw Error('報告書の集計がありません');
  const esc=escapeHtml,month=data.month,y=month.slice(0,4),m=Number(month.slice(5));
  const created=new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(issuedAt);
- const status=data.payrollComplete&&data.salesAvailable?'提出前確認':'要確認';
+ const status=data.payrollComplete&&data.salesAvailable&&cashflowActual?.status==='reviewed'?'提出前確認':'要確認';
  const salaryDisplay=data.hasConfirmed?yen(data.salaryTotal):'未確定';
  const balanceDisplay=data.referenceBalance===null?'未算出':yen(data.referenceBalance);
  const val=(n)=>yen(n);
@@ -162,13 +162,16 @@ export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',i
  .warning p{margin:4px 0;font-size:9pt}.disclaimer{font-size:8pt;color:#5f7183;border-top:1px solid #dce4ee;padding-top:8px;margin-top:13px}
  .controls{background:#e9f0f8;border:1px solid #c6d7eb;border-radius:8px;padding:11px;margin-bottom:16px}
  .controls button{border:0;background:#213e61;color:#fff;padding:10px 16px;border-radius:5px;font:inherit;cursor:pointer}
- .controls small{display:block;margin-top:6px}.page-two{page-break-before:always;break-before:page;margin-top:28px}
+ .controls small{display:block;margin-top:6px}.page-three{margin-top:24px}
  .amount-due{background:#eff4f8;border-radius:7px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
  .amount-due strong{font-size:21pt}.confidential{font-size:8pt;color:#778493;text-align:right;margin-top:20px}
  .memo{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #dce4ee;background:#f9fafc;border-radius:6px;padding:9px;margin-top:8px}
  .payroll-note{background:#fff8e8;padding:8px 12px;font-size:9pt;margin-top:10px}.badge{font-size:9pt;color:#9a6308;font-weight:700}
  tr{break-inside:avoid}
- @media print{main{max-width:none;margin:0;padding:0}.controls{display:none}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.page-two{margin-top:0}}
+ .page-three h2{margin:11px 0 6px}.page-three .header{margin-bottom:12px}
+ .page-three .amount-due{padding:10px 15px}
+ ${cashflowExecutiveStyles}
+ @media print{main{max-width:none;margin:0;padding:0}.controls{display:none}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.page-three{margin-top:0}}
  </style></head><body><main>
  <div class="controls"><button id="print-report" type="button">PDF保存・印刷</button><small>印刷先で「PDFに保存」を選択してください。送付は自動では行われません。</small></div>
  <div class="header"><div class="kicker">${esc(teamName)} / MONTHLY MANAGEMENT REPORT</div><h1>月次経営サマリー</h1><div class="meta"><span>${esc(y)}年${m}月分（前月実績）</span><span>作成日：${esc(created)}　<span class="status">${esc(status)}</span></span></div></div>
@@ -176,6 +179,18 @@ export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',i
  <div class="metrics">${cell('売上（登録済みイベント収支）',val(data.sales))}${cell('確定給与（給与支払依頼候補）',salaryDisplay)}${cell('経費（人件費・外注費を除く）',val(data.expenseTotal))}${cell('外注費（給与とは別）',val(data.outsideTotal))}</div>
  <div class="split" style="margin-top:10px"><div class="panel"><div>参考差引額</div><strong>${esc(balanceDisplay)}</strong><p>売上 − 確定給与 − 登録済み経費 − 登録済み外注費。未登録・重複を未調整。</p></div>
  <div class="panel"><div>確定給与の状況</div><strong>${data.confirmedCount}名確定 / ${data.expectedCount}名対象</strong><p>${data.pending.length?'未確定 '+data.pending.length+'名':'対象者の未確定は検出されていません'} ／ 収支登録 ${data.reportedEventsCount}/${data.eventsCount}件</p></div></div>
+
+ ${cashflowExecutiveHighlights({actual:cashflowActual,plan:cashflowPlan,mode:'actual'})}
+ ${cashflowExecutiveDiscussion({actual:cashflowActual,plan:cashflowPlan,mode:'actual'})}
+ <p class="disclaimer">損益側の「参考差引額」は利益・資金残高ではありません。資金繰りは入出金の独立した実績管理であり、給与・経費の計上額を再加算していません。未入力は0円とみなしません。</p>
+ ${cashflowExecutiveDetails({actual:cashflowActual,plan:cashflowPlan,mode:'actual'})}
+ <div class="report-page page-three"><div class="header"><div class="kicker">${esc(teamName)} / PAYROLL REQUEST</div><h1>給与支払依頼・内訳</h1><div class="meta"><span>${esc(y)}年${m}月分</span><span>作成日：${esc(created)}　<span class="status">${esc(status)}</span></span></div></div>
+ <div class="amount-due"><div><b>確定済み給与の合計</b><br><small>給与確定データに基づく支払依頼候補額</small></div><strong>${esc(salaryDisplay)}</strong></div>
+ <p class="payroll-note">確定額は交通費・調整額を含む場合があります。所得税・社会保険等の控除後振込額とは限りません。${data.pending.length?' 未確定者がいるため、この金額のみを最終支払総額として送付しないでください。':''}</p>
+ <h2>スタッフ別 給与確定一覧</h2>
+ <table><thead><tr><th>氏名</th><th class="num">確定支給額</th></tr></thead><tbody>${payrollRows||'<tr><td colspan="2">確定済み給与はありません</td></tr>'}</tbody></table>
+ ${data.pending.length?`<div class="warning"><b>未確定のスタッフ</b><p>${data.pending.map(esc).join('、')}</p></div>`:''}
+ ${note.trim()?`<h2>社長への連絡・確認事項</h2><div class="memo">${esc(note)}</div>`:''}
  <h2>経費・外注費の内訳</h2>
  <table><thead><tr><th>登録元</th><th class="num">経費</th><th class="num">外注費</th></tr></thead><tbody>
  <tr><td>経費台帳</td><td class="num">${esc(val(data.ledgerExpense))}</td><td class="num">${esc(val(data.ledgerOutside))}</td></tr>
@@ -183,16 +198,10 @@ export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',i
  <tr><td><b>登録額合計（重複照合前）</b></td><td class="num"><b>${esc(val(data.expenseTotal))}</b></td><td class="num"><b>${esc(val(data.outsideTotal))}</b></td></tr>
  </tbody></table>
  <h2>月次予算との比較</h2>${budgetTable}
- ${cashflowReportSection({actual:cashflowActual,plan:cashflowPlan,mode:'actual'})}
+
  ${data.warnings.length?`<div class="warning"><strong>要確認</strong>${data.warnings.map(w=>`<p>・${esc(w)}</p>`).join('')}</div>`:''}
- <p class="disclaimer">対象は登録済みのイベント収支・経費台帳・確定給与です。経費台帳とイベント収支の重複、未入力の共通経費、出演者支払、税・社会保険等は既存のイベント収支とは未照合です。下の資金繰り表は別途入力された入出金を表示します。「参考差引額」は利益または資金繰り残高ではありません。外注費のシフト予測は計上していません。</p>
- <div class="page-two"><div class="header"><div class="kicker">${esc(teamName)} / PAYROLL REQUEST</div><h1>給与支払依頼・内訳</h1><div class="meta"><span>${esc(y)}年${m}月分</span><span>作成日：${esc(created)}　<span class="status">${esc(status)}</span></span></div></div>
- <div class="amount-due"><div><b>確定済み給与の合計</b><br><small>給与確定データに基づく支払依頼候補額</small></div><strong>${esc(salaryDisplay)}</strong></div>
- <p class="payroll-note">確定額は交通費・調整額を含む場合があります。所得税・社会保険等の控除後振込額とは限りません。${data.pending.length?' 未確定者がいるため、この金額のみを最終支払総額として送付しないでください。':''}</p>
- <h2>スタッフ別 給与確定一覧</h2>
- <table><thead><tr><th>氏名</th><th class="num">確定支給額</th></tr></thead><tbody>${payrollRows||'<tr><td colspan="2">確定済み給与はありません</td></tr>'}</tbody></table>
- ${data.pending.length?`<div class="warning"><b>未確定のスタッフ</b><p>${data.pending.map(esc).join('、')}</p></div>`:''}
- ${note.trim()?`<h2>社長への連絡・確認事項</h2><div class="memo">${esc(note)}</div>`:''}
+ <p class="disclaimer">対象は登録済みのイベント収支・経費台帳・確定給与です。経費台帳とイベント収支の重複、未入力の共通経費、出演者支払、税・社会保険等は既存のイベント収支とは未照合です。前ページの資金繰り明細は別途入力された入出金を表示します。「参考差引額」は利益または資金繰り残高ではありません。外注費のシフト予測は計上していません。</p>
+
  <div class="confidential">社内機密 / 給与・経営情報 / 閲覧・作成はオーナー権限のみ</div>
  </div></main></body></html>`;
 }

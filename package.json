@@ -4,7 +4,7 @@
     "build": "next build",
     "start": "next start",
     "prepare:timetable": "node scripts/prepare-timetable-reader.mjs",
-    "prebuild": "npm run prepare:timetable && npm run test:hall-deductions && npm run test:shift-labor && npm run test:management-report && npm run test:payroll-bulk && npm run test:payroll-report && npm run test:next-budget && npm run test:next-budget-permissions && npm run test:cashflow && npm run test:cashflow-sheet",
+    "prebuild": "npm run prepare:timetable && npm run test:hall-deductions && npm run test:shift-labor && npm run test:management-report && npm run test:payroll-bulk && npm run test:payroll-report && npm run test:next-budget && npm run test:next-budget-permissions && npm run test:cashflow && npm run test:cashflow-sheet && npm run test:cashflow-executive",
     "predev": "npm run prepare:timetable",
     "test:timetable": "node --test tests/timetable-import.test.mjs",
     "test:hall-deductions": "node --test tests/hall-deductions.test.mjs",
@@ -15,7 +15,8 @@
     "test:next-budget": "node --test tests/next-month-budget-report.test.mjs",
     "test:next-budget-permissions": "node --test tests/next-month-budget-event-permissions.test.mjs",
     "test:cashflow": "node --test tests/cashflow-model.test.mjs",
-    "test:cashflow-sheet": "node --test tests/cashflow-sheet-layout.test.mjs"
+    "test:cashflow-sheet": "node --test tests/cashflow-sheet-layout.test.mjs",
+    "test:cashflow-executive": "node --test tests/cashflow-executive-reports.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "latest",

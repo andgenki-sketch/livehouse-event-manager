@@ -12,12 +12,17 @@ const previousMonth=month=>{
  const d=new Date(Date.UTC(year,m-2,1));
  return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');
 };
-const formFields=['opening_balance',...CASHFLOW_KEYS,'reported_closing_balance','source_note','evidence_note','management_note'];
+const monetaryFields=['opening_balance',...CASHFLOW_KEYS,'reported_closing_balance'];
+const formFields=[...monetaryFields,'source_note','evidence_note','management_note',
+ 'discussion_topic','discussion_decision','discussion_assignee','discussion_deadline'];
 const fromRow=(row,unit)=>({
  opening_balance:cashflowYenToInput(row?.opening_balance,unit),
  ...Object.fromEntries(CASHFLOW_KEYS.map(key=>[key,cashflowYenToInput(row?.[key],unit)])),
  reported_closing_balance:cashflowYenToInput(row?.reported_closing_balance,unit),
- source_note:row?.source_note||'',evidence_note:row?.evidence_note||'',management_note:row?.management_note||''
+ source_note:row?.source_note||'',evidence_note:row?.evidence_note||'',management_note:row?.management_note||'',
+ discussion_topic:row?.discussion_topic||'',discussion_decision:row?.discussion_decision||'',
+ discussion_assignee:row?.discussion_assignee||'',
+ discussion_deadline:row?.discussion_deadline?String(row.discussion_deadline).slice(0,10):''
 });
 const toRow=(form,month,scenario,unit)=>({
  month,scenario,
@@ -52,6 +57,7 @@ export default function CashflowSpreadsheet({client,team}){
  const formBase=useMemo(()=>fromRow(active,unit),[active?.id,active?.updated_at,month,view,unit]);
  useEffect(()=>{setForm(formBase)},[formBase]);
  const dirty=view!=='difference'&&formFields.some(key=>String(form[key]??'')!==String(formBase[key]??''));
+ const monetaryDirty=view!=='difference'&&monetaryFields.some(key=>String(form[key]??'')!==String(formBase[key]??''));
  const parsed=useMemo(()=>{
   if(view==='difference')return {row:null,error:null};
   try{
@@ -127,7 +133,7 @@ export default function CashflowSpreadsheet({client,team}){
    const hasValue=validated.opening_balance!==null||validated.reported_closing_balance!==null||
      CASHFLOW_KEYS.some(key=>validated[key]!==null);
    if(!hasValue)throw Error('金額がすべて未入力です。月初残高またはいずれかの入出金を入力してください。');
-   if(active?.status==='reviewed'&&!window.confirm('確認済みの月です。編集を保存すると確認状態が下書きに戻ります。続行しますか？'))return;
+   if(active?.status==='reviewed'&&monetaryDirty&&!window.confirm('確認済みの金額を変更しています。保存すると照合の確認状態が下書きに戻ります。続行しますか？'))return;
    setSaving(true);
    const auth=await client.auth.getUser();
    if(auth.error||!auth.data?.user?.id)throw Error('オーナーのログイン状態を確認できませんでした');
@@ -137,7 +143,13 @@ export default function CashflowSpreadsheet({client,team}){
     source_note:String(form.source_note||'').trim(),
     evidence_note:String(form.evidence_note||'').trim(),
     management_note:String(form.management_note||'').trim(),
-    status:'draft',reviewed_at:null,reviewed_by:null,
+    discussion_topic:String(form.discussion_topic||'').trim(),
+    discussion_decision:String(form.discussion_decision||'').trim(),
+    discussion_assignee:String(form.discussion_assignee||'').trim(),
+    discussion_deadline:form.discussion_deadline||null,
+    status:monetaryDirty?'draft':active?.status||'draft',
+    reviewed_at:monetaryDirty?null:active?.reviewed_at||null,
+    reviewed_by:monetaryDirty?null:active?.reviewed_by||null,
     updated_by:auth.data.user.id,updated_at:new Date().toISOString()
    };
    const response=await client.from('cashflow_monthly').upsert(payload,{onConflict:'team_id,month,scenario'});
@@ -289,9 +301,13 @@ export default function CashflowSpreadsheet({client,team}){
      <label>数値の根拠・参照資料<input maxLength={1000} value={form.source_note??''} onChange={e=>edit('source_note',e.target.value)} placeholder="例：銀行入出金明細、資金繰り表の基準計画"/></label>
      <label>実績の照合根拠<textarea rows={2} maxLength={2000} value={form.evidence_note??''} onChange={e=>edit('evidence_note',e.target.value)} placeholder="例：銀行残高・現金出納帳と照合"/></label>
      <label>経営協議メモ・差異の原因<textarea rows={2} maxLength={4000} value={form.management_note??''} onChange={e=>edit('management_note',e.target.value)} placeholder="例：差異の原因、今後の改善案、確認担当者"/></label>
+     <label>社長と協議するテーマ<textarea rows={2} maxLength={800} value={form.discussion_topic??''} onChange={e=>edit('discussion_topic',e.target.value)} placeholder="例：返済予定と資金見通しの確認、支払時期の調整"/></label>
+     <label>協議後の決定事項<textarea rows={2} maxLength={1200} value={form.discussion_decision??''} onChange={e=>edit('discussion_decision',e.target.value)} placeholder="未決定の場合は空欄のまま保存"/></label>
+     <label>次の担当者<input maxLength={160} value={form.discussion_assignee??''} onChange={e=>edit('discussion_assignee',e.target.value)} placeholder="社長・店長など、決まってから入力"/></label>
+     <label>対応期限<input type="date" value={form.discussion_deadline??''} onChange={e=>edit('discussion_deadline',e.target.value)}/></label>
     </div>
    </details>
-   <p className="cashflow-sheet-review-note">確認済みにするには全勘定項目に値を入力し、実績には照合根拠と月末の確認済み残高が必要です。照合差額があれば協議メモに残してください。保存すると確認状態は下書きに戻ります。</p>
+   <p className="cashflow-sheet-review-note">確認済みにするには全勘定項目に値を入力し、実績には照合根拠と月末の確認済み残高が必要です。照合差額があれば協議メモに残してください。金額を変更して保存すると確認状態は下書きに戻ります。協議メモのみの変更では確認済みの金額を保持します。</p>
   </section>:
   <section className="cashflow-sheet-edit-footer"><h3>{labelMonth(month)}の差異（実績 − 計画）</h3>
    <p>残高の差異：{yen(difference)}。実績・計画の両方に数字がある項目のみ比較します。未入力の場合は「—」で表示します。</p>
