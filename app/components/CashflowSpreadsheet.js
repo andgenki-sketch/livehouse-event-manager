@@ -2,6 +2,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {CASHFLOW_KEYS,calculateCashflow,cashflowMonthList,cashflowYearStart,validateCashflowEntry,prepareCashflowMonthSave,yen} from './cashflow-model.mjs';
 import {CASHFLOW_SHEET_ROWS,cashflowSheetValue,cashflowSheetAnnualValue,cashflowCellToYen,cashflowYenToInput,cashflowYenToDisplay} from './cashflow-sheet-layout.mjs';
+import {fetchCashflowLinkedReferences,previousCashflowMonth,verifiedCarryover,salesAllocation,payrollPaymentSuggestion} from './cashflow-linked-actuals.mjs';
 
 const currentJapanMonth=()=>{
  const p=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit'}).formatToParts(new Date());
@@ -43,7 +44,12 @@ export default function CashflowSpreadsheet({client,team}){
  const [view,setView]=useState('plan');
  const [unit,setUnit]=useState('man');
  const [entries,setEntries]=useState([]);
+ const [linked,setLinked]=useState({sales:{},payroll:{}});
+ const [linkedError,setLinkedError]=useState('');
+ const [payMonthMode,setPayMonthMode]=useState('previous');
+ const [cashlessSplit,setCashlessSplit]=useState('');
  const sheetRef=useRef(null);
+ const requestSeq=useRef(0);
  const [form,setForm]=useState({});
  const [loading,setLoading]=useState(true);
  const [saving,setSaving]=useState(false);
@@ -54,10 +60,16 @@ export default function CashflowSpreadsheet({client,team}){
  const records=useMemo(()=>new Map(entries.map(row=>[keyOf(String(row.month).slice(0,7),row.scenario),row])),[entries]);
  const record=(m,scenario)=>records.get(keyOf(m,scenario))||null;
  const active=view==='difference'?null:record(month,view);
- const formBase=useMemo(()=>fromRow(active,unit),[active?.id,active?.updated_at,month,view,unit]);
+ const priorActual=record(previousMonth(month),'actual');
+ const carryCandidate=view==='actual'?verifiedCarryover(priorActual,active):null;
+ const originalBase=useMemo(()=>fromRow(active,unit),[active?.id,active?.updated_at,month,view,unit]);
+ const formBase=useMemo(()=>({
+  ...originalBase,
+  ...(carryCandidate!==null?{opening_balance:cashflowYenToInput(carryCandidate,unit)}:{})
+ }),[originalBase,carryCandidate,unit]);
  useEffect(()=>{setForm(formBase)},[formBase]);
- const dirty=view!=='difference'&&formFields.some(key=>String(form[key]??'')!==String(formBase[key]??''));
- const monetaryDirty=view!=='difference'&&monetaryFields.some(key=>String(form[key]??'')!==String(formBase[key]??''));
+ const dirty=view!=='difference'&&formFields.some(key=>String(form[key]??'')!==String(originalBase[key]??''));
+ const monetaryDirty=view!=='difference'&&monetaryFields.some(key=>String(form[key]??'')!==String(originalBase[key]??''));
  const parsed=useMemo(()=>{
   if(view==='difference')return {row:null,error:null};
   try{
@@ -76,12 +88,22 @@ export default function CashflowSpreadsheet({client,team}){
 
  const reload=async()=>{
   if(!owner||!team?.id)return;
-  setLoading(true);setError('');
+  const seq=++requestSeq.current;
+  setLoading(true);setError('');setLinkedError('');
   const first=(fiscalYear-1)+'-08-01',last=(fiscalYear+1)+'-09-01';
-  const response=await client.from('cashflow_monthly').select('*').eq('team_id',team.id)
-   .gte('month',first).lt('month',last).order('month');
-  if(response.error)setError('資金繰り表を取得できませんでした：'+response.error.message);
-  else setEntries(response.data||[]);
+  const [book,external]=await Promise.allSettled([
+   client.from('cashflow_monthly').select('*').eq('team_id',team.id)
+    .gte('month',first).lt('month',last).order('month'),
+   fetchCashflowLinkedReferences(client,team.id,fiscalYear)
+  ]);
+  if(seq!==requestSeq.current)return;
+  if(book.status==='rejected')setError('資金繰り表の取得に失敗しました：'+(book.reason?.message||'通信エラー'));
+  else if(book.value.error)setError('資金繰り表の取得に失敗しました：'+book.value.error.message);
+  else setEntries(book.value.data||[]);
+  if(external.status==='rejected'){
+   setLinked({sales:{},payroll:{}});
+   setLinkedError('登録済み売上・給与の自動参照に失敗しました：'+(external.reason?.message||'通信エラー'));
+  }else setLinked(external.value);
   setLoading(false);
  };
  useEffect(()=>{if(owner&&team?.id)reload()},[owner,team?.id,fiscalYear]);
@@ -95,6 +117,7 @@ export default function CashflowSpreadsheet({client,team}){
  },[month,loading,fiscalYear]);
 
  const confirmLeave=()=>!dirty||window.confirm('選択中の月に未保存の入力があります。保存せずに移動しますか？');
+ useEffect(()=>{setCashlessSplit('');setPayMonthMode('previous')},[month,view,unit]);
  const selectMonth=target=>{
   if(target===month||!confirmLeave())return;
   setError('');setMessage('');setMonth(target);
