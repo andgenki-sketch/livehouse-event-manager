@@ -305,7 +305,8 @@ export default function CashflowSpreadsheet({client,team}){
     <button type="button" className={unit==='yen'?'active':''} onClick={()=>selectUnit('yen')}>円</button>
    </div>
   </div>
-  <p className="cashflow-sheet-help">月の見出しを選ぶと、その月の列で直接入力できます。小計と月末残高は自動計算します。空欄の「—」と0円は別です。{view==='difference'?'差異は比較専用です。':'変更後は表の下にある「保存」を押してください。'}</p>
+  <p className="cashflow-sheet-help">月の見出しを選ぶと、その月の列で直接入力できます。小計と月末残高は自動計算します。空欄の「—」と0円は別です。{view==='difference'?'差異は比較専用です。':'変更後は表の下にある「保存」を押してください。'}{view==='actual'?' 「参考：アプリ登録売上・確定給与」は自動取得した計上額で、現預金収支には未加算です。':''}</p>
+  {linkedError&&<p className="cashflow-sheet-alert" role="alert">{linkedError}</p>
   {loading?<div className="cashflow-sheet-loading">資金繰り表を読み込み中…</div>:
   <div className="cashflow-sheet-scroll" ref={sheetRef} role="region" tabIndex={0} aria-label="12か月の資金繰り一覧">
    <table className="cashflow-sheet-table">
@@ -349,7 +350,47 @@ export default function CashflowSpreadsheet({client,team}){
     </tbody>
    </table>
   </div>}
-  <p className="cashflow-sheet-footnote">合計欄の * は一部の月・項目が未入力の暫定合計です。勘定項目の並びは共有された資金繰り表に準拠しています。月初・月末残高は年間合計しません。マイナス残高もそのまま表示します。</p>
+  <p className="cashflow-sheet-footnote">合計欄の * は一部の月・項目が未入力の暫定合計です。勘定項目の並びは共有された資金繰り表に準拠しています。月初・月末残高は年間合計しません。マイナス残高もそのまま表示します。自動連携の参考行はキャッシュフロー合計に加算されません。</p>
+  {view==='actual'&&<section className="cashflow-sheet-linked" aria-label="実績の自動連携">
+   <div className="cashflow-sheet-linked-heading">
+    <div><h3>売上・人件費の自動連携</h3><p>登録済みの金額を自動集計しています。入金・振込の事実を確認してから、実績入力欄へ反映してください。</p></div>
+    <button type="button" onClick={reload} disabled={saving||loading}>連携データを更新</button>
+   </div>
+   <div className="cashflow-sheet-linked-grid">
+    <div className="cashflow-sheet-linked-card">
+     <span>イベント売上の登録額（{labelMonth(month)}）</span>
+     <strong>{selectedSales?.registered?yen(selectedSales.total):'未登録'}</strong>
+     <p>収支登録済み：{selectedSales?.registered||0}件 ／ 収支未登録：{selectedSales?.missing||0}件。未収金・決済の入金日やキャッシュレス区分は区別できません。</p>
+     <label>今月実際に入金されたキャッシュレス額（{unit==='man'?'万円':'円'}）
+      <input type="number" min="0" step={unit==='man'?'0.0001':'1'} value={cashlessSplit}
+       placeholder="0円の場合も0を入力" onChange={e=>setCashlessSplit(e.target.value)} disabled={saving||loading}/>
+     </label>
+     <button type="button" onClick={applySales} disabled={saving||loading||!selectedSales?.registered||selectedSales.missing>0||cashlessSplit.trim()===''}>
+      入金を照合して売上実績へ反映
+     </button>
+     <small>現金額は「登録売上 − 確認したキャッシュレス額」で計算します。イベント収支の合計と実際の入金額が異なる場合は、反映せず表の実績欄へ直接入力してください。</small>
+    </div>
+    <div className="cashflow-sheet-linked-card">
+     <span>確定給与の登録額（勤務月ベース）</span>
+     <div className="cashflow-sheet-linked-mode">
+      <label>支払対象の給与月
+       <select value={payMonthMode} onChange={e=>setPayMonthMode(e.target.value)}>
+        <option value="previous">前月分を当月支払</option>
+        <option value="current">当月分を当月支払</option>
+       </select>
+      </label>
+     </div>
+     <strong>{selectedPayroll?.confirmed?yen(selectedPayroll.total):'確定給与なし'}</strong>
+     <p>{labelMonth(payrollWorkMonth)}の確定給与：{selectedPayroll?.confirmed||0}名。未確定者の金額は含まれません。給与の振込日・控除額はこのデータに含まれていません。</p>
+     <button type="button" onClick={applyPayroll} disabled={saving||loading||!selectedPayroll?.confirmed}>
+      支払を照合して人件費実績へ反映
+     </button>
+     <small>給与の実際の振込月や控除後の支出額が異なる場合は、表の「従業員給与」へ正しい金額を入力してください。二重反映しません。</small>
+    </div>
+   </div>
+   {carryCandidate!==null&&<p className="cashflow-sheet-carry-note">前月実績の確認済み残高 {yen(carryCandidate)} を「前月繰越現金・預金」へ自動入力しました。保存すると当月実績に記録されます。</p>}
+   {carryCandidate===null&&!active?.opening_balance&&<p className="cashflow-sheet-carry-note">前月の実績残高が未確認のため、自動繰越は保留しています。最初の月は月初残高を手入力し、前月の実績を確認済みにすると次月以降に引き継げます。</p>}
+  </section>}
   {editable?<section className="cashflow-sheet-edit-footer">
    <div className="cashflow-sheet-edit-title"><div><h3>{labelMonth(month)}の{view==='plan'?'資金計画':'資金実績'}</h3><p>{reviewState?'確認済み':active?'下書き・要照合':'未登録'}　／　{dirty?'未保存の変更あり':'保存済み内容を表示'}</p></div>
     <div className="cashflow-sheet-edit-summary">
