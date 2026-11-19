@@ -36,6 +36,15 @@ export function validateCashflowEntry(entry,{complete=false}={}){
  if(complete&&(opening===null||CASHFLOW_KEYS.some(key=>fields[key]===null)))throw Error('確認済みにするには残高と全項目の入力（該当しない項目は0円）が必要です');
  return {opening_balance:opening,reported_closing_balance:reportedClosing,...fields};
 }
+/**
+ * UI month is YYYY-MM. The database stores the first of that month as DATE.
+ * Validate before conversion, never validate a YYYY-MM-01 date as an input month.
+ * Return only validated monetary fields and the canonical database month.
+ */
+export function prepareCashflowMonthSave(row,month,scenario){
+ const amounts=validateCashflowEntry({...row,month,scenario});
+ return {month:month+'-01',scenario,...amounts};
+}
 const sumGroup=(row,keys)=>{
  const values=keys.map(key=>row?.[key]);
  const known=values.filter(v=>v!==null&&v!==undefined&&v!=='').map(v=>Number(v));
