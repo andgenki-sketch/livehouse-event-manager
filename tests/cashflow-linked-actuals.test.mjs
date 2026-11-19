@@ -80,7 +80,7 @@ test('UI does not auto-post reference numbers as cash without explicit owner act
  assert.match(src,/onClick=\{applySales\}/);
  assert.match(src,/onClick=\{applyPayroll\}/);
  assert.match(src,/verifiedCarryover/);
- assert.match(src,/資金繰り合計に加算されません/);
+ assert.match(src,/キャッシュフロー合計に加算されません/);
 });
 test('failed source read does not require a broad permission grant',async()=>{
  const calls=[];
