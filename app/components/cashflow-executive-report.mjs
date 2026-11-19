@@ -93,7 +93,7 @@ export function cashflowExecutiveDetails({actual=null,plan=null,mode='actual'}={
  const row=sourceOf(actual,plan,mode),other=referenceOf(actual,plan,mode);
  const a=calculateCashflow(row);
  const sameMode=mode==='plan'?'計画':'実績',otherMode=mode==='plan'?'同月実績':'同月計画';
- const body=CASHFLOW_SHEET_ROWS.map(item=>{
+ const body=CASHFLOW_SHEET_ROWS.filter(item=>item.type!=='reference').map(item=>{
   if(item.type==='section')return `<tr class="cfe-group"><th colspan="4">${escapeHtml(item.label)}</th></tr>`;
   const x=cashflowSheetValue(row,item.key),y=cashflowSheetValue(other,item.key);
   const delta=x!==null&&y!==null?x-y:null;

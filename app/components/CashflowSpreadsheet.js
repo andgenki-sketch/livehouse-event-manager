@@ -2,6 +2,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {CASHFLOW_KEYS,calculateCashflow,cashflowMonthList,cashflowYearStart,validateCashflowEntry,prepareCashflowMonthSave,yen} from './cashflow-model.mjs';
 import {CASHFLOW_SHEET_ROWS,cashflowSheetValue,cashflowSheetAnnualValue,cashflowCellToYen,cashflowYenToInput,cashflowYenToDisplay} from './cashflow-sheet-layout.mjs';
+import {fetchCashflowLinkedReferences,previousCashflowMonth,verifiedCarryover,salesAllocation,payrollPaymentSuggestion} from './cashflow-linked-actuals.mjs';
 
 const currentJapanMonth=()=>{
  const p=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit'}).formatToParts(new Date());
@@ -43,7 +44,12 @@ export default function CashflowSpreadsheet({client,team}){
  const [view,setView]=useState('plan');
  const [unit,setUnit]=useState('man');
  const [entries,setEntries]=useState([]);
+ const [linked,setLinked]=useState({sales:{},payroll:{}});
+ const [linkedError,setLinkedError]=useState('');
+ const [payMonthMode,setPayMonthMode]=useState('previous');
+ const [cashlessSplit,setCashlessSplit]=useState('');
  const sheetRef=useRef(null);
+ const requestSeq=useRef(0);
  const [form,setForm]=useState({});
  const [loading,setLoading]=useState(true);
  const [saving,setSaving]=useState(false);
@@ -54,10 +60,16 @@ export default function CashflowSpreadsheet({client,team}){
  const records=useMemo(()=>new Map(entries.map(row=>[keyOf(String(row.month).slice(0,7),row.scenario),row])),[entries]);
  const record=(m,scenario)=>records.get(keyOf(m,scenario))||null;
  const active=view==='difference'?null:record(month,view);
- const formBase=useMemo(()=>fromRow(active,unit),[active?.id,active?.updated_at,month,view,unit]);
+ const priorActual=record(previousMonth(month),'actual');
+ const carryCandidate=view==='actual'?verifiedCarryover(priorActual,active):null;
+ const originalBase=useMemo(()=>fromRow(active,unit),[active?.id,active?.updated_at,month,view,unit]);
+ const formBase=useMemo(()=>({
+  ...originalBase,
+  ...(carryCandidate!==null?{opening_balance:cashflowYenToInput(carryCandidate,unit)}:{})
+ }),[originalBase,carryCandidate,unit]);
  useEffect(()=>{setForm(formBase)},[formBase]);
- const dirty=view!=='difference'&&formFields.some(key=>String(form[key]??'')!==String(formBase[key]??''));
- const monetaryDirty=view!=='difference'&&monetaryFields.some(key=>String(form[key]??'')!==String(formBase[key]??''));
+ const dirty=view!=='difference'&&formFields.some(key=>String(form[key]??'')!==String(originalBase[key]??''));
+ const monetaryDirty=view!=='difference'&&monetaryFields.some(key=>String(form[key]??'')!==String(originalBase[key]??''));
  const parsed=useMemo(()=>{
   if(view==='difference')return {row:null,error:null};
   try{
@@ -76,12 +88,22 @@ export default function CashflowSpreadsheet({client,team}){
 
  const reload=async()=>{
   if(!owner||!team?.id)return;
-  setLoading(true);setError('');
+  const seq=++requestSeq.current;
+  setLoading(true);setError('');setLinkedError('');
   const first=(fiscalYear-1)+'-08-01',last=(fiscalYear+1)+'-09-01';
-  const response=await client.from('cashflow_monthly').select('*').eq('team_id',team.id)
-   .gte('month',first).lt('month',last).order('month');
-  if(response.error)setError('資金繰り表を取得できませんでした：'+response.error.message);
-  else setEntries(response.data||[]);
+  const [book,external]=await Promise.allSettled([
+   client.from('cashflow_monthly').select('*').eq('team_id',team.id)
+    .gte('month',first).lt('month',last).order('month'),
+   fetchCashflowLinkedReferences(client,team.id,fiscalYear)
+  ]);
+  if(seq!==requestSeq.current)return;
+  if(book.status==='rejected')setError('資金繰り表の取得に失敗しました：'+(book.reason?.message||'通信エラー'));
+  else if(book.value.error)setError('資金繰り表の取得に失敗しました：'+book.value.error.message);
+  else setEntries(book.value.data||[]);
+  if(external.status==='rejected'){
+   setLinked({sales:{},payroll:{}});
+   setLinkedError('登録済み売上・給与の自動参照に失敗しました：'+(external.reason?.message||'通信エラー'));
+  }else setLinked(external.value);
   setLoading(false);
  };
  useEffect(()=>{if(owner&&team?.id)reload()},[owner,team?.id,fiscalYear]);
@@ -95,6 +117,7 @@ export default function CashflowSpreadsheet({client,team}){
  },[month,loading,fiscalYear]);
 
  const confirmLeave=()=>!dirty||window.confirm('選択中の月に未保存の入力があります。保存せずに移動しますか？');
+ useEffect(()=>{setCashlessSplit('');setPayMonthMode('previous')},[month,view,unit]);
  const selectMonth=target=>{
   if(target===month||!confirmLeave())return;
   setError('');setMessage('');setMonth(target);
@@ -123,6 +146,44 @@ export default function CashflowSpreadsheet({client,team}){
   if(!calc.reviewed||balance===null)return;
   if(!window.confirm('前月の確認済み月末残高 '+yen(balance)+' を、選択月の月初残高に転記しますか？'))return;
   edit('opening_balance',cashflowYenToInput(balance,unit));
+ };
+ const selectedSales=linked.sales[month]||null;
+ const payrollWorkMonth=payMonthMode==='previous'?previousMonth(month):month;
+ const selectedPayroll=linked.payroll[payrollWorkMonth]||null;
+ const noteWithSource=(prev,source)=>{
+  const current=String(prev||'');
+  return current.includes(source)?current:([current,source].filter(Boolean).join(' / ')).slice(0,1000);
+ };
+ const applySales=()=>{
+  if(view!=='actual'||!selectedSales||saving||loading)return;
+  try{
+   if(cashlessSplit.trim()==='')throw Error('実際に入金されたキャッシュレス額を入力してください（0円の場合も0を入力）');
+   const cashless=cashflowCellToYen(cashlessSplit,unit);
+   if(cashless===null||cashless>selectedSales.total)throw Error('入金済みのキャッシュレス額が売上登録額を超えています');
+   const split=salesAllocation({reference:selectedSales,receivedCash:selectedSales.total-cashless,receivedCashless:cashless});
+   if(!window.confirm('【入金確認】'+labelMonth(month)+'のイベント売上登録額 '+yen(selectedSales.total)+' を、現金 '+yen(split.sales_cash)+'／キャッシュレス '+yen(split.sales_cashless)+' として資金繰り実績に入力しますか？ 既に入力した売上実績がある場合は上書きします。\\nイベント収支の数字は入金証明ではありません。実際に今月入金されたこと、未収・未決済分がないことを確認してから続行してください。\\n保存ボタンを押すまでDBには反映されません。'))return;
+   setForm(prev=>({
+    ...prev,
+    sales_cash:cashflowYenToInput(split.sales_cash,unit),
+    sales_cashless:cashflowYenToInput(split.sales_cashless,unit),
+    source_note:noteWithSource(prev.source_note,'イベント収支登録額 '+month+'（'+selectedSales.registered+'件、入金区分は確認入力）')
+   }));
+   setMessage('登録済みイベント売上を入力欄へ反映しました。入金日と内訳を照合し、保存してください。');
+   setError('');
+  }catch(e){setError('売上を反映できませんでした：'+(e?.message||'入力を確認してください'))}
+ };
+ const applyPayroll=()=>{
+  if(view!=='actual'||!selectedPayroll||saving||loading)return;
+  try{
+   const amount=payrollPaymentSuggestion(selectedPayroll);
+   if(!window.confirm('【支払確認】'+payrollWorkMonth+'分の確定給与 '+yen(amount)+'（'+selectedPayroll.confirmed+'名）を'+labelMonth(month)+'の従業員給与支出へ反映しますか？ 既に入力した従業員給与実績がある場合は上書きします。\\n給与確定額は振込記録ではありません。実際にこの月に支払われ、控除等を調整した支出額と一致していることをご確認ください。\\n保存ボタンを押すまでDBには反映されません。'))return;
+   setForm(prev=>({
+    ...prev,employee_salary:cashflowYenToInput(amount,unit),
+    source_note:noteWithSource(prev.source_note,'確定給与 '+payrollWorkMonth+'分（'+selectedPayroll.confirmed+'名、支払月確認入力）')
+   }));
+   setMessage('確定給与を入力欄へ反映しました。給与振込明細を照合し、保存してください。');
+   setError('');
+  }catch(e){setError('給与を反映できませんでした：'+(e?.message||'入力を確認してください'))}
  };
  const save=async()=>{
   if(!owner||view==='difference'||saving||loading)return;
@@ -185,7 +246,14 @@ export default function CashflowSpreadsheet({client,team}){
   }catch(e){setError('確認できませんでした：'+(e?.message||'原因不明'))}
   finally{setSaving(false)}
  };
+ const linkedReferenceValue=(m,row)=>{
+  if(view!=='actual')return null;
+  const ref=row.key==='linked_sales'?linked.sales[m]:row.key==='linked_payroll'?linked.payroll[m]:null;
+  if(!ref)return null;
+  return row.key==='linked_sales'?ref.registered>0?ref.total:null:ref.confirmed>0?ref.total:null;
+ };
  const cellFor=(m,row)=>{
+  if(row.type==='reference')return linkedReferenceValue(m,row);
   const actualRow=getRow(m,'actual'),planRow=getRow(m,'plan');
   const source=view==='difference'?null:getRow(m,view);
   const value=view==='difference'?(()=>{
@@ -196,6 +264,10 @@ export default function CashflowSpreadsheet({client,team}){
  };
  const annual=(row)=>{
   if(row.type==='section'||row.total===false)return null;
+  if(row.type==='reference'){
+   const amounts=months.map(m=>linkedReferenceValue(m,row)).filter(v=>v!==null);
+   return amounts.length?{value:amounts.reduce((a,b)=>a+b,0),partial:amounts.length<12}:null;
+  }
   if(view==='difference'){
    const data=Object.fromEntries(months.map(m=>[m,(()=>{
     const a=cashflowSheetValue(record(m,'actual'),row.key),p=cashflowSheetValue(record(m,'plan'),row.key);
@@ -233,7 +305,8 @@ export default function CashflowSpreadsheet({client,team}){
     <button type="button" className={unit==='yen'?'active':''} onClick={()=>selectUnit('yen')}>円</button>
    </div>
   </div>
-  <p className="cashflow-sheet-help">月の見出しを選ぶと、その月の列で直接入力できます。小計と月末残高は自動計算します。空欄の「—」と0円は別です。{view==='difference'?'差異は比較専用です。':'変更後は表の下にある「保存」を押してください。'}</p>
+  <p className="cashflow-sheet-help">月の見出しを選ぶと、その月の列で直接入力できます。小計と月末残高は自動計算します。空欄の「—」と0円は別です。{view==='difference'?'差異は比較専用です。':'変更後は表の下にある「保存」を押してください。'}{view==='actual'?' 「参考：アプリ登録売上・確定給与」は自動取得した計上額で、現預金収支には未加算です。':''}</p>
+  {linkedError&&<p className="cashflow-sheet-alert" role="alert">{linkedError}</p>}
   {loading?<div className="cashflow-sheet-loading">資金繰り表を読み込み中…</div>:
   <div className="cashflow-sheet-scroll" ref={sheetRef} role="region" tabIndex={0} aria-label="12か月の資金繰り一覧">
    <table className="cashflow-sheet-table">
@@ -277,7 +350,47 @@ export default function CashflowSpreadsheet({client,team}){
     </tbody>
    </table>
   </div>}
-  <p className="cashflow-sheet-footnote">合計欄の * は一部の月・項目が未入力の暫定合計です。勘定項目の並びは共有された資金繰り表に準拠しています。月初・月末残高は年間合計しません。マイナス残高もそのまま表示します。</p>
+  <p className="cashflow-sheet-footnote">合計欄の * は一部の月・項目が未入力の暫定合計です。勘定項目の並びは共有された資金繰り表に準拠しています。月初・月末残高は年間合計しません。マイナス残高もそのまま表示します。自動連携の参考行はキャッシュフロー合計に加算されません。</p>
+  {view==='actual'&&<section className="cashflow-sheet-linked" aria-label="実績の自動連携">
+   <div className="cashflow-sheet-linked-heading">
+    <div><h3>売上・人件費の自動連携</h3><p>登録済みの金額を自動集計しています。入金・振込の事実を確認してから、実績入力欄へ反映してください。</p></div>
+    <button type="button" onClick={reload} disabled={saving||loading}>連携データを更新</button>
+   </div>
+   <div className="cashflow-sheet-linked-grid">
+    <div className="cashflow-sheet-linked-card">
+     <span>イベント売上の登録額（{labelMonth(month)}）</span>
+     <strong>{selectedSales?.registered?yen(selectedSales.total):'未登録'}</strong>
+     <p>収支登録済み：{selectedSales?.registered||0}件 ／ 収支未登録：{selectedSales?.missing||0}件。未収金・決済の入金日やキャッシュレス区分は区別できません。</p>
+     <label>今月実際に入金されたキャッシュレス額（{unit==='man'?'万円':'円'}）
+      <input type="number" min="0" step={unit==='man'?'0.0001':'1'} value={cashlessSplit}
+       placeholder="0円の場合も0を入力" onChange={e=>setCashlessSplit(e.target.value)} disabled={saving||loading}/>
+     </label>
+     <button type="button" onClick={applySales} disabled={saving||loading||!selectedSales?.registered||selectedSales.missing>0||cashlessSplit.trim()===''}>
+      入金を照合して売上実績へ反映
+     </button>
+     <small>現金額は「登録売上 − 確認したキャッシュレス額」で計算します。イベント収支の合計と実際の入金額が異なる場合は、反映せず表の実績欄へ直接入力してください。</small>
+    </div>
+    <div className="cashflow-sheet-linked-card">
+     <span>確定給与の登録額（勤務月ベース）</span>
+     <div className="cashflow-sheet-linked-mode">
+      <label>支払対象の給与月
+       <select value={payMonthMode} onChange={e=>setPayMonthMode(e.target.value)}>
+        <option value="previous">前月分を当月支払</option>
+        <option value="current">当月分を当月支払</option>
+       </select>
+      </label>
+     </div>
+     <strong>{selectedPayroll?.confirmed?yen(selectedPayroll.total):'確定給与なし'}</strong>
+     <p>{labelMonth(payrollWorkMonth)}の確定給与：{selectedPayroll?.confirmed||0}名。未確定者の金額は含まれません。給与の振込日・控除額はこのデータに含まれていません。</p>
+     <button type="button" onClick={applyPayroll} disabled={saving||loading||!selectedPayroll?.confirmed}>
+      支払を照合して人件費実績へ反映
+     </button>
+     <small>給与の実際の振込月や控除後の支出額が異なる場合は、表の「従業員給与」へ正しい金額を入力してください。二重反映しません。</small>
+    </div>
+   </div>
+   {carryCandidate!==null&&<p className="cashflow-sheet-carry-note">前月実績の確認済み残高 {yen(carryCandidate)} を「前月繰越現金・預金」へ自動入力しました。保存すると当月実績に記録されます。</p>}
+   {carryCandidate===null&&(active?.opening_balance===null||active?.opening_balance===undefined)&&<p className="cashflow-sheet-carry-note">前月の実績残高が未確認のため、自動繰越は保留しています。最初の月は月初残高を手入力し、前月の実績を確認済みにすると次月以降に引き継げます。</p>}
+  </section>}
   {editable?<section className="cashflow-sheet-edit-footer">
    <div className="cashflow-sheet-edit-title"><div><h3>{labelMonth(month)}の{view==='plan'?'資金計画':'資金実績'}</h3><p>{reviewState?'確認済み':active?'下書き・要照合':'未登録'}　／　{dirty?'未保存の変更あり':'保存済み内容を表示'}</p></div>
     <div className="cashflow-sheet-edit-summary">

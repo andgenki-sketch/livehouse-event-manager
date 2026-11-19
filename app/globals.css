@@ -1092,3 +1092,30 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 .cashflow-sheet-alert,.cashflow-sheet-error{padding:10px 12px;border:1px solid #edb8b8;background:#fff3f3;color:#943735;border-radius:7px;font-size:12px}
 .cashflow-sheet-success{padding:10px 12px;border:1px solid #b6dcc7;background:#f0faf5;color:#236644;border-radius:7px;font-size:12px}
 @media(max-width:750px){.cashflow-sheet-table .cashflow-sheet-label-cell{min-width:180px;width:180px;max-width:180px;font-size:11px}.cashflow-sheet-table thead th,.cashflow-sheet-table td{min-width:94px}.cashflow-sheet-table td.cashflow-sheet-editable input{max-width:94px}.cashflow-sheet-notes-grid{grid-template-columns:1fr}.cashflow-sheet-notes-grid label:first-child{grid-column:auto}.cashflow-sheet-edit-summary b{font-size:14px}}
+
+
+/* Cashflow linked source amounts are reference-only, never posted without review. */
+.cashflow-sheet-table .cashflow-sheet-reference th.cashflow-sheet-label-cell,
+.cashflow-sheet-table .cashflow-sheet-reference td{
+ background:#f1f5fa;color:#607286;font-size:10.5px;font-weight:600;
+ border-bottom:1px dashed #c9d7e3
+}
+.cashflow-sheet-table .cashflow-sheet-reference td.cashflow-sheet-selected{background:#e6eef8}
+.cashflow-sheet-linked{border:1px solid #ccdbe8;background:#f7fafd;border-radius:11px;padding:16px;margin:2px 0;display:grid;gap:12px}
+.cashflow-sheet-linked-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.cashflow-sheet-linked-heading h3{margin:0 0 4px;font-size:16px;color:#233e58}
+.cashflow-sheet-linked-heading p{margin:0;color:#60758a;font-size:11.5px;line-height:1.6}
+.cashflow-sheet-linked-heading button,.cashflow-sheet-linked-card button{border:1px solid #abc5db;border-radius:7px;color:#214f7b;background:#fff;padding:9px 13px;font-weight:700;font-size:12px;cursor:pointer}
+.cashflow-sheet-linked-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.cashflow-sheet-linked-card{background:#fff;border:1px solid #d2e0ec;border-radius:9px;padding:14px;display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-width:0}
+.cashflow-sheet-linked-card>span{color:#637a8e;font-size:11px;font-weight:700}
+.cashflow-sheet-linked-card>strong{color:#244766;font-size:21px;font-variant-numeric:tabular-nums}
+.cashflow-sheet-linked-card p,.cashflow-sheet-linked-card small{color:#62758a;font-size:11px;margin:0;line-height:1.65}
+.cashflow-sheet-linked-card small{font-size:10px}
+.cashflow-sheet-linked-card label{display:flex;flex-direction:column;gap:6px;width:100%;font-size:11px;color:#445f77;font-weight:700}
+.cashflow-sheet-linked-card input,.cashflow-sheet-linked-card select{padding:9px;border:1px solid #c5d5e4;border-radius:6px;font:inherit;color:#24445e;background:#fff;max-width:100%}
+.cashflow-sheet-linked-card button{background:#e9f2fc}
+.cashflow-sheet-linked-card button:disabled,.cashflow-sheet-linked-heading button:disabled{opacity:.48;cursor:not-allowed}
+.cashflow-sheet-linked-mode{width:100%}
+.cashflow-sheet-carry-note{margin:0;background:#eaf3fb;border-left:3px solid #3a77ae;padding:9px 12px;border-radius:4px;font-size:11.5px;line-height:1.6;color:#365a76}
+@media(max-width:820px){.cashflow-sheet-linked-grid{grid-template-columns:1fr}}

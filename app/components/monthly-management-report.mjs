@@ -23,7 +23,7 @@ export function previousJapanMonth(now=new Date()){
  return month===1?`${year-1}-12`:`${year}-${String(month-1).padStart(2,'0')}`;
 }
 
-function eventRevenue(settlement,isHall,artists=[]){
+export function eventRevenue(settlement,isHall,artists=[]){
  if(!settlement)return 0;
  const artistTicket=artists.length?artists.reduce((n,a)=>n+sum([a],'ticket_sales')+sum([a],'electronic_ticket_sales')+
    sum([a],'streaming_sales')+sum([a],'equipment_fee')+sum([a],'video_fee')-sum([a],'ticket_back'),0):
