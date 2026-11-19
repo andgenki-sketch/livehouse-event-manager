@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useRef,useState} from 'react';
-import {CASHFLOW_KEYS,calculateCashflow,cashflowMonthList,cashflowYearStart,validateCashflowEntry,yen} from './cashflow-model.mjs';
+import {CASHFLOW_KEYS,calculateCashflow,cashflowMonthList,cashflowYearStart,validateCashflowEntry,prepareCashflowMonthSave,yen} from './cashflow-model.mjs';
 import {CASHFLOW_SHEET_ROWS,cashflowSheetValue,cashflowSheetAnnualValue,cashflowCellToYen,cashflowYenToInput,cashflowYenToDisplay} from './cashflow-sheet-layout.mjs';
 
 const currentJapanMonth=()=>{
@@ -129,7 +129,7 @@ export default function CashflowSpreadsheet({client,team}){
   setError('');setMessage('');
   try{
    if(!parsed.row)throw Error(parsed.error||'金額を確認してください');
-   const validated=validateCashflowEntry(parsed.row);
+   const validated=prepareCashflowMonthSave(parsed.row,month,view);
    const hasValue=validated.opening_balance!==null||validated.reported_closing_balance!==null||
      CASHFLOW_KEYS.some(key=>validated[key]!==null);
    if(!hasValue)throw Error('金額がすべて未入力です。月初残高またはいずれかの入出金を入力してください。');
@@ -138,8 +138,7 @@ export default function CashflowSpreadsheet({client,team}){
    const auth=await client.auth.getUser();
    if(auth.error||!auth.data?.user?.id)throw Error('オーナーのログイン状態を確認できませんでした');
    const payload={
-    team_id:team.id,month:month+'-01',scenario:view,
-    ...validated,
+    team_id:team.id,...validated,
     source_note:String(form.source_note||'').trim(),
     evidence_note:String(form.evidence_note||'').trim(),
     management_note:String(form.management_note||'').trim(),
