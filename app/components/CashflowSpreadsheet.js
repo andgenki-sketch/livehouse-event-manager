@@ -306,7 +306,7 @@ export default function CashflowSpreadsheet({client,team}){
    </div>
   </div>
   <p className="cashflow-sheet-help">月の見出しを選ぶと、その月の列で直接入力できます。小計と月末残高は自動計算します。空欄の「—」と0円は別です。{view==='difference'?'差異は比較専用です。':'変更後は表の下にある「保存」を押してください。'}{view==='actual'?' 「参考：アプリ登録売上・確定給与」は自動取得した計上額で、現預金収支には未加算です。':''}</p>
-  {linkedError&&<p className="cashflow-sheet-alert" role="alert">{linkedError}</p>
+  {linkedError&&<p className="cashflow-sheet-alert" role="alert">{linkedError}</p>}
   {loading?<div className="cashflow-sheet-loading">資金繰り表を読み込み中…</div>:
   <div className="cashflow-sheet-scroll" ref={sheetRef} role="region" tabIndex={0} aria-label="12か月の資金繰り一覧">
    <table className="cashflow-sheet-table">
