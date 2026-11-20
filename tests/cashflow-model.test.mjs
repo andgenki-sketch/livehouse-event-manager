@@ -19,7 +19,7 @@ const plan={
 };
 
 test('all source categories and independent contractor/debt controls are included',()=>{
- assert.equal(CASHFLOW_KEYS.length,22);
+ assert.equal(CASHFLOW_KEYS.length,24);
  assert.deepEqual(CASHFLOW_KEYS,CASHFLOW_FIELDS.map(x=>x.key));
  for(const key of ['sales_cash','sales_cashless','employee_salary','statutory_benefits','outsourcing','long_loan_out','short_loan_out','loan_interest']){
   assert.ok(CASHFLOW_KEYS.includes(key),key);
