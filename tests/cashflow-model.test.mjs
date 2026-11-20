@@ -54,7 +54,7 @@ test('reported bank/ledger balance differences remain visible for discussion',()
  assert.equal(v.reconciliationDelta,-90000);
 });
 test('validating complete reviewed cashflow requires every category explicitly entered',()=>{
- const row={...plan,...Object.fromEntries(CASHFLOW_KEYS.filter(k=>plan[k]===null).map(k=>[k,0]))};
+ const row={...plan,...Object.fromEntries(CASHFLOW_KEYS.filter(k=>plan[k]===null||plan[k]===undefined).map(k=>[k,0]))};
  assert.doesNotThrow(()=>validateCashflowEntry(row,{complete:true}));
  assert.throws(()=>validateCashflowEntry(plan,{complete:true}),/全項目/);
 });
