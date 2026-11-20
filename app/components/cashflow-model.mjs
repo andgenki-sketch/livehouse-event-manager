@@ -4,7 +4,7 @@
  * Blank (null) is not equivalent to an explicitly verified 0 yen.
  */
 export const CASHFLOW_GROUPS=[
- {title:'営業収入',kind:'in',fields:[['sales_cash','売上入金（現金）'],['sales_cashless','売上入金（キャッシュレス）']]},
+ {title:'営業収入',kind:'in',fields:[['sales_cash','従来売上入金（現金）'],['sales_cashless','従来売上入金（キャッシュレス）'],['studio_sales_cash','スタジオ売上入金（現金）'],['studio_sales_cashless','スタジオ売上入金（キャッシュレス）']]},
  {title:'仕入・営業支出',kind:'out',fields:[
   ['purchase_cost','仕入高'],['director_salary','役員報酬'],['employee_salary','従業員給与'],
   ['transportation','交通費'],['entertainment','交際費'],['advertising','広告宣伝費'],
