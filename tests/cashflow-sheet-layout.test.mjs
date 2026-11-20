@@ -13,9 +13,12 @@ const plan={
 };
 test('workbook row order begins and ends with the exact original flow',()=>{
  const rows=CASHFLOW_SHEET_ROWS;
- assert.deepEqual(rows.slice(0,5).map(r=>r.label),[
-  '前月繰越現金・預金','営業収支｜売上高','売上高（現金）','売上高（キャッシュレス）','売上高合計'
+ assert.deepEqual(rows.slice(0,4).map(r=>r.label),[
+  '前月繰越現金・預金','営業収支｜売上高','売上高（現金）','売上高（キャッシュレス）'
  ]);
+ assert.ok(rows.some(r=>r.key==='studio_sales_cash'&&r.label.includes('現金')));
+ assert.ok(rows.some(r=>r.key==='studio_sales_cashless'&&r.label.includes('キャッシュレス')));
+ assert.ok(rows.some(r=>r.key==='studio_sales_total'&&r.type==='calc'));
  assert.deepEqual(rows.slice(-5).map(r=>r.label),[
   '財務収支差引過不足','月別収支合計','翌月繰越現金・預金（計算）',
   '翌月繰越現金・預金（原本・帳簿）','月末残高の照合差額'
@@ -24,7 +27,7 @@ test('workbook row order begins and ends with the exact original flow',()=>{
 test('every cashflow model field can be edited in original matrix',()=>{
  const inputRows=CASHFLOW_SHEET_ROWS.filter(r=>r.type==='amount').map(r=>r.key);
  assert.deepEqual(new Set(inputRows),new Set(['opening_balance',...CASHFLOW_KEYS,'reported_closing_balance']));
- assert.equal(inputRows.length,24);
+ assert.equal(inputRows.length,26);
 });
 test('December workbook subtotals exactly reconcile cash movement',()=>{
  const expected={

@@ -83,6 +83,7 @@ export default function CashflowSpreadsheet({client,team}){
  const rowsByMonth=useMemo(()=>Object.fromEntries(months.map(m=>[m,getRow(m,view)])),[months,records,month,view,chosen]);
  const selectedPlan=record(month,'plan'),selectedActual=record(month,'actual');
  const currentTotals=calculateCashflow(chosen),planned=calculateCashflow(selectedPlan),actual=calculateCashflow(selectedActual);
+ const studioTotal=cashflowSheetValue(chosen,'studio_sales_total');
  const difference=selectedActual?.reported_closing_balance!=null&&selectedPlan?.reported_closing_balance!=null
   ?Number(selectedActual.reported_closing_balance)-Number(selectedPlan.reported_closing_balance):null;
 
@@ -194,6 +195,10 @@ export default function CashflowSpreadsheet({client,team}){
    const hasValue=validated.opening_balance!==null||validated.reported_closing_balance!==null||
      CASHFLOW_KEYS.some(key=>validated[key]!==null);
    if(!hasValue)throw Error('金額がすべて未入力です。月初残高またはいずれかの入出金を入力してください。');
+   const studioAmount=Number(validated.studio_sales_cash||0)+Number(validated.studio_sales_cashless||0);
+   const existingSales=Number(validated.sales_cash||0)+Number(validated.sales_cashless||0);
+   const newlyIncludedStudio=studioAmount>0&&(Number(active?.studio_sales_cash||0)+Number(active?.studio_sales_cashless||0)===0);
+   if(newlyIncludedStudio&&existingSales>0&&!window.confirm('【売上の二重計上確認】既存の「売上高（現金・キャッシュレス）」にスタジオ売上が既に含まれている場合、新しいスタジオ欄へ入力した金額と重複します。\\n必要に応じて既存売上欄から同額を減らすなど、重複がないことを確認しましたか？'))return;
    if(active?.status==='reviewed'&&monetaryDirty&&!window.confirm('確認済みの金額を変更しています。保存すると照合の確認状態が下書きに戻ります。続行しますか？'))return;
    setSaving(true);
    const auth=await client.auth.getUser();
@@ -306,6 +311,7 @@ export default function CashflowSpreadsheet({client,team}){
    </div>
   </div>
   <p className="cashflow-sheet-help">月の見出しを選ぶと、その月の列で直接入力できます。小計と月末残高は自動計算します。空欄の「—」と0円は別です。{view==='difference'?'差異は比較専用です。':'変更後は表の下にある「保存」を押してください。'}{view==='actual'?' 「参考：アプリ登録売上・確定給与」は自動取得した計上額で、現預金収支には未加算です。':''}</p>
+  <p className="cashflow-sheet-caution">STUDIO SNAKEの売上は「スタジオ売上（現金入金／キャッシュレス入金）」に記入してください。既存の「売上高」にスタジオ分が含まれている場合は、二重計上しないよう金額を振り分けてください。原本の基準計画はそのまま保持しています。</p>
   {linkedError&&<p className="cashflow-sheet-alert" role="alert">{linkedError}</p>}
   {loading?<div className="cashflow-sheet-loading">資金繰り表を読み込み中…</div>:
   <div className="cashflow-sheet-scroll" ref={sheetRef} role="region" tabIndex={0} aria-label="12か月の資金繰り一覧">
@@ -395,6 +401,7 @@ export default function CashflowSpreadsheet({client,team}){
    <div className="cashflow-sheet-edit-title"><div><h3>{labelMonth(month)}の{view==='plan'?'資金計画':'資金実績'}</h3><p>{reviewState?'確認済み':active?'下書き・要照合':'未登録'}　／　{dirty?'未保存の変更あり':'保存済み内容を表示'}</p></div>
     <div className="cashflow-sheet-edit-summary">
      <span>月間資金増減 <b>{yen(currentTotals.net)}</b></span>
+     <span>スタジオ売上入金 <b>{yen(studioTotal)}</b></span>
      <span>計算上の月末 <b>{yen(currentTotals.closing)}</b></span>
      <span>原本・帳簿の月末 <b>{yen(currentTotals.reportedClosing)}</b></span>
      <span>照合差額 <b>{yen(currentTotals.reconciliationDelta)}</b></span>

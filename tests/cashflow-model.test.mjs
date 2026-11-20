@@ -19,7 +19,7 @@ const plan={
 };
 
 test('all source categories and independent contractor/debt controls are included',()=>{
- assert.equal(CASHFLOW_KEYS.length,22);
+ assert.equal(CASHFLOW_KEYS.length,24);
  assert.deepEqual(CASHFLOW_KEYS,CASHFLOW_FIELDS.map(x=>x.key));
  for(const key of ['sales_cash','sales_cashless','employee_salary','statutory_benefits','outsourcing','long_loan_out','short_loan_out','loan_interest']){
   assert.ok(CASHFLOW_KEYS.includes(key),key);
@@ -54,7 +54,7 @@ test('reported bank/ledger balance differences remain visible for discussion',()
  assert.equal(v.reconciliationDelta,-90000);
 });
 test('validating complete reviewed cashflow requires every category explicitly entered',()=>{
- const row={...plan,...Object.fromEntries(CASHFLOW_KEYS.filter(k=>plan[k]===null).map(k=>[k,0]))};
+ const row={...plan,...Object.fromEntries(CASHFLOW_KEYS.filter(k=>plan[k]===null||plan[k]===undefined).map(k=>[k,0]))};
  assert.doesNotThrow(()=>validateCashflowEntry(row,{complete:true}));
  assert.throws(()=>validateCashflowEntry(plan,{complete:true}),/全項目/);
 });

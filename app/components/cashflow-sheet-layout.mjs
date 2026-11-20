@@ -10,7 +10,11 @@ export const CASHFLOW_SHEET_ROWS=[
  {type:'section',label:'営業収支｜売上高'},
  {type:'amount',key:'sales_cash',label:'売上高（現金）'},
  {type:'amount',key:'sales_cashless',label:'売上高（キャッシュレス）'},
- {type:'calc',key:'sales_total',label:'売上高合計',kind:'subtotal'},
+ {type:'section',label:'営業収支｜STUDIO SNAKE'},
+ {type:'amount',key:'studio_sales_cash',label:'スタジオ売上（現金入金）'},
+ {type:'amount',key:'studio_sales_cashless',label:'スタジオ売上（キャッシュレス入金）'},
+ {type:'calc',key:'studio_sales_total',label:'スタジオ売上合計',kind:'subtotal'},
+ {type:'calc',key:'sales_total',label:'売上高合計（スタジオ含む）',kind:'subtotal'},
  {type:'reference',key:'linked_sales',label:'参考：アプリ登録売上（入金・決済区分未照合）',total:true},
  {type:'section',label:'営業収支｜原価'},
  {type:'amount',key:'purchase_cost',label:'仕入高'},
@@ -59,9 +63,11 @@ export function cashflowSheetValue(row,key){
   return row[key]===null||row[key]===undefined?null:Number(row[key]);
  }
  const calc=calculateCashflow(row);
- const hasSales=hasOne(row,['sales_cash','sales_cashless']);
+ const hasSales=hasOne(row,['sales_cash','sales_cashless','studio_sales_cash','studio_sales_cashless']);
+ const hasStudio=hasOne(row,['studio_sales_cash','studio_sales_cashless']);
  switch(key){
   case 'sales_total':return hasSales?calc.operatingIncome:null;
+  case 'studio_sales_total':return hasStudio?number(row,'studio_sales_cash')+number(row,'studio_sales_cashless'):null;
   case 'cost_total':return row.purchase_cost===null||row.purchase_cost===undefined?null:Number(row.purchase_cost);
   case 'gross_profit':return hasSales?calc.operatingIncome-number(row,'purchase_cost'):null;
   case 'expenses_total':return hasOne(row,OPERATING_NON_PURCHASE_KEYS)
