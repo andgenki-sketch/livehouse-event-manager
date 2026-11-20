@@ -1,6 +1,6 @@
 import {confirmedPayrollRows,sortPayrollRows} from './payroll-report.mjs';
 import {cashflowExecutiveHighlights,cashflowExecutiveDiscussion,cashflowExecutiveDetails,cashflowExecutiveStyles} from './cashflow-executive-report.mjs';
-import {studioSalesReportLine} from './studio-sales-summary.mjs';
+import {studioSalesSummary} from './studio-sales-summary.mjs';
 import {hallDeductionTotal} from './hall-deductions.mjs';
 import {shiftPaymentMode} from './shift-labor-forecast.mjs';
 
@@ -55,10 +55,11 @@ export function buildMonthlyExecutiveSummary({month,teamId,staff=[],events=[],se
   artistsByEvent.get(row.event_id).push(row);
  }
  const missingReports=eventRows.filter(e=>!settlementMap.has(e.id)).map(e=>({date:e.event_date,title:e.title}));
- let sales=0,eventExpense=0,eventOutside=0,manuallyEnteredLabor=0;
+ let sales=0,eventStudioSales=0,eventExpense=0,eventOutside=0,manuallyEnteredLabor=0;
  for(const event of eventRows){
   const settlement=settlementMap.get(event.id);if(!settlement)continue;
   sales+=eventRevenue(settlement,event.event_genre==='ホールレンタル',artistsByEvent.get(event.id)||[]);
+  eventStudioSales+=moneyValue(settlement.studio_sales);
   eventExpense+=eventCostFields.reduce((n,k)=>n+moneyValue(settlement[k]),0);
   eventOutside+=moneyValue(settlement.outsourcing_cost);
   manuallyEnteredLabor+=moneyValue(settlement.labor_cost);
@@ -105,7 +106,7 @@ export function buildMonthlyExecutiveSummary({month,teamId,staff=[],events=[],se
  const referenceBalance=hasConfirmed?sales-salaryTotal-expenseTotal-outsideTotal:null;
  const monthlyBudget=budget?.team_id===teamId&&budget.year===Number(month.slice(0,4))&&budget.month===Number(month.slice(5))?budget:null;
  return {
-  month,sales,salaryTotal,hasConfirmed,payroll,manualPayroll,salaryExceptions,pending,expectedCount:expectedIds.size,
+  month,sales,eventStudioSales,salaryTotal,hasConfirmed,payroll,manualPayroll,salaryExceptions,pending,expectedCount:expectedIds.size,
   confirmedCount:payroll.length,payrollComplete:hasConfirmed&&pending.length===0,
   expenseTotal,outsideTotal,ledgerExpense,eventExpense,ledgerOutside,eventOutside,
   eventsCount:eventRows.length,reportedEventsCount:eventRows.length-missingReports.length,
@@ -124,20 +125,45 @@ export function buildMonthlyExecutiveSummary({month,teamId,staff=[],events=[],se
  };
 }
 
+
+/**
+ * Management-only reconciliation of venue event revenue and studio receipts.
+ * Studio receipts are cashflow deposits while event revenue follows settlements:
+ * the combined number is a reference, NOT accounting profit or recognized revenue.
+ * Studio amounts already embedded in event settlement "studio_sales" are excluded
+ * from the livehouse side so they cannot be double-counted here.
+ */
+export function monthlyRevenueOverview({data,cashflowActual=null}){
+ if(!data)throw Error('月次売上データがありません');
+ const registeredEventSales=moneyValue(data.sales);
+ const embeddedStudioSales=moneyValue(data.eventStudioSales);
+ const livehouse=registeredEventSales-embeddedStudioSales;
+ const studio=studioSalesSummary(cashflowActual);
+ const total=studio.total===null?null:livehouse+studio.total;
+ return {
+  registeredEventSales,embeddedStudioSales,livehouse,studio,total,
+  complete:studio.complete&&data.salesAvailable===true,
+  reviewed:studio.reviewed&&data.salesAvailable===true,
+  status:total===null?'スタジオ未入力':!studio.complete||data.salesAvailable!==true?'暫定':!studio.reviewed?'要照合':'入力確認済み'
+ };
+}
+
 export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',issuedAt=new Date(),note='',cashflowActual=null,cashflowPlan=null}) {
  if(!data||!data.month)throw Error('報告書の集計がありません');
  const esc=escapeHtml,month=data.month,y=month.slice(0,4),m=Number(month.slice(5));
  const created=new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(issuedAt);
- const status=data.payrollComplete&&data.salesAvailable&&cashflowActual?.status==='reviewed'?'提出前確認':'要確認';
+ const revenue=monthlyRevenueOverview({data,cashflowActual});
+ const status=data.payrollComplete&&revenue.reviewed?'提出前確認':'要確認';
  const salaryDisplay=data.hasConfirmed?yen(data.salaryTotal):'未確定';
- const balanceDisplay=data.referenceBalance===null?'未算出':yen(data.referenceBalance);
+ const consolidatedBalance=revenue.total!==null&&data.hasConfirmed?revenue.total-data.salaryTotal-data.expenseTotal-data.outsideTotal:null;
+ const balanceDisplay=consolidatedBalance===null?'未算出':yen(consolidatedBalance);
  const val=(n)=>yen(n);
  const cell=(label,amount)=>`<div class="metric"><small>${esc(label)}</small><strong>${esc(amount)}</strong></div>`;
  const variance=(actual,target,isCost=false)=>isCost?target-actual:actual-target;
  const budget=data.monthlyBudget;
  const budgetRow=(title,actual,target,isCost)=>`<tr><td>${esc(title)}</td><td class="num">${esc(val(actual))}</td><td class="num">${target===null?'未設定':esc(val(target))}</td><td class="num">${target===null?'—':esc(val(variance(actual,target,isCost)))}</td></tr>`;
  const budgetTable=budget?`<table><thead><tr><th>項目</th><th class="num">登録額</th><th class="num">予算</th><th class="num">差額（有利方向を＋）</th></tr></thead><tbody>
-  ${budgetRow('売上',data.sales,Number(budget.revenue_budget||0),false)}
+  ${budgetRow('イベント収支登録売上（スタジオ欄を含む）',data.sales,Number(budget.revenue_budget||0),false)}
   ${budgetRow('確定給与（未確定者除く）',data.salaryTotal,Number(budget.labor_budget||0),true)}
   ${budgetRow('経費（イベント入力＋台帳）',data.expenseTotal,Number(budget.cost_budget||0),true)}
   ${budgetRow('外注費（別枠）',data.outsideTotal,null,true)}
@@ -155,6 +181,19 @@ export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',i
  .metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
  .metric{border:1px solid #dbe4ec;border-radius:7px;padding:12px;background:#f7f9fc}
  .metric small{display:block;color:#64748b;font-size:9pt}.metric strong{display:block;font-size:17pt;margin-top:5px;font-variant-numeric:tabular-nums}
+
+ .revenue-overview{border:2px solid #253d58;border-radius:9px;overflow:hidden;break-inside:avoid;margin-bottom:7px}
+ .revenue-breakdown{display:grid;grid-template-columns:1fr 1fr;background:#f6f8fc}
+ .revenue-item{padding:11px 15px;min-width:0}
+ .revenue-item:first-child{border-right:1px solid #d8e2ec}
+ .revenue-item small{display:block;color:#53667e;font-size:9pt;font-weight:700}
+ .revenue-item strong{display:block;font-size:16pt;color:#1d334c;margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap}
+ .revenue-item span{display:block;font-size:8pt;color:#64748b;margin-top:3px}
+ .revenue-total{background:#192f49;color:#fff;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
+ .revenue-total span{font-size:10pt;font-weight:700}
+ .revenue-total strong{font-size:29pt;line-height:1.25;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+ .revenue-note{font-size:7.7pt;color:#53667e;line-height:1.5;margin:5px 0 10px}
+ @media(max-width:520px){.revenue-total{display:block}.revenue-total strong{display:block;margin-top:3px;font-size:26pt}.revenue-item strong{font-size:13pt}}
  .split{display:grid;grid-template-columns:1fr 1fr;gap:11px}.panel{padding:11px;border:1px solid #dae3ed;border-radius:7px}
  .panel strong{font-size:13pt}.panel p{margin:5px 0 0;font-size:9pt;color:#526175}
  table{border-collapse:collapse;width:100%;font-size:9pt}thead{background:#263b54;color:#fff}th,td{padding:7px 8px;text-align:left;border-bottom:1px solid #dce4ee}
@@ -176,10 +215,18 @@ export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',i
  </style></head><body><main>
  <div class="controls"><button id="print-report" type="button">PDF保存・印刷</button><small>印刷先で「PDFに保存」を選択してください。送付は自動では行われません。</small></div>
  <div class="header"><div class="kicker">${esc(teamName)} / MONTHLY MANAGEMENT REPORT</div><h1>月次経営サマリー</h1><div class="meta"><span>${esc(y)}年${m}月分（前月実績）</span><span>作成日：${esc(created)}　<span class="status">${esc(status)}</span></span></div></div>
- <h2>経営・支払サマリー</h2>
- <div class="metrics">${cell('イベント等の売上（登録済み収支）',val(data.sales))}${cell('確定給与（給与支払依頼候補）',salaryDisplay)}${cell('経費（人件費・外注費を除く）',val(data.expenseTotal))}${cell('外注費（給与とは別）',val(data.outsideTotal))}</div>
- ${studioSalesReportLine(cashflowActual,{mode:'actual'})}
- <div class="split" style="margin-top:10px"><div class="panel"><div>参考差引額</div><strong>${esc(balanceDisplay)}</strong><p>イベント等の登録済み売上 − 確定給与 − 登録済み経費 − 外注費。スタジオ入金は別集計で、重複確認前につき加算していません。</p></div>
+ <h2>売上サマリー</h2>
+ <section class="revenue-overview" aria-label="月次売上サマリー">
+  <div class="revenue-breakdown">
+   <div class="revenue-item"><small>ライブハウス売上 / ThunderSnakeATSUGI</small><strong>${esc(val(revenue.livehouse))}</strong><span>イベント収支登録分${!data.salesAvailable?'（収支未登録イベントあり）':''}</span></div>
+   <div class="revenue-item"><small>STUDIO SNAKE 売上 / スタジオ入金実績</small><strong>${esc(revenue.studio.total===null?'未入力':val(revenue.studio.total))}</strong><span>現金：${esc(revenue.studio.cash===null?'未入力':val(revenue.studio.cash))}　キャッシュレス：${esc(revenue.studio.cashless===null?'未入力':val(revenue.studio.cashless))}</span></div>
+  </div>
+  <div class="revenue-total"><span>月間売上合計（経営確認用）</span><strong>${esc(revenue.total===null?'未算出':val(revenue.total))}</strong></div>
+ </section>
+ <p class="revenue-note">集計状況：${esc(revenue.status)}。イベント等の売上（登録済み収支）：${esc(val(revenue.registeredEventSales))}。${revenue.embeddedStudioSales?'イベント収支内のスタジオ売上 '+esc(val(revenue.embeddedStudioSales))+' はライブハウス側から除外。':''}ライブハウスはイベント売上、スタジオは資金繰りに登録された入金実績で集計基準が異なるため、合計は参考値です。未入力は0円とみなしません。</p>
+ <h2>人件費・支払サマリー</h2>
+ <div class="metrics">${cell('確定給与（スタジオ担当分を含む）',salaryDisplay)}${cell('経費（人件費・外注費を除く）',val(data.expenseTotal))}${cell('外注費（給与とは別）',val(data.outsideTotal))}</div>
+ <div class="split" style="margin-top:10px"><div class="panel"><div>売上合計ベースの参考差引額</div><strong>${esc(balanceDisplay)}</strong><p>上記の売上合計 − 確定給与 − 登録済み経費 − 外注費。スタジオを含む売上と人件費を比較していますが、入金時点と売上計上時点は異なり、利益ではありません。</p></div>
  <div class="panel"><div>確定給与の状況</div><strong>${data.confirmedCount}名確定 / ${data.expectedCount}名対象</strong><p>${data.pending.length?'未確定 '+data.pending.length+'名':'対象者の未確定は検出されていません'} ／ 収支登録 ${data.reportedEventsCount}/${data.eventsCount}件</p></div></div>
 
  ${cashflowExecutiveHighlights({actual:cashflowActual,plan:cashflowPlan,mode:'actual'})}
