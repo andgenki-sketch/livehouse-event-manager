@@ -73,7 +73,7 @@ export default function MonthlyManagementReport({client,team}){
  return <section className="monthly-management-report" aria-label="社長提出用月次サマリー">
   <div className="monthly-management-report-head">
    <div><h3>社長提出用 月次経営サマリー</h3>
-    <p>毎月15日の提出向けに、前月の売上・給与・経費・外注費を2ページのPDF用書式にまとめます。</p></div>
+    <p>毎月15日の提出向けに、ライブハウス売上＋STUDIO SNAKE売上の合計を先頭で大きく表示し、共通の人件費・経費・外注費と並べて確認できるPDFにまとめます。</p></div>
    <span className="monthly-management-private">オーナー専用</span>
   </div>
   <div className="monthly-management-report-fields">
@@ -87,6 +87,6 @@ export default function MonthlyManagementReport({client,team}){
    <p>プレビューで内容を確認し、「PDF保存・印刷」を押してください。メール送信は自動では行いません。</p>
   </div>
   {error&&<p role="alert" className="monthly-management-error">{error}</p>}
-  <p className="monthly-management-disclaimer">給与の支払依頼額は確定済みの給与データのみ。未確定者、未登録のイベント収支、イベント経費と経費台帳の重複候補を明示します。シフト予測の外注費・人件費は実績に加算しません。</p>
+  <p className="monthly-management-disclaimer">スタジオ売上は資金繰り管理の実績入力から取得し、未入力時の売上合計は未算出とします。売上と入金の集計基準の差に注意してください。給与の支払依頼額は確定済みの給与データのみ。未確定者、未登録のイベント収支、イベント経費と経費台帳の重複候補を明示します。シフト予測の外注費・人件費は実績に加算しません。</p>
  </section>;
 }
