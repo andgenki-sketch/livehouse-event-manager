@@ -62,10 +62,13 @@ export async function POST(request) {
   catch { return Response.json({ error: 'Invalid public event data' }, { status: 422 }); }
   // Live publication is a separate opt-in after the WordPress single-event trial.
   const liveEnabled = process.env.WORDPRESS_SYNC_LIVE_ENABLED === 'true';
-  // Fail closed BEFORE contacting WordPress. A receiver still in single-event
-  // write mode could mutate a mapped post even if this client expects dry-run.
-  if (!liveEnabled) {
-    return Response.json({ error: 'WordPress writes are paused after a date-integrity incident' }, { status: 503 });
+  // Fail closed BEFORE contacting WordPress. The trial is preview-only and
+  // locked to one explicitly approved event ID, even if WordPress is in write mode.
+  if (process.env.VERCEL_ENV !== 'preview' || !liveEnabled) {
+    return Response.json({ error: 'WordPress writes are paused outside the approved preview trial' }, { status: 503 });
+  }
+  if (process.env.WORDPRESS_SYNC_TEST_EVENT_ID !== event.id) {
+    return Response.json({ error: 'This event is not allowed in the WordPress publication trial' }, { status: 403 });
   }
   try {
     const result = await sendWordPressEventWithRetry(payload, {
