@@ -1,5 +1,6 @@
 import {confirmedPayrollRows,sortPayrollRows} from './payroll-report.mjs';
 import {cashflowExecutiveHighlights,cashflowExecutiveDiscussion,cashflowExecutiveDetails,cashflowExecutiveStyles} from './cashflow-executive-report.mjs';
+import {studioSalesReportLine} from './studio-sales-summary.mjs';
 import {hallDeductionTotal} from './hall-deductions.mjs';
 import {shiftPaymentMode} from './shift-labor-forecast.mjs';
 
@@ -176,8 +177,9 @@ export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',i
  <div class="controls"><button id="print-report" type="button">PDF保存・印刷</button><small>印刷先で「PDFに保存」を選択してください。送付は自動では行われません。</small></div>
  <div class="header"><div class="kicker">${esc(teamName)} / MONTHLY MANAGEMENT REPORT</div><h1>月次経営サマリー</h1><div class="meta"><span>${esc(y)}年${m}月分（前月実績）</span><span>作成日：${esc(created)}　<span class="status">${esc(status)}</span></span></div></div>
  <h2>経営・支払サマリー</h2>
- <div class="metrics">${cell('売上（登録済みイベント収支）',val(data.sales))}${cell('確定給与（給与支払依頼候補）',salaryDisplay)}${cell('経費（人件費・外注費を除く）',val(data.expenseTotal))}${cell('外注費（給与とは別）',val(data.outsideTotal))}</div>
- <div class="split" style="margin-top:10px"><div class="panel"><div>参考差引額</div><strong>${esc(balanceDisplay)}</strong><p>売上 − 確定給与 − 登録済み経費 − 登録済み外注費。未登録・重複を未調整。</p></div>
+ <div class="metrics">${cell('イベント等の売上（登録済み収支）',val(data.sales))}${cell('確定給与（給与支払依頼候補）',salaryDisplay)}${cell('経費（人件費・外注費を除く）',val(data.expenseTotal))}${cell('外注費（給与とは別）',val(data.outsideTotal))}</div>
+ ${studioSalesReportLine(cashflowActual,{mode:'actual'})}
+ <div class="split" style="margin-top:10px"><div class="panel"><div>参考差引額</div><strong>${esc(balanceDisplay)}</strong><p>イベント等の登録済み売上 − 確定給与 − 登録済み経費 − 外注費。スタジオ入金は別集計で、重複確認前につき加算していません。</p></div>
  <div class="panel"><div>確定給与の状況</div><strong>${data.confirmedCount}名確定 / ${data.expectedCount}名対象</strong><p>${data.pending.length?'未確定 '+data.pending.length+'名':'対象者の未確定は検出されていません'} ／ 収支登録 ${data.reportedEventsCount}/${data.eventsCount}件</p></div></div>
 
  ${cashflowExecutiveHighlights({actual:cashflowActual,plan:cashflowPlan,mode:'actual'})}
