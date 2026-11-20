@@ -12,12 +12,14 @@ const sourceOf=(actual,plan,mode)=>mode==='plan'?plan:actual;
 const referenceOf=(actual,plan,mode)=>mode==='plan'?actual:plan;
 const present=(row,key)=>row&&row[key]!==null&&row[key]!==undefined;
 const groupPresent=(row,keys)=>!!row&&keys.some(key=>present(row,key));
-const GROUP_SALES=['sales_cash','sales_cashless'];
+const GROUP_SALES=['sales_cash','sales_cashless','studio_sales_cash','studio_sales_cashless'];
+const GROUP_STUDIO=['studio_sales_cash','studio_sales_cashless'];
 const GROUP_LOAN_REPAY=['long_loan_out','short_loan_out'];
 const metric=(name,value,subtitle='')=>`<div class="cfe-metric"><small>${escapeHtml(name)}</small><strong>${escapeHtml(value)}</strong>${subtitle?`<p>${escapeHtml(subtitle)}</p>`:''}</div>`;
 const comparisonValue=(cashflow,kind)=>{
  if(!cashflow.hasInput)return null;
  if(kind==='income')return groupPresent(cashflow.row,GROUP_SALES)?cashflow.operatingIncome:null;
+ if(kind==='studio')return groupPresent(cashflow.row,GROUP_STUDIO)?GROUP_STUDIO.reduce((total,key)=>total+Number(cashflow.row[key]||0),0):null;
  if(kind==='operating')return cashflow.net===null?null:cashflow.operatingNet;
  if(kind==='repayment')return groupPresent(cashflow.row,GROUP_LOAN_REPAY)
   ?GROUP_LOAN_REPAY.reduce((total,key)=>total+Number(cashflow.row[key]||0),0):null;
@@ -49,7 +51,7 @@ export function cashflowExecutiveHighlights({actual=null,plan=null,mode='actual'
  const partial=!!row&&!a.complete;
  const columns=isPlan?['計画','実績（参考）','差異（計画－実績）']:['実績','同月計画','差異（実績－計画）'];
  const comparison=[
-  ['売上入金','income'],['営業資金収支','operating'],['借入金元本返済','repayment'],
+  ['売上入金（スタジオ含む）','income'],['スタジオ売上入金','studio'],['営業資金収支','operating'],['借入金元本返済','repayment'],
   ['月間資金増減','monthly'],['月末残高','closing']
  ].map(([name,key])=>{
   const x=comparisonValue(a,key),y=comparisonValue(b,key);
