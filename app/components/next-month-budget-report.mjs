@@ -1,5 +1,6 @@
 import {reportMonthRange} from './monthly-management-report.mjs';
 import {cashflowExecutiveHighlights,cashflowExecutiveDiscussion,cashflowExecutiveDetails,cashflowExecutiveStyles} from './cashflow-executive-report.mjs';
+import {studioSalesReportLine} from './studio-sales-summary.mjs';
 import {fixedMonthlySalaryTotal,resolveMonthlyLaborBudget} from './shift-labor-forecast.mjs';
 
 const yen=value=>'¥'+Math.round(Number(value)||0).toLocaleString('ja-JP');
@@ -86,8 +87,9 @@ export function nextMonthBudgetReportHtml({data,teamName='ThunderSnakeATSUGI',is
  <div class="controls"><button type="button" id="print-budget">PDF保存・印刷</button><small>金額と未設定事項を確認後、印刷先で「PDFに保存」を選択。送付は自動ではありません。</small></div>
  <header class="header"><div class="eyebrow">${esc(teamName)} / MONTHLY BUDGET PLAN</div>
  <h1>月次予算計画サマリー</h1><div class="meta"><span>${esc(year)}年${n}月 計画</span><span>作成日：${esc(issued)}　${esc(planStatus)}</span></div></header>
- <div class="metrics">${totalCard('売上目標',data.revenue)}${totalCard('総人件費予算',data.labor)}${totalCard('経費予算（人件費・外注費除く）',data.cost)}${totalCard('外注費予算（独立管理）',data.contractor)}</div>
- <div class="balance"><div><b>予算上の差引額</b><div><small>売上 − 総人件費 − 経費 − 外注費</small></div></div><strong>${data.projectedBalance===null?'未算出':esc(yen(data.projectedBalance))}</strong></div>
+ <div class="metrics">${totalCard('月次売上目標（スタジオ内訳未分離）',data.revenue)}${totalCard('総人件費予算',data.labor)}${totalCard('経費予算（人件費・外注費除く）',data.cost)}${totalCard('外注費予算（独立管理）',data.contractor)}</div>
+ ${studioSalesReportLine(cashflowPlan,{mode:'plan'})}
+ <div class="balance"><div><b>予算上の差引額</b><div><small>登録された月次売上目標 − 総人件費 − 経費 − 外注費。スタジオ入金予測は二重計上防止のため別表示</small></div></div><strong>${data.projectedBalance===null?'未算出':esc(yen(data.projectedBalance))}</strong></div>
  ${cashflowExecutiveHighlights({actual:cashflowActual,plan:cashflowPlan,mode:'plan'})}
  ${cashflowExecutiveDiscussion({actual:cashflowActual,plan:cashflowPlan,mode:'plan'})}
  <p class="cfe-caption">損益予算と資金繰り計画の入出金は独立した数字です。未登録・未入力は0円に置き換えません。</p>
