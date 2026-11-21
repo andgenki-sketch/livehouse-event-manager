@@ -4,6 +4,7 @@ import { sendWordPressEventWithRetry } from '../../../lib/wordpress-sync-transpo
 import { classifyWordPressConnectionFailure } from '../../../lib/wordpress-sync-diagnostics.mjs';
 
 export const runtime = 'nodejs';
+export const maxDuration = 60; // Allow WordPress to validate and import a <=5MB flyer.
 
 /**
  * Staging-only server action. The caller supplies an event ID, never event data.
@@ -79,7 +80,7 @@ export async function POST(request) {
     if (liveEnabled && result.dry_run !== false) {
       return Response.json({ error: 'WordPress publication has not been enabled on the site' }, { status: 409 });
     }
-    return Response.json({ accepted: true, dry_run: result.dry_run, event_id: event.id, post_id: result.post_id || null });
+    return Response.json({ accepted: true, dry_run: result.dry_run, event_id: event.id, post_id: result.post_id || null, featured_image_id: result.featured_image_id || null });
   } catch (error) {
     return Response.json({
       error: 'WordPress event sync failed',
