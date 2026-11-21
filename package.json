@@ -4,7 +4,7 @@
     "build": "next build",
     "start": "next start",
     "prepare:timetable": "node scripts/prepare-timetable-reader.mjs",
-    "prebuild": "npm run prepare:timetable && npm run test:hall-deductions && npm run test:shift-labor && npm run test:management-report && npm run test:payroll-bulk && npm run test:payroll-report && npm run test:next-budget && npm run test:next-budget-permissions && npm run test:cashflow && npm run test:cashflow-sheet && npm run test:cashflow-executive && npm run test:cashflow-save-month && npm run test:cashflow-linked && npm run test:cashflow-studio && npm run test:studio-summary && npm run test:finance-nav && npm run test:expense-type",
+    "prebuild": "npm run prepare:timetable && npm run test:hall-deductions && npm run test:shift-labor && npm run test:management-report && npm run test:payroll-bulk && npm run test:payroll-report && npm run test:next-budget && npm run test:next-budget-permissions && npm run test:cashflow && npm run test:cashflow-sheet && npm run test:cashflow-executive && npm run test:cashflow-save-month && npm run test:cashflow-linked && npm run test:cashflow-studio && npm run test:studio-summary && npm run test:finance-nav && npm run test:expense-type && npm run test:money-hourly-labor",
     "predev": "npm run prepare:timetable",
     "test:timetable": "node --test tests/timetable-import.test.mjs",
     "test:hall-deductions": "node --test tests/hall-deductions.test.mjs",
@@ -22,7 +22,8 @@
     "test:cashflow-studio": "node --test tests/cashflow-studio-revenue.test.mjs",
     "test:studio-summary": "node --test tests/studio-sales-summary.test.mjs",
     "test:finance-nav": "node --test tests/finance-navigation.test.mjs",
-    "test:expense-type": "node --test tests/expense-type-summary.test.mjs"
+    "test:expense-type": "node --test tests/expense-type-summary.test.mjs",
+    "test:money-hourly-labor": "node --test tests/money-hourly-labor-budget.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "latest",
