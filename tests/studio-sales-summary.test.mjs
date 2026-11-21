@@ -46,14 +46,14 @@ test('combined monthly revenue is prominent before payroll and preserves studio 
  const actual={month:'2026-10-01',scenario:'actual',studio_sales_cash:100000,studio_sales_cashless:158100,status:'draft'};
  const html=monthlyExecutiveReportHtml({data:monthData,cashflowActual:actual});
  assert.match(html,/ライブハウス売上 \/ ThunderSnakeATSUGI/);
- assert.match(html,/STUDIO SNAKE 売上 \/ スタジオ入金実績/);
- assert.match(html,/現金：¥100,000/);
- assert.match(html,/キャッシュレス：¥158,100/);
+ assert.match(html,/STUDIO SNAKE 売上 \/ スタジオ入金実績（従来）/);
+ assert.match(html,/資金繰りの登録済み入金額/);
+ assert.doesNotMatch(html,/キャッシュレス：¥158,100/);
  assert.match(html,/月間売上合計（経営確認用）<\/span><strong>¥448,100<\/strong>/);
  assert.match(html,/売上合計ベースの参考差引額<\/div><strong>¥37,600<\/strong>/);
  assert.match(html,/確定給与（スタジオ担当分を含む）/);
  assert.match(html,/イベント等の売上（登録済み収支）/);
- assert.match(html,/集計基準が異なるため/);
+ assert.match(html,/資金繰り表の入金実績（旧方式）/);
  assert.ok(html.indexOf('ライブハウス売上')<html.indexOf('STUDIO SNAKE 売上'));
  assert.ok(html.indexOf('STUDIO SNAKE 売上')<html.indexOf('月間売上合計（経営確認用）'));
  assert.ok(html.indexOf('月間売上合計（経営確認用）')<html.indexOf('確定給与（スタジオ担当分を含む）'));

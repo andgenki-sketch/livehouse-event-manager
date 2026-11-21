@@ -1160,3 +1160,42 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
  .finance-overview-sources,.finance-overview-links{grid-template-columns:1fr}
  .finance-overview-total{padding:22px 12px}
 }
+
+
+/* Studio daily cash sales entry (staff-accessible, no room/payment splits) */
+.revenue-entry-tabs{display:flex;gap:8px;margin:0 0 18px;padding:6px;border-radius:13px;background:#edf2f8;flex-wrap:wrap}
+.revenue-entry-tabs button{border:1px solid transparent;border-radius:9px;background:transparent;color:#38485e;font-size:13px;font-weight:700;padding:11px 14px;cursor:pointer}
+.revenue-entry-tabs button.active{background:#fff;border-color:#c5d2e0;color:#173c64;box-shadow:0 1px 4px #203e5817}
+.revenue-entry-tabs button:focus-visible,.studio-daily-sales button:focus-visible{outline:3px solid #4587e0;outline-offset:2px}
+.studio-daily-sales{min-width:0}
+.studio-daily-sales .sectionhead{margin-bottom:16px}
+.studio-sales-month{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.studio-sales-month label{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700}
+.studio-sales-month input{min-height:39px}
+.studio-sales-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid #d6e0ec;border-radius:13px;padding:20px 22px;margin-bottom:16px;flex-wrap:wrap}
+.studio-sales-summary>div{display:flex;flex-direction:column;gap:6px}
+.studio-sales-summary small{font-size:12px;color:#667085}
+.studio-sales-summary strong{font-size:clamp(25px,4vw,36px);font-variant-numeric:tabular-nums;color:#173c64}
+.studio-sales-summary>span{font-size:13px;color:#667085}
+.studio-sales-form{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+.studio-sales-form h3,.studio-sales-list h3{margin:0}
+.studio-sales-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.studio-sales-fields label{display:flex;flex-direction:column;gap:8px;font-size:13px;font-weight:700}
+.studio-sales-fields input{width:100%;min-height:43px}
+.studio-sales-form .primary{align-self:flex-start;min-height:42px}
+.studio-sales-error{color:#b42318;font-weight:700}
+.studio-sales-success{color:#067647;font-weight:700}
+.studio-sales-list{display:flex;flex-direction:column;gap:12px}
+.studio-sales-list-rows{display:flex;flex-direction:column}
+.studio-sales-list-row{display:grid;grid-template-columns:minmax(110px,1fr) minmax(100px,1fr) auto;align-items:center;gap:12px;padding:13px 0;border-top:1px solid #e5e9f0}
+.studio-sales-list-row strong{font-variant-numeric:tabular-nums;text-align:right}
+.studio-sales-row-actions{display:flex;gap:6px;justify-content:flex-end}
+@media(max-width:600px){
+ .revenue-entry-tabs{flex-wrap:nowrap;overflow-x:auto}
+ .revenue-entry-tabs button{flex:1 0 auto}
+ .studio-sales-fields{grid-template-columns:1fr}
+ .studio-sales-list-row{grid-template-columns:1fr auto;row-gap:6px}
+ .studio-sales-list-row strong{text-align:right}
+ .studio-sales-row-actions{grid-column:1/-1}
+ .studio-sales-form .primary{width:100%}
+}

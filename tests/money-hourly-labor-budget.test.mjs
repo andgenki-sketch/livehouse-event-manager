@@ -10,7 +10,7 @@ const section=(start,end)=>{
  return page.slice(i,j);
 };
 const register=section('function FinanceRegister(','function savedEventReport(');
-const money=section("{canViewContracts&&view==='money'&&financeLoadError","{modal==='timetable'");
+const money=section("{view==='money'&&<>","{modal==='timetable'");
 
 test('event income/expense view explicitly asks for hourly-only scope',()=>{
  assert.match(money,/canEditBudget=\{false\} laborBudgetScope="hourly"/);
@@ -47,7 +47,7 @@ test('yearly hourly-only summary has explicit label and salary-excluding referen
 });
 
 test('finance management continues to use original salary-inclusive scope',()=>{
- const finance=section("{team?.role==='owner'&&view==='finance'","{canViewContracts&&view==='money'&&financeLoadError");
+ const finance=section("{team?.role==='owner'&&view==='finance'","{view==='money'&&<>");
  assert.match(finance,/canEditBudget=\{true\} staff=\{staff\}/);
  assert.doesNotMatch(finance,/laborBudgetScope="hourly"/);
 });

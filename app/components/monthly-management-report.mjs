@@ -1,6 +1,7 @@
 import {confirmedPayrollRows,sortPayrollRows} from './payroll-report.mjs';
 import {cashflowExecutiveHighlights,cashflowExecutiveDiscussion,cashflowExecutiveDetails,cashflowExecutiveStyles} from './cashflow-executive-report.mjs';
 import {studioSalesSummary} from './studio-sales-summary.mjs';
+import {studioDailySalesSummary} from './studio-daily-sales.mjs';
 import {hallDeductionTotal} from './hall-deductions.mjs';
 import {shiftPaymentMode} from './shift-labor-forecast.mjs';
 
@@ -133,26 +134,38 @@ export function buildMonthlyExecutiveSummary({month,teamId,staff=[],events=[],se
  * Studio amounts already embedded in event settlement "studio_sales" are excluded
  * from the livehouse side so they cannot be double-counted here.
  */
-export function monthlyRevenueOverview({data,cashflowActual=null}){
+export function monthlyRevenueOverview({data,cashflowActual=null,studioDailySales=null}){
  if(!data)throw Error('月次売上データがありません');
  const registeredEventSales=moneyValue(data.sales);
  const embeddedStudioSales=moneyValue(data.eventStudioSales);
  const livehouse=registeredEventSales-embeddedStudioSales;
- const studio=studioSalesSummary(cashflowActual);
+ const cashflow=studioSalesSummary(cashflowActual);
+ const daily=studioDailySalesSummary(studioDailySales||[]);
+ // Do not add daily turnover to cashflow receipts. When a daily ledger exists,
+ // the ledger is the single studio revenue source. Old months retain the
+ // owner-entered cashflow fallback until daily sales are entered.
+ const studio=daily.entered?{
+  cash:daily.total,cashless:null,total:daily.total,days:daily.days,source:'daily',
+  cashflowReference:cashflow.total,
+  gap:cashflow.total===null?null:daily.total-cashflow.total,
+  complete:cashflow.reviewed&&cashflow.total===daily.total,
+  reviewed:cashflow.reviewed&&cashflow.total===daily.total,
+  status:cashflow.total===null?'入金未照合':cashflow.total===daily.total&&cashflow.reviewed?'照合済み':'要照合'
+ }:{...cashflow,days:0,source:'cashflow',cashflowReference:cashflow.total,gap:null};
  const total=studio.total===null?null:livehouse+studio.total;
  return {
   registeredEventSales,embeddedStudioSales,livehouse,studio,total,
   complete:studio.complete&&data.salesAvailable===true,
   reviewed:studio.reviewed&&data.salesAvailable===true,
-  status:total===null?'スタジオ未入力':!studio.complete||data.salesAvailable!==true?'暫定':!studio.reviewed?'要照合':'入力確認済み'
+  status:total===null?'スタジオ未入力':data.salesAvailable!==true?'暫定':studio.source==='daily'&&!studio.reviewed?'日次入力・要照合':!studio.complete?'暫定':!studio.reviewed?'要照合':'入力確認済み'
  };
 }
 
-export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',issuedAt=new Date(),note='',cashflowActual=null,cashflowPlan=null}) {
+export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',issuedAt=new Date(),note='',cashflowActual=null,cashflowPlan=null,studioDailySales=null}) {
  if(!data||!data.month)throw Error('報告書の集計がありません');
  const esc=escapeHtml,month=data.month,y=month.slice(0,4),m=Number(month.slice(5));
  const created=new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(issuedAt);
- const revenue=monthlyRevenueOverview({data,cashflowActual});
+ const revenue=monthlyRevenueOverview({data,cashflowActual,studioDailySales});
  const status=data.payrollComplete&&revenue.reviewed?'提出前確認':'要確認';
  const salaryDisplay=data.hasConfirmed?yen(data.salaryTotal):'未確定';
  const consolidatedBalance=revenue.total!==null&&data.hasConfirmed?revenue.total-data.salaryTotal-data.expenseTotal-data.outsideTotal:null;
@@ -219,11 +232,11 @@ export function monthlyExecutiveReportHtml({data,teamName='ThunderSnakeATSUGI',i
  <section class="revenue-overview" aria-label="月次売上サマリー">
   <div class="revenue-breakdown">
    <div class="revenue-item"><small>ライブハウス売上 / ThunderSnakeATSUGI</small><strong>${esc(val(revenue.livehouse))}</strong><span>イベント収支登録分${!data.salesAvailable?'（収支未登録イベントあり）':''}</span></div>
-   <div class="revenue-item"><small>STUDIO SNAKE 売上 / スタジオ入金実績</small><strong>${esc(revenue.studio.total===null?'未入力':val(revenue.studio.total))}</strong><span>現金：${esc(revenue.studio.cash===null?'未入力':val(revenue.studio.cash))}　キャッシュレス：${esc(revenue.studio.cashless===null?'未入力':val(revenue.studio.cashless))}</span></div>
+   <div class="revenue-item"><small>STUDIO SNAKE 売上 / ${revenue.studio.source==='daily'?'日次売上台帳':'スタジオ入金実績（従来）'}</small><strong>${esc(revenue.studio.total===null?'未入力':val(revenue.studio.total))}</strong><span>${revenue.studio.source==='daily'?'日次現金売上 '+revenue.studio.days+'日分（入金照合：'+esc(revenue.studio.status)+'）':'資金繰りの登録済み入金額。日次売上は未登録'}</span></div>
   </div>
   <div class="revenue-total"><span>月間売上合計（経営確認用）</span><strong>${esc(revenue.total===null?'未算出':val(revenue.total))}</strong></div>
  </section>
- <p class="revenue-note">集計状況：${esc(revenue.status)}。イベント等の売上（登録済み収支）：${esc(val(revenue.registeredEventSales))}。${revenue.embeddedStudioSales?'イベント収支内のスタジオ売上 '+esc(val(revenue.embeddedStudioSales))+' はライブハウス側から除外。':''}ライブハウスはイベント売上、スタジオは資金繰りに登録された入金実績で集計基準が異なるため、合計は参考値です。未入力は0円とみなしません。</p>
+ <p class="revenue-note">集計状況：${esc(revenue.status)}。イベント等の売上（登録済み収支）：${esc(val(revenue.registeredEventSales))}。${revenue.embeddedStudioSales?'イベント収支内のスタジオ売上 '+esc(val(revenue.embeddedStudioSales))+' はライブハウス側から除外。':''}ライブハウスはイベント登録売上、スタジオは${revenue.studio.source==='daily'?'日次売上台帳の入力合計（現金のみ）':'資金繰り表の入金実績（旧方式）'}です。資金繰り表のスタジオ入金額は別途照合し、売上に二重加算しません。${revenue.studio.source==='daily'&&revenue.studio.cashflowReference!==null?' 入金実績 '+esc(val(revenue.studio.cashflowReference))+'（差額 '+esc(val(revenue.studio.gap))+'）':''} 未入力は0円とみなしません。</p>
  <h2>人件費・支払サマリー</h2>
  <div class="metrics">${cell('確定給与（スタジオ担当分を含む）',salaryDisplay)}${cell('経費（人件費・外注費を除く）',val(data.expenseTotal))}${cell('外注費（給与とは別）',val(data.outsideTotal))}</div>
  <div class="split" style="margin-top:10px"><div class="panel"><div>売上合計ベースの参考差引額</div><strong>${esc(balanceDisplay)}</strong><p>上記の売上合計 − 確定給与 − 登録済み経費 − 外注費。スタジオを含む売上と人件費を比較していますが、入金時点と売上計上時点は異なり、利益ではありません。</p></div>

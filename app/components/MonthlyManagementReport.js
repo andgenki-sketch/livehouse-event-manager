@@ -59,9 +59,13 @@ export default function MonthlyManagementReport({client,team}){
    if(cashflowResponse.error)throw Error('資金繰りデータを取得できませんでした：'+cashflowResponse.error.message);
    const cashflowActual=(cashflowResponse.data||[]).find(row=>row.scenario==='actual')||null;
    const cashflowPlan=(cashflowResponse.data||[]).find(row=>row.scenario==='plan')||null;
+   const studioDailyResponse=await client.from('studio_daily_sales').select('sales_date,amount')
+    .eq('team_id',team.id).gte('sales_date',start).lt('sales_date',end);
+   if(studioDailyResponse.error)throw Error('スタジオ日次売上を取得できませんでした：'+studioDailyResponse.error.message);
+   const studioDailySales=studioDailyResponse.data||[];
    if(preview.closed)throw Error('出力画面が閉じられました。もう一度開いてください。');
    preview.document.open();
-   preview.document.write(monthlyExecutiveReportHtml({data,teamName:team.name||'ThunderSnakeATSUGI',note,cashflowActual,cashflowPlan}));
+   preview.document.write(monthlyExecutiveReportHtml({data,teamName:team.name||'ThunderSnakeATSUGI',note,cashflowActual,cashflowPlan,studioDailySales}));
    preview.document.close();
    const print=preview.document.getElementById('print-report');
    if(print)print.addEventListener('click',()=>preview.print());
@@ -87,6 +91,6 @@ export default function MonthlyManagementReport({client,team}){
    <p>プレビューで内容を確認し、「PDF保存・印刷」を押してください。メール送信は自動では行いません。</p>
   </div>
   {error&&<p role="alert" className="monthly-management-error">{error}</p>}
-  <p className="monthly-management-disclaimer">スタジオ売上は資金繰り管理の実績入力から取得し、未入力時の売上合計は未算出とします。売上と入金の集計基準の差に注意してください。給与の支払依頼額は確定済みの給与データのみ。未確定者、未登録のイベント収支、イベント経費と経費台帳の重複候補を明示します。シフト予測の外注費・人件費は実績に加算しません。</p>
+  <p className="monthly-management-disclaimer">スタジオ売上は日次台帳を優先して集計します（日次未入力の月は旧方式の資金繰り実績を参照）。資金繰りの入金額と二重加算せず差額を照合します。未入力時の売上合計は未算出です。給与の支払依頼額は確定済みの給与データのみ。未確定者、未登録のイベント収支、イベント経費と経費台帳の重複候補を明示します。シフト予測の外注費・人件費は実績に加算しません。</p>
  </section>;
 }

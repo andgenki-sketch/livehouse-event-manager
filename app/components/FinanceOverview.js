@@ -11,7 +11,7 @@ const yen=value=>value===null||value===undefined?'未算出':'¥'+Number(value).
 const chunks=(items,size)=>Array.from({length:Math.ceil(items.length/size)},(_,index)=>items.slice(index*size,(index+1)*size));
 
 /** Owner-only overview: use the same revenue reconciliation as the monthly management PDF. */
-export default function FinanceOverview({client,team,onNavigate,onOpenEvents}){
+export default function FinanceOverview({client,team,onNavigate,onOpenEvents,onOpenStudio}){
  const [month,setMonth]=useState(currentJapanMonth);
  const [revision,setRevision]=useState(0);
  const [state,setState]=useState({loading:true,error:'',data:null});
@@ -22,12 +22,14 @@ export default function FinanceOverview({client,team,onNavigate,onOpenEvents}){
    setState({loading:true,error:'',data:null});
    try{
     const {start,end}=reportMonthRange(month);
-    const [eventsResult,cashflowResult]=await Promise.all([
+    const [eventsResult,cashflowResult,studioDailyResult]=await Promise.all([
      client.from('events').select('id,team_id,title,event_date,event_genre').eq('team_id',team.id).gte('event_date',start).lt('event_date',end),
-     client.from('cashflow_monthly').select('*').eq('team_id',team.id).eq('month',start).eq('scenario','actual').maybeSingle()
+     client.from('cashflow_monthly').select('*').eq('team_id',team.id).eq('month',start).eq('scenario','actual').maybeSingle(),
+     client.from('studio_daily_sales').select('sales_date,amount').eq('team_id',team.id).gte('sales_date',start).lt('sales_date',end)
     ]);
     if(eventsResult.error)throw Error('イベントの読み込みに失敗しました：'+eventsResult.error.message);
-    if(cashflowResult.error)throw Error('スタジオ売上の読み込みに失敗しました：'+cashflowResult.error.message);
+    if(cashflowResult.error)throw Error('資金繰り実績の読み込みに失敗しました：'+cashflowResult.error.message);
+    if(studioDailyResult.error)throw Error('スタジオ日次売上の読み込みに失敗しました：'+studioDailyResult.error.message);
     const events=eventsResult.data||[],ids=events.map(row=>row.id);
     const results=await Promise.all(chunks(ids,100).map(async batch=>{
      const [settlements,artists]=await Promise.all([
@@ -54,7 +56,8 @@ export default function FinanceOverview({client,team,onNavigate,onOpenEvents}){
     }
     const overview=monthlyRevenueOverview({
      data:{sales,eventStudioSales,salesAvailable:missing===0},
-     cashflowActual:cashflowResult.data||null
+     cashflowActual:cashflowResult.data||null,
+     studioDailySales:studioDailyResult.data||[]
     });
     if(!canceled)setState({loading:false,error:'',data:{overview,eventCount:events.length,missing}});
    }catch(error){
@@ -76,14 +79,14 @@ export default function FinanceOverview({client,team,onNavigate,onOpenEvents}){
    <div className="finance-overview-figures">
     <div className="finance-overview-sources">
      <div className="finance-overview-source"><small>ThunderSnakeATSUGI</small><b>ライブハウス売上</b><strong>{yen(summary?.livehouse)}</strong></div>
-     <div className="finance-overview-source"><small>STUDIO SNAKE</small><b>スタジオ売上入金</b><strong>{summary?.studio.total===null?'未入力':yen(summary?.studio.total)}</strong></div>
+     <div className="finance-overview-source"><small>STUDIO SNAKE</small><b>{summary?.studio.source==='daily'?'スタジオ日次売上':'スタジオ入金実績（旧方式）'}</b><strong>{summary?.studio.total===null?'未入力':yen(summary?.studio.total)}</strong></div>
     </div>
     <div className="finance-overview-total">
      <span>月間売上合計（経営確認用）</span>
      <strong>{yen(summary?.total)}</strong>
      <small>{summary?.status} ／ {state.data?.eventCount}イベント中 {state.data?.missing}件未報告</small>
     </div>
-    <p className="hint">ライブハウス売上は登録されたイベント収支から算出し、イベント内のスタジオ売上を控除しています。スタジオは資金繰り表の入金実績です。集計基準が異なるため合計は参考値で、会計上の売上や利益を確定するものではありません。スタジオ未入力なら合計は未算出です。</p>
+    <p className="hint">ライブハウス売上はイベント収支から算出し、イベント内のスタジオ売上を控除しています。スタジオは日次売上台帳を優先し、台帳未登録の月のみ従来の資金繰り入金実績を参照します。日次売上と資金繰りの入金は二重加算せず、照合します。売上合計は経営確認用の参考額です。{summary?.studio.source==='daily'&&summary.studio.cashflowReference!==null?'スタジオ日次売上と資金繰り入金実績の差額：'+yen(summary.studio.gap)+'。':''}未入力は0円とみなしません。</p>
    </div>}
   <div className="finance-overview-links">
    <button type="button" onClick={()=>onNavigate('budget')}><b>予算・予実管理</b><span>人件費・売上・経費・外注費の設定と比較</span></button>
@@ -91,6 +94,7 @@ export default function FinanceOverview({client,team,onNavigate,onOpenEvents}){
    <button type="button" onClick={()=>onNavigate('reports')}><b>報告書管理</b><span>月次経営サマリー・翌月予算・給与報告書</span></button>
    <button type="button" onClick={()=>onNavigate('expenses')}><b>経費・外注費</b><span>支出実績の登録・確認</span></button>
    <button type="button" onClick={onOpenEvents}><b>イベント収支登録</b><span>イベント単位の売上・収支を入力</span></button>
+   <button type="button" onClick={onOpenStudio}><b>スタジオ日次売上</b><span>日付ごとの現金売上を入力・確認</span></button>
   </div>
  </div>;
 }
