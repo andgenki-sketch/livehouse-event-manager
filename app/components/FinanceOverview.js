@@ -91,7 +91,7 @@ export default function FinanceOverview({client,team,onNavigate,onOpenEvents,onO
   <div className="finance-overview-links">
    <button type="button" onClick={()=>onNavigate('budget')}><b>予算・予実管理</b><span>人件費・売上・経費・外注費の設定と比較</span></button>
    <button type="button" onClick={()=>onNavigate('cashflow')}><b>資金繰り管理</b><span>入出金計画、実績、現預金残高</span></button>
-   <button type="button" onClick={()=>onNavigate('reports')}><b>報告書管理</b><span>月次経営サマリー・翌月予算・給与報告書</span></button>
+   <button type="button" onClick={()=>onNavigate('reports')}><b>報告書管理</b><span>{team?.role==='owner'?'月次経営サマリー・翌月予算・給与報告書':'制作向け月次財務サマリー（給与個人明細なし）'}</span></button>
    <button type="button" onClick={()=>onNavigate('expenses')}><b>経費・外注費</b><span>支出実績の登録・確認</span></button>
    <button type="button" onClick={onOpenEvents}><b>イベント収支登録</b><span>イベント単位の売上・収支を入力</span></button>
    <button type="button" onClick={onOpenStudio}><b>スタジオ日次売上</b><span>日付ごとの現金売上を入力・確認</span></button>
