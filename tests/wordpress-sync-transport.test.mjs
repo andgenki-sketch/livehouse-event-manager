@@ -94,3 +94,17 @@ test('rejects unsafe server error codes and HTML errors without exposing details
     );
   }
 });
+
+test('flyer imports do not retry a timed-out write (ambiguous result safety)', async () => {
+  let calls = 0;
+  await assert.rejects(sendWordPressEventWithRetry({
+    ...payload, action: 'upsert', flyer_path: 'team/file.png'
+  }, {
+    endpoint: 'https://example.com/wp-json/tsa-sync/v1/events', secret,
+    fetcher: async () => {
+      calls++;
+      throw Object.assign(new Error('timed out'), { name: 'TimeoutError' });
+    }
+  }));
+  assert.equal(calls, 1);
+});
