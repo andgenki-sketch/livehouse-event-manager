@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useState} from 'react';
 import {eventRevenue,monthlyRevenueOverview,reportMonthRange} from './monthly-management-report.mjs';
+import ProductionMonthlyLaborProgress from './ProductionMonthlyLaborProgress';
 
 const currentJapanMonth=()=>{
  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit'}).formatToParts(new Date());
@@ -88,6 +89,7 @@ export default function FinanceOverview({client,team,onNavigate,onOpenEvents,onO
     </div>
     <p className="hint">ライブハウス売上はイベント収支から算出し、イベント内のスタジオ売上を控除しています。スタジオは日次売上台帳を優先し、台帳未登録の月のみ従来の資金繰り入金実績を参照します。日次売上と資金繰りの入金は二重加算せず、照合します。売上合計は経営確認用の参考額です。{summary?.studio.source==='daily'&&summary.studio.cashflowReference!==null?'スタジオ日次売上と資金繰り入金実績の差額：'+yen(summary.studio.gap)+'。':''}未入力は0円とみなしません。</p>
    </div>}
+  {team?.role==='member'&&<ProductionMonthlyLaborProgress client={client} team={team} year={Number(month.slice(0,4))} month={Number(month.slice(5))}/>}
   <div className="finance-overview-links">
    <button type="button" onClick={()=>onNavigate('budget')}><b>予算・予実管理</b><span>人件費・売上・経費・外注費の設定と比較</span></button>
    <button type="button" onClick={()=>onNavigate('cashflow')}><b>資金繰り管理</b><span>入出金計画、実績、現預金残高</span></button>
