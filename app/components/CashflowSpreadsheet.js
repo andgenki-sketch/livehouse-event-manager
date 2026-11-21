@@ -55,7 +55,7 @@ export default function CashflowSpreadsheet({client,team}){
  const [saving,setSaving]=useState(false);
  const [error,setError]=useState('');
  const [message,setMessage]=useState('');
- const owner=team?.role==='owner',fiscalYear=cashflowYearStart(month);
+ const owner=team?.role==='owner',canView=owner||team?.role==='member',fiscalYear=cashflowYearStart(month);
  const months=useMemo(()=>cashflowMonthList(fiscalYear),[fiscalYear]);
  const records=useMemo(()=>new Map(entries.map(row=>[keyOf(String(row.month).slice(0,7),row.scenario),row])),[entries]);
  const record=(m,scenario)=>records.get(keyOf(m,scenario))||null;
@@ -88,14 +88,14 @@ export default function CashflowSpreadsheet({client,team}){
   ?Number(selectedActual.reported_closing_balance)-Number(selectedPlan.reported_closing_balance):null;
 
  const reload=async()=>{
-  if(!owner||!team?.id)return;
+  if(!canView||!team?.id)return;
   const seq=++requestSeq.current;
   setLoading(true);setError('');setLinkedError('');
   const first=(fiscalYear-1)+'-08-01',last=(fiscalYear+1)+'-09-01';
   const [book,external]=await Promise.allSettled([
    client.from('cashflow_monthly').select('*').eq('team_id',team.id)
     .gte('month',first).lt('month',last).order('month'),
-   fetchCashflowLinkedReferences(client,team.id,fiscalYear)
+   owner?fetchCashflowLinkedReferences(client,team.id,fiscalYear):Promise.resolve({sales:{},payroll:{}})
   ]);
   if(seq!==requestSeq.current)return;
   if(book.status==='rejected')setError('資金繰り表の取得に失敗しました：'+(book.reason?.message||'通信エラー'));
@@ -107,7 +107,7 @@ export default function CashflowSpreadsheet({client,team}){
   }else setLinked(external.value);
   setLoading(false);
  };
- useEffect(()=>{if(owner&&team?.id)reload()},[owner,team?.id,fiscalYear]);
+ useEffect(()=>{if(canView&&team?.id)reload()},[canView,team?.id,fiscalYear]);
  useEffect(()=>{
   const wrap=sheetRef.current;
   const header=wrap?.querySelector('[data-cashflow-month="'+month+'"]');
@@ -283,16 +283,16 @@ export default function CashflowSpreadsheet({client,team}){
   }
   return cashflowSheetAnnualValue(rowsByMonth,row.key,months);
  };
- const cellInput=(row)=>row.type==='amount'&&view!=='difference';
- const editable=view!=='difference';
+ const cellInput=(row)=>owner&&row.type==='amount'&&view!=='difference';
+ const editable=owner&&view!=='difference';
  const previous=calculateCashflow(record(previousMonth(month),view));
  const previousBalance=previous.reportedClosing??previous.closing;
  const reviewState=chosen?.status==='reviewed'&&!dirty;
- if(!owner)return null;
+ if(!canView)return null;
  return <div className="cashflow-sheet-page">
   <header className="cashflow-sheet-head">
    <div><h2>資金繰り表</h2><p>{fiscalYear}年9月〜{fiscalYear+1}年8月 ｜ 勘定項目を縦、月を横にした12か月一覧</p></div>
-   <span>オーナー専用</span>
+   <span>{owner?'オーナー管理':'制作：閲覧専用'}</span>
   </header>
   <div className="cashflow-sheet-toolbar">
    <div className="cashflow-sheet-switch" role="group" aria-label="実績または計画">
@@ -310,7 +310,7 @@ export default function CashflowSpreadsheet({client,team}){
     <button type="button" className={unit==='yen'?'active':''} onClick={()=>selectUnit('yen')}>円</button>
    </div>
   </div>
-  <p className="cashflow-sheet-help">月の見出しを選ぶと、その月の列で直接入力できます。小計と月末残高は自動計算します。空欄の「—」と0円は別です。{view==='difference'?'差異は比較専用です。':'変更後は表の下にある「保存」を押してください。'}{view==='actual'?' 「参考：アプリ登録売上・確定給与」は自動取得した計上額で、現預金収支には未加算です。':''}</p>
+  <p className="cashflow-sheet-help">{owner?'月の見出しを選ぶと、その月の列で直接入力できます。小計と月末残高は自動計算します。空欄の「—」と0円は別です。'+(view==='difference'?'差異は比較専用です。':'変更後は表の下にある「保存」を押してください。'):'制作権限は閲覧専用です。月ごとの計画・実績・差異を確認できます。変更・保存・確認済みへの更新はオーナーのみが行えます。'}{owner&&view==='actual'?' 「参考：アプリ登録売上・確定給与」は自動取得した計上額で、現預金収支には未加算です。':''}</p>
   <p className="cashflow-sheet-caution">STUDIO SNAKEの売上は「スタジオ売上（現金入金／キャッシュレス入金）」に記入してください。既存の「売上高」にスタジオ分が含まれている場合は、二重計上しないよう金額を振り分けてください。原本の基準計画はそのまま保持しています。</p>
   {linkedError&&<p className="cashflow-sheet-alert" role="alert">{linkedError}</p>}
   {loading?<div className="cashflow-sheet-loading">資金繰り表を読み込み中…</div>:
@@ -319,7 +319,7 @@ export default function CashflowSpreadsheet({client,team}){
     <thead><tr>
      <th className="cashflow-sheet-label-cell">勘定項目</th>
      {months.map(m=><th data-cashflow-month={m} className={m===month?'cashflow-sheet-selected':''} key={m}>
-      <button type="button" onClick={()=>selectMonth(m)} aria-label={labelMonth(m)+'を編集'}>{Number(m.slice(5))}月 <span>{m===month?'入力月':'選択'}</span></button>
+      <button type="button" onClick={()=>selectMonth(m)} aria-label={labelMonth(m)+(owner?'を編集':'を表示')}>{Number(m.slice(5))}月 <span>{m===month?'入力月':'選択'}</span></button>
      </th>)}
      <th className="cashflow-sheet-annual">合計</th>
     </tr></thead>
@@ -357,7 +357,7 @@ export default function CashflowSpreadsheet({client,team}){
    </table>
   </div>}
   <p className="cashflow-sheet-footnote">合計欄の * は一部の月・項目が未入力の暫定合計です。勘定項目の並びは共有された資金繰り表に準拠しています。月初・月末残高は年間合計しません。マイナス残高もそのまま表示します。自動連携の参考行はキャッシュフロー合計に加算されません。</p>
-  {view==='actual'&&<section className="cashflow-sheet-linked" aria-label="実績の自動連携">
+  {owner&&view==='actual'&&<section className="cashflow-sheet-linked" aria-label="実績の自動連携">
    <div className="cashflow-sheet-linked-heading">
     <div><h3>売上・人件費の自動連携</h3><p>登録済みの金額を自動集計しています。入金・振込の事実を確認してから、実績入力欄へ反映してください。</p></div>
     <button type="button" onClick={reload} disabled={saving||loading}>連携データを更新</button>
@@ -428,9 +428,9 @@ export default function CashflowSpreadsheet({client,team}){
    </details>
    <p className="cashflow-sheet-review-note">確認済みにするには全勘定項目に値を入力し、実績には照合根拠と月末の確認済み残高が必要です。照合差額があれば協議メモに残してください。金額を変更して保存すると確認状態は下書きに戻ります。協議メモのみの変更では確認済みの金額を保持します。</p>
   </section>:
-  <section className="cashflow-sheet-edit-footer"><h3>{labelMonth(month)}の差異（実績 − 計画）</h3>
-   <p>残高の差異：{yen(difference)}。実績・計画の両方に数字がある項目のみ比較します。未入力の場合は「—」で表示します。</p>
-   <button type="button" onClick={()=>selectView('actual')}>実績の入力に戻る</button>
+  <section className="cashflow-sheet-edit-footer"><h3>{labelMonth(month)}の{owner?'差異（実績 − 計画）':'資金繰り確認（閲覧のみ）'}</h3>
+   <p>{owner?'残高の差異：'+yen(difference)+'。実績・計画の両方に数字がある項目のみ比較します。未入力の場合は「—」で表示します。':'この表は読み取り専用です。登録内容を変更する場合はオーナーに依頼してください。'}</p>
+   {owner&&<button type="button" onClick={()=>selectView('actual')}>実績の入力に戻る</button>}
   </section>}
   {message&&<p className="cashflow-sheet-success" role="status">{message}</p>}
   {error&&<p className="cashflow-sheet-error" role="alert">{error}</p>}

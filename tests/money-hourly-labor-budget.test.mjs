@@ -47,7 +47,7 @@ test('yearly hourly-only summary has explicit label and salary-excluding referen
 });
 
 test('finance management continues to use original salary-inclusive scope',()=>{
- const finance=section("{team?.role==='owner'&&view==='finance'","{view==='money'&&<>");
- assert.match(finance,/canEditBudget=\{true\} staff=\{staff\}/);
+ const finance=section("{canViewFinance&&view==='finance'","{view==='money'&&<>");
+ assert.match(finance,/canEditBudget=\{financeOwner\} restrictedLaborActual=\{!financeOwner\} staff=\{staff\}/);
  assert.doesNotMatch(finance,/laborBudgetScope="hourly"/);
 });

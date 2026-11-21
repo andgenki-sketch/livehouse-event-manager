@@ -12,9 +12,9 @@ const slice=(start,end)=>{
 };
 
 test('financial management owns the payroll calculation and confirmation panel',()=>{
- const finance=slice("{team?.role==='owner'&&view==='finance'","{view==='money'&&<>");
- assert.match(finance,/\['payroll','給与計算・確定'\]/);
- assert.match(finance,/financeTab==='payroll'&&\(!payrollLoaded\|\|payrollLoadError/);
+ const finance=slice("{canViewFinance&&view==='finance'","{view==='money'&&<>");
+ assert.match(finance,/financeMenuItems\(team\?\.role\)/);
+ assert.match(finance,/financeOwner&&activeFinanceTab==='payroll'&&\(!payrollLoaded\|\|payrollLoadError/);
  assert.match(finance,/<PayrollPanel staff=\{staff\} schedules=\{shiftSchedules\} attendance=\{allAttendance\}/);
  assert.match(finance,/confirmations=\{payrollConfirmations\}/);
  assert.match(finance,/reload=\{loadCompensation\}/);
