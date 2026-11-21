@@ -71,7 +71,7 @@ test('revenue screen exposes staff-only studio entry, while finance and livehous
  assert.match(page,/import StudioDailySales from '\.\/components\/StudioDailySales';/);
  assert.match(page,/<StudioDailySales client=\{supabase\} team=\{team\} userId=\{session\?\.user\?\.id\}/);
  assert.match(page,/canViewContracts&&revenueTab==='events'/);
- assert.match(page,/<FinanceRegister schedules=\{shiftSchedules\}/);
+ assert.match(page,/<FinanceRegister client=\{supabase\} team=\{team\} schedules=\{shiftSchedules\}/);
  assert.match(page,/onOpenStudio=\{\(\)=>\{setRevenueTab\('studio'\);setView\('money'\)\}\}/);
  const view=readFileSync(new URL('../app/components/StudioDailySales.js',import.meta.url),'utf8');
  assert.match(view,/\.from\('studio_daily_sales'\)/);
