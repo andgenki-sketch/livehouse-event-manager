@@ -1123,3 +1123,40 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
 
 /* Studio inflow is separate from event/legacy sales to prevent silent overlap. */
 .cashflow-sheet-caution{margin:0 2px;padding:9px 12px;background:#fff8ec;border:1px solid #e9ce9d;border-radius:7px;color:#785824;font-size:11.5px;line-height:1.65}
+
+
+/* Owner-only financial management hub */
+.finance-management{min-width:0}
+.finance-management>.sectionhead{margin-bottom:16px}
+.finance-management-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px;padding:6px;border-radius:13px;background:#edf2f8}
+.finance-management-tabs button{border:1px solid transparent;border-radius:9px;background:transparent;color:#38485e;font-size:13px;font-weight:700;padding:11px 14px;cursor:pointer}
+.finance-management-tabs button.active{background:#fff;border-color:#c5d2e0;color:#173c64;box-shadow:0 1px 4px #203e5817}
+.finance-management-tabs button:focus-visible,.finance-overview-links button:focus-visible{outline:3px solid #4587e0;outline-offset:2px}
+.finance-overview{min-width:0}
+.finance-overview-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.finance-overview-toolbar label{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700}
+.finance-overview-toolbar input{min-height:38px}
+.finance-overview-sources{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.finance-overview-source{background:#f5f8fb;border:1px solid #dce5ee;border-radius:12px;padding:19px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.finance-overview-source small{color:#697a8f;font-size:12px}
+.finance-overview-source b{color:#263c54;font-size:14px}
+.finance-overview-source strong{color:#153a60;font-size:clamp(19px,2.7vw,29px);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.finance-overview-total{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;margin-top:12px;padding:26px 18px;color:#fff;background:#192f49;border-radius:14px}
+.finance-overview-total span{font-size:15px;font-weight:700}
+.finance-overview-total strong{font-size:clamp(30px,5.2vw,51px);line-height:1.15;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.finance-overview-total small{color:#c9d9e8;font-size:12px}
+.finance-overview-figures>.hint{margin:12px 0 24px;line-height:1.7}
+.finance-overview-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}
+.finance-overview-links button{text-align:left;display:flex;flex-direction:column;gap:7px;padding:17px;border:1px solid #dae3ec;background:#fff;border-radius:12px;cursor:pointer;min-width:0}
+.finance-overview-links button b{font-size:15px;color:#1d4368}
+.finance-overview-links button span{font-size:12px;color:#617188;line-height:1.6}
+.finance-overview-links button:hover{border-color:#6f94b9;background:#f7faff}
+.finance-management-reports{display:grid;gap:18px}
+.finance-management-reports>.card{display:flex;flex-direction:column;gap:12px}
+.finance-management-reports>.card label{display:flex;align-items:center;gap:10px}
+@media(max-width:700px){
+ .finance-management-tabs{display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity}
+ .finance-management-tabs button{flex:0 0 auto;scroll-snap-align:start}
+ .finance-overview-sources,.finance-overview-links{grid-template-columns:1fr}
+ .finance-overview-total{padding:22px 12px}
+}
