@@ -10,7 +10,7 @@ const section=(start,end)=>{
  return page.slice(i,j);
 };
 const register=section('function FinanceRegister(','function savedEventReport(');
-const money=section("{canViewContracts&&view==='money'&&financeLoadError","{modal==='timetable'");
+const money=section("{view==='money'&&<>","{modal==='timetable'");
 
 test('event income/expense view explicitly asks for hourly-only scope',()=>{
  assert.match(money,/canEditBudget=\{false\} laborBudgetScope="hourly"/);
