@@ -24,7 +24,8 @@ test('published event contains only public fields', () => {
   const result = projectWordPressEvent(sample);
   assert.equal(result.action, 'upsert');
   assert.equal(result.open_time, '18:30');
-  assert.equal(result.pickup, true);
+  // PICK UP is managed in XO Slider manually, not via event taxonomy.
+  assert.equal(Object.hasOwn(result, 'pickup'), false);
   for (const key of ['hall_rental_fee', 'day_notes', 'team_id']) {
     assert.equal(Object.hasOwn(result, key), false);
   }
@@ -56,4 +57,11 @@ test('rejects unsafe flyer object paths while keeping valid relative paths', () 
   }
   assert.equal(projectWordPressEvent({ ...sample, flyer_path: 'team/flyer.png' }).flyer_path, 'team/flyer.png');
   assert.equal(projectWordPressEvent({ ...sample, flyer_path: null }).flyer_path, null);
+});
+
+test('PICK UP toggle does not alter the WordPress event payload', () => {
+  const withPickup = projectWordPressEvent({ ...sample, website_pickup: true });
+  const withoutPickup = projectWordPressEvent({ ...sample, website_pickup: false });
+  assert.deepEqual(withPickup, withoutPickup);
+  assert.equal(Object.hasOwn(withPickup, 'pickup'), false);
 });
