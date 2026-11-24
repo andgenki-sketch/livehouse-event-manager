@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { projectWordPressEvent } from '../../../lib/wordpress-event-projection.mjs';
 import { sendWordPressEventWithRetry } from '../../../lib/wordpress-sync-transport.mjs';
 import { classifyWordPressConnectionFailure } from '../../../lib/wordpress-sync-diagnostics.mjs';
+import { authorizedWordPressWriteMode } from '../../../lib/wordpress-sync-permission.mjs';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // Allow WordPress to validate and import a <=5MB flyer.
@@ -52,35 +53,28 @@ export async function POST(request) {
   if (memberError || !['owner', 'member'].includes(member?.role)) {
     return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
-  if (process.env.WORDPRESS_SYNC_STAGING_ENABLED !== 'true') {
-    return Response.json({ error: 'WordPress sync is disabled until staging is approved' }, { status: 503 });
-  }
   if (!process.env.WORDPRESS_SYNC_ENDPOINT || !process.env.WORDPRESS_SYNC_SECRET) {
     return Response.json({ error: 'WordPress staging integration is not configured' }, { status: 503 });
   }
   let payload;
   try { payload = projectWordPressEvent(event); }
   catch { return Response.json({ error: 'Invalid public event data' }, { status: 422 }); }
-  // Live publication is a separate opt-in after the WordPress single-event trial.
-  const liveEnabled = process.env.WORDPRESS_SYNC_LIVE_ENABLED === 'true';
-  // Fail closed BEFORE contacting WordPress. The trial is preview-only and
-  // locked to one explicitly approved event ID, even if WordPress is in write mode.
-  if (process.env.VERCEL_ENV !== 'preview' || !liveEnabled) {
-    return Response.json({ error: 'WordPress writes are paused outside the approved preview trial' }, { status: 503 });
-  }
-  if (process.env.WORDPRESS_SYNC_TEST_EVENT_ID !== event.id) {
-    return Response.json({ error: 'This event is not allowed in the WordPress publication trial' }, { status: 403 });
+  // Explicit server-side gates. The production switch is distinct from preview
+  // and defaults to OFF; it is only configured after the WordPress canary trial.
+  const writeMode = authorizedWordPressWriteMode(process.env, event.id);
+  if (!writeMode) {
+    return Response.json({ error: 'WordPress publication is disabled for this environment or event' }, { status: 503 });
   }
   try {
     const result = await sendWordPressEventWithRetry(payload, {
       endpoint: process.env.WORDPRESS_SYNC_ENDPOINT,
       secret: process.env.WORDPRESS_SYNC_SECRET,
-      requireDryRun: !liveEnabled
+      requireDryRun: false
     });
-    if (liveEnabled && result.dry_run !== false) {
+    if (result.dry_run !== false) {
       return Response.json({ error: 'WordPress publication has not been enabled on the site' }, { status: 409 });
     }
-    return Response.json({ accepted: true, dry_run: result.dry_run, event_id: event.id, post_id: result.post_id || null, featured_image_id: result.featured_image_id || null });
+    return Response.json({ accepted: true, dry_run: false, write_mode: writeMode, event_id: event.id, post_id: result.post_id || null, operation: result.operation || null, featured_image_id: result.featured_image_id || null });
   } catch (error) {
     return Response.json({
       error: 'WordPress event sync failed',
