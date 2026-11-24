@@ -5,5 +5,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: node --test tests/wordpress-event-projection.test.mjs tests/wordpress-sync-transport.test.mjs tests/wordpress-sync-diagnostics.test.mjs
+      - run: node --test tests/wordpress-event-projection.test.mjs tests/wordpress-sync-transport.test.mjs tests/wordpress-sync-diagnostics.test.mjs tests/wordpress-sync-permission.test.mjs
       - run: php -l wordpress/tsa-event-sync-receiver/tsa-event-sync-receiver.php
