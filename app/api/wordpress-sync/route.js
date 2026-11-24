@@ -53,18 +53,18 @@ export async function POST(request) {
   if (memberError || !['owner', 'member'].includes(member?.role)) {
     return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
+  // Fail closed before reading any WordPress credentials or contacting the site.
+  // Production and preview write switches are independent and default OFF.
+  const writeMode = authorizedWordPressWriteMode(process.env, event.id);
+  if (!writeMode) {
+    return Response.json({ error: 'WordPress publication is currently paused', code: 'SYNC_PAUSED' }, { status: 503 });
+  }
   if (!process.env.WORDPRESS_SYNC_ENDPOINT || !process.env.WORDPRESS_SYNC_SECRET) {
-    return Response.json({ error: 'WordPress staging integration is not configured' }, { status: 503 });
+    return Response.json({ error: 'WordPress integration is not configured', code: 'SYNC_NOT_CONFIGURED' }, { status: 503 });
   }
   let payload;
   try { payload = projectWordPressEvent(event); }
   catch { return Response.json({ error: 'Invalid public event data' }, { status: 422 }); }
-  // Explicit server-side gates. The production switch is distinct from preview
-  // and defaults to OFF; it is only configured after the WordPress canary trial.
-  const writeMode = authorizedWordPressWriteMode(process.env, event.id);
-  if (!writeMode) {
-    return Response.json({ error: 'WordPress publication is disabled for this environment or event' }, { status: 503 });
-  }
   try {
     const result = await sendWordPressEventWithRetry(payload, {
       endpoint: process.env.WORDPRESS_SYNC_ENDPOINT,
