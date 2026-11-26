@@ -37,9 +37,14 @@ export async function POST(request) {
   if (permissionError || !owner) {
     return Response.json({ error: 'Owner permission required' }, { status: 403 });
   }
-  if (process.env.WORDPRESS_SYNC_STAGING_ENABLED !== 'true' ||
+  // Connection checks are permitted in production even while publishing is OFF.
+  // Preview still requires its independent staging gate. Neither environment
+  // uses the WordPress write-permission flags for this read-only probe.
+  const connectionCheckAllowed = process.env.VERCEL_ENV === 'production' ||
+    (process.env.VERCEL_ENV === 'preview' && process.env.WORDPRESS_SYNC_STAGING_ENABLED === 'true');
+  if (!connectionCheckAllowed ||
       !process.env.WORDPRESS_SYNC_ENDPOINT || !process.env.WORDPRESS_SYNC_SECRET) {
-    return Response.json({ error: 'WordPress preview sync is not configured' }, { status: 503 });
+    return Response.json({ error: 'WordPress connection check is not configured', code: 'wp_configuration' }, { status: 503 });
   }
   const keyFingerprint = wordpressKeyFingerprint(process.env.WORDPRESS_SYNC_SECRET);
   // A random never-used ID and unpublish action keep the probe harmless even
