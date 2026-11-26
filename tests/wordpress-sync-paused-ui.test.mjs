@@ -20,3 +20,14 @@ test('event saves remain successful if WordPress is intentionally paused', () =>
   assert.match(page, /if\(data\.website_published\|\|selected\?\.website_published\)/);
   assert.match(page, /const result=await requestWordPressSync\(data\.id\)/);
 });
+
+test('production connection check works independently of event publication flags', () => {
+  const check = readFileSync(new URL('../app/api/wordpress-sync/check/route.js', import.meta.url), 'utf8');
+  assert.match(check, /process\.env\.VERCEL_ENV === 'production'/);
+  assert.match(check, /process\.env\.VERCEL_ENV === 'preview' && process\.env\.WORDPRESS_SYNC_STAGING_ENABLED === 'true'/);
+  assert.doesNotMatch(check, /process\.env\.WORDPRESS_SYNC_PRODUCTION_ENABLED/);
+  assert.doesNotMatch(check, /process\.env\.WORDPRESS_SYNC_LIVE_ENABLED/);
+  assert.match(check, /action: 'unpublish'/);
+  assert.match(check, /sendWordPressEventWithRetry\(payload,/);
+  assert.match(check, /code: 'wp_configuration'/);
+});
