@@ -1199,3 +1199,20 @@ header{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:12px 
  .studio-sales-row-actions{grid-column:1/-1}
  .studio-sales-form .primary{width:100%}
 }
+
+/* Mobile navigation must never cover editing dialogs or the final page actions. */
+@media(max-width:700px){
+ .shell>.mobile-bottom-nav{z-index:100}
+ body:has(.modal,.request-modal-backdrop,[aria-modal="true"],dialog[open]) .mobile-bottom-nav{display:none!important}
+ .shell>main{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
+ .modal:not(.finance-modal):not(.tt-backdrop)>form{
+  max-height:calc(100dvh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+  overflow-y:auto;
+  overscroll-behavior:contain;
+ }
+ .request-modal-backdrop .request-modal{
+  max-height:calc(100dvh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+  overflow-y:auto;
+  overscroll-behavior:contain;
+ }
+}
